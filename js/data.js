@@ -12,7 +12,7 @@
 const DEFAULT_SECURITY_PIN = "1234";
 
 // URL Google Apps Script Web App Bawaan (Dapat diisi di sini agar seluruh perangkat/wali langsung tersambung otomatis)
-const DEFAULT_SPREADSHEET_ENDPOINT = "";
+const DEFAULT_SPREADSHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbwVJvHXK2s_M9J-gs94m0W-0cJYNCvzDThKaseEmtdOJRLtD8R4IurpLngCC_ZMuyFa/exec";
 
 const MASTER_CLASSES = [
   {
