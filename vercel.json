@@ -1,12 +1,3 @@
 {
-  "version": 2,
-  "name": "rq-ummul-qasim",
-  "public": true,
-  "cleanUrls": true,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ]
+  "cleanUrls": true
 }
