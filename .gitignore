@@ -1,0 +1,6 @@
+.system_generated/
+*.log
+.vercel
+node_modules/
+.DS_Store
+Thumbs.db

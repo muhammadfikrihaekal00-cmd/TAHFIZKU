@@ -1,0 +1,17 @@
+{
+  "name": "rq-ummul-qasim",
+  "version": "1.0.0",
+  "description": "Portal Mutaba'ah & Kontrol Hafalan RQ Ummul Qasim (Kitab Tamhid, Tartil Al-Qur'an & Tahfidz)",
+  "scripts": {
+    "start": "powershell -ExecutionPolicy Bypass -File ./serve.ps1"
+  },
+  "keywords": [
+    "tahfidz",
+    "tamhid",
+    "tartil",
+    "mutabaah",
+    "ummul-qasim"
+  ],
+  "author": "RQ Ummul Qasim",
+  "license": "MIT"
+}

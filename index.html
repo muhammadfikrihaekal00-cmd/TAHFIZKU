@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0284c7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RQ Ummul Qasim">
+  <title>RQ Ummul Qasim - Kontrol Hafalan, Kitab Tamhid & Tartil Qur'an</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- HIDDEN PHOTO INPUT FOR QUICK UPLOAD -->
+  <input type="file" id="globalPhotoInput" accept="image/*" style="display:none;">
+
+  <!-- ===================================================================
+       APP HEADER
+       =================================================================== -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper" id="brandHeaderAction" title="Klik untuk kembali ke beranda">
+        <img src="assets/logo.png" alt="Logo RQ Ummul Qasim" class="brand-logo" onerror="this.src='assets/logo.jpg'">
+        <div class="brand-info">
+          <h1>RQ UMMUL QASIM <span class="badge-rq">TAHFIDZ & TARTIL</span></h1>
+          <p id="headerTeacherText">Portal Mutaba'ah & Kontrol Hafalan</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <!-- Auth Role Toggle Button -->
+        <button class="btn-auth-role" id="btnAuthToggle" title="Beralih peran Ustadz / Wali Santri">
+          <span id="authIcon">🔒</span>
+          <span id="authLabel">Masuk Ustadz/ah</span>
+        </button>
+
+        <!-- Google Sheets Connection Status -->
+        <div class="status-pill ustadz-feature" id="sheetStatusPill" title="Pengaturan Spreadsheet" style="display: none;">
+          <span class="status-dot offline" id="sheetStatusDot"></span>
+          <span id="sheetStatusLabel">Spreadsheet</span>
+        </div>
+        
+        <!-- Add Santri -->
+        <button class="btn-icon ustadz-feature" id="btnAddSantriModal" title="Tambah Santri Baru" style="display: none;">
+          <span>➕</span>
+        </button>
+
+        <!-- Settings -->
+        <button class="btn-icon ustadz-feature" id="btnOpenSettings" title="Pengaturan Sandi & Spreadsheet" style="display: none;">
+          <span>⚙️</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TIP BANNER KHUSUS TAMPILAN HP UNTUK PENGAJAR / WALI -->
+  <div class="mobile-tip-banner" id="mobileTipBanner">
+    <div class="mobile-tip-content">
+      <span>📲 <strong>Tips Pengajar di HP:</strong> Buka menu browser lalu pilih <em>"Tambahkan ke Layar Utama" (Add to Home screen)</em> agar aplikasi tampil fullscreen seperti APK!</span>
+      <button type="button" class="mobile-tip-close" onclick="document.getElementById('mobileTipBanner').style.display='none'" title="Tutup">&times;</button>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MAIN CONTAINER
+       =================================================================== -->
+  <main class="app-main">
+    
+    <!-- TOP PILL TAB NAVIGATION (URUTAN: CAPAIAN -> PANTAUAN -> INPUT -> HADITS -> DOA) -->
+    <nav class="tab-navigation" id="mainTabNav">
+      <!-- Tab 1: Peringkat Bintang -->
+      <button class="tab-btn active" data-tab="tab-leaderboard">
+        <span>🏆</span>
+        <span>Peringkat Bintang</span>
+      </button>
+
+      <!-- Tab 2: Pantauan Anak -->
+      <button class="tab-btn" data-tab="tab-wali">
+        <span>👨‍👩‍👧</span>
+        <span>Pantau Anak</span>
+      </button>
+
+      <!-- Tab 3: Input Setoran (Dekat dengan Capaian & Pantauan) -->
+      <button class="tab-btn ustadz-only" data-tab="tab-input" id="tabBtnInput">
+        <span>📝</span>
+        <span>Input Setoran</span>
+      </button>
+
+      <!-- Tab 4: Folder Hadits Pilihan (Paling Ujung Kanan) -->
+      <button class="tab-btn" data-tab="tab-hadits">
+        <span>📜</span>
+        <span>Hadits Pilihan</span>
+      </button>
+
+      <!-- Tab 5: Folder Do'a Harian (Paling Ujung Kanan) -->
+      <button class="tab-btn" data-tab="tab-doa">
+        <span>🤲</span>
+        <span>Do'a Harian</span>
+      </button>
+    </nav>
+
+    <!-- ===================================================================
+         PANEL 1: PERINGKAT BINTANG HAFALAN (2 KATEGORI REWARD BULANAN)
+         =================================================================== -->
+    <section class="tab-panel active" id="tab-leaderboard">
+      
+      <!-- CAPAIAN BINTANG: PEKANAN vs BULANAN (REWARD) vs SEMUA WAKTU (TAMPILAN SIMPEL) -->
+      <div class="period-filter-wrapper">
+        <button type="button" class="period-btn active" data-period="pekanan" id="btnPeriodPekanan">
+          <span>📅 Capaian Bintang Pekan Ini</span>
+        </button>
+        <button type="button" class="period-btn" data-period="bulanan" id="btnPeriodBulanan">
+          <span>🏆 Peringkat Bulan Ini (Reward)</span>
+        </button>
+        <button type="button" class="period-btn" data-period="semua" id="btnPeriodSemua">
+          <span>🌟 Akumulasi Semua Waktu</span>
+        </button>
+      </div>
+
+      <!-- REWARD BANNER (HANYA JUARA 1 TIAP KATEGORI YANG DAPAT REWARD) -->
+      <div class="reward-banner">
+        <div class="reward-icon" id="rewardBannerIcon">📅</div>
+        <div class="reward-text">
+          <h3 id="rewardBannerTitle">Capaian Bintang Pekan Ini (Senin – Ahad)</h3>
+          <p id="rewardBannerDesc">
+            Memantau keaktifan setoran hafalan dan tilawah ananda sepanjang pekan berjalan secara realtime.
+          </p>
+        </div>
+      </div>
+
+      <!-- KATEGORI REWARD: 2 KATEGORI (DASAR & MENENGAH) + SEMUA SANTRI -->
+      <div class="category-filter-wrapper">
+        <button type="button" class="category-filter-btn" data-kategori="Dasar">
+          <span>🌱 Kategori Kelas Dasar (1 Reward)</span>
+        </button>
+        <button type="button" class="category-filter-btn active" data-kategori="Menengah">
+          <span>🚀 Kategori Kelas Menengah (1 Reward)</span>
+        </button>
+        <button type="button" class="category-filter-btn" data-kategori="ALL">
+          <span>🌟 Semua Santri (Gabungan)</span>
+        </button>
+      </div>
+
+      <!-- PODIUM TOP 3 HIGHLIGHT -->
+      <div class="podium-container" id="podiumContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- FILTER & SEARCH BAR -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <span class="search-box-icon">🔍</span>
+          <input type="text" id="searchLeaderboard" placeholder="Cari nama santri di papan peringkat...">
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <!-- Filter 4 Kelas Spesifik -->
+          <select class="form-select" id="filterHalaqahLeaderboard" style="width: auto; min-width: 170px;">
+            <option value="">Semua Kelas</option>
+          </select>
+
+          <!-- Refresh from Sheet -->
+          <button class="btn-icon" id="btnRefreshLeaderboard" title="Segarkan Data Realtime" style="background:#ffffff; color:var(--primary); border: 1.5px solid var(--surface-border);">
+            <span>🔄</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TOTAL SANTRI COUNT -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.8rem; color: var(--text-muted);">
+        <span id="badgeCategoryLabel">Menampilkan santri:</span>
+        <span id="badgeTotalSantriCount">16 Santri</span>
+      </div>
+
+      <!-- COMPLETE LEADERBOARD LIST (DENGAN FOTO & NOMOR URUT) -->
+      <div class="leaderboard-list" id="leaderboardList">
+        <!-- Rendered by JS -->
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================================
+         PANEL 2: PORTAL PANTAUAN ANAK (WALI SANTRI REALTIME)
+         =================================================================== -->
+    <section class="tab-panel" id="tab-wali">
+      
+      <!-- Search Card for Parents -->
+      <div class="parent-search-card">
+        <h2>👨‍👩‍👧 Portal Pantauan Santri RQ Ummul Qasim</h2>
+        <p>Pilih nama ananda untuk melihat perkembangan bimbingan Kitab Tamhid, Tartil Al-Qur'an, hafalan tahfidz, dan bintang prestasi secara realtime.</p>
+        
+        <div class="form-group">
+          <select class="form-select" id="selectParentSantri" style="font-size: 1rem; padding: 12px 16px; border-radius: var(--radius-md); font-weight: 700; border-color: #ffffff;">
+            <option value="">-- Pilih Nama Ananda --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Student Detail & History Card -->
+      <div class="parent-student-detail" id="parentStudentDetail">
+        
+        <!-- Hero Card -->
+        <div class="student-hero-card">
+          <div class="student-hero-header">
+            <div class="student-photo-big" id="parentHeroPhotoBox" title="Klik untuk ganti foto anak">
+              <span id="parentHeroAvatar" style="font-size: 3.2rem; line-height: 1;">👦🏻</span>
+              <img id="parentHeroImg" src="" alt="Foto Santri" style="width:100%; height:100%; object-fit:cover; display:none;">
+            </div>
+
+            <div class="student-hero-titles">
+              <h3 id="parentHeroName">Ahmad Rayyan Al-Fatih</h3>
+              <p id="parentHeroHalaqah">Kelas Menengah Ikhwan</p>
+              <div style="margin-top: 6px;">
+                <span class="meta-badge" id="parentHeroRankBadge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 800;">
+                  🥇 Peringkat #1 di Kategori (Penerima Reward Bulanan 🏆)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Grid: Pekanan, Bulanan, Total & Jenjang -->
+          <div class="student-stats-grid">
+            <div class="stat-box">
+              <div class="stat-label">Bintang Pekan Ini</div>
+              <div class="stat-val" id="parentStatStarsWeek" style="color: #0284c7;">0 ⭐</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Bintang Bulan Ini</div>
+              <div class="stat-val" id="parentStatStarsMonth" style="color: #f43f7a;">0 ⭐</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Total Bintang</div>
+              <div class="stat-val" id="parentStatStars" style="color: #b45309;">0 ⭐</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Jenjang Tilawah</div>
+              <div class="stat-val" id="parentStatBacaan" style="font-size: 0.85rem; color: #0284c7;">Tartil Qur'an</div>
+            </div>
+          </div>
+
+          <!-- Tombol Bagikan Laporan ke WhatsApp -->
+          <button type="button" class="btn-wa-share" id="btnShareWhatsApp">
+            <span>💬 Bagikan Laporan Mutaba'ah ke WhatsApp</span>
+          </button>
+        </div>
+
+        <!-- Riwayat Setoran Timeline -->
+        <div class="timeline-title">
+          <span>📜 Riwayat Evaluasi Harian Ananda</span>
+        </div>
+
+        <div id="parentTimelineContainer">
+          <!-- Rendered by JS -->
+        </div>
+
+      </div>
+
+      <!-- Empty state when no student chosen -->
+      <div id="parentEmptyState" style="text-align: center; padding: 40px 20px; color: var(--text-muted); background: #ffffff; border-radius: var(--radius-md); border: 1.5px dashed #bae6fd;">
+        <span style="font-size: 3rem; display: block; margin-bottom: 10px;">📖</span>
+        <h4 style="font-weight: 700; color: var(--primary-dark); margin-bottom: 4px;">Silakan Pilih Nama Santri di Atas</h4>
+        <p style="font-size: 0.85rem;">Perkembangan harian Kitab Tamhid, Tartil Al-Qur'an, dan perolehan bintang prestasi ananda akan otomatis tampil di sini.</p>
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================================
+         PANEL 3: FORMULIR INPUT TERPADU (DEKAT DENGAN CAPAIAN & PANTAUAN)
+         =================================================================== -->
+    <section class="tab-panel" id="tab-input">
+      <form id="formSetoran" autocomplete="off">
+        
+        <!-- IDENTITAS KELAS & SANTRI -->
+        <div class="card">
+          <div class="card-header-styled">
+            <div class="section-title">
+              <span class="section-icon icon-blue">👤</span>
+              <span>Data Kelas & Santri</span>
+            </div>
+            <span class="meta-badge meta-badge-tamhid" id="formCurrentDateBadge">Hari Ini</span>
+          </div>
+
+          <div class="form-grid form-grid-2">
+            <!-- Tanggal Setoran -->
+            <div class="form-group">
+              <label class="form-label" for="inputTanggal">📅 Tanggal Setoran</label>
+              <input type="date" class="form-control" id="inputTanggal" required>
+            </div>
+
+            <!-- Pilih Kelas (4 Pilihan Resmi) -->
+            <div class="form-group">
+              <label class="form-label" for="selectHalaqah">🏫 Pilih Kelas (4 Kelas Resmi)</label>
+              <select class="form-select" id="selectHalaqah" required>
+                <!-- Populated by JS -->
+              </select>
+            </div>
+
+            <!-- Ustadz Pengampu (Otomatis sesuai kelas) -->
+            <div class="form-group">
+              <label class="form-label" for="inputUstadz">👳‍♂️ Ustadz / Ustadzah Pengampu</label>
+              <input type="text" class="form-control" id="inputUstadz" value="Ustadz M. Fikri Haekal, C.LQ" required readonly style="background:#f1f5f9;">
+            </div>
+
+            <!-- Pilih Santri + Tombol Tambah Cepat -->
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="form-label" for="selectSantri" style="margin-bottom: 0;">👦 Pilih Santri</label>
+                <button type="button" id="btnQuickAddSantri" style="background: none; border: none; color: var(--primary); font-size: 0.78rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                  <span>➕ Tambah Santri Baru</span>
+                </button>
+              </div>
+              <select class="form-select" id="selectSantri" required style="margin-top: 6px;">
+                <option value="">-- Pilih Santri --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===============================================================
+             SEKSI 1: BIMBINGAN TILAWAH (KITAB TAMHID vs TARTIL QUR'AN)
+             Tartil Qur'an ringkas: Pilihan Juz & Halaman saja
+             =============================================================== -->
+        <div class="card section-bacaan-box">
+          <div class="card-header-styled" style="border-bottom-color: #bae6fd;">
+            <div class="section-title">
+              <span class="section-icon icon-pink">📖</span>
+              <span>1. Bimbingan Tilawah (Tamhid / Tartil Qur'an)</span>
+            </div>
+            <span class="meta-badge" id="badgeBacaanActive" style="background:#0284c7; color:#fff;">Kitab Tamhid</span>
+          </div>
+
+          <!-- Switcher: Kitab Tamhid (Dasar) vs Tartil Qur'an (Lanjutan) -->
+          <div class="stage-switch-wrapper">
+            <button type="button" class="stage-switch-btn active" id="btnSwitchTamhid" data-mode="Tamhid">
+              <span>📚 1. Kitab Tamhid (Dasar)</span>
+            </button>
+            <button type="button" class="stage-switch-btn" id="btnSwitchTartil" data-mode="Tartil">
+              <span>📜 2. Tartil Al-Qur'an (Lulus Tamhid)</span>
+            </button>
+          </div>
+          <input type="hidden" id="inputBacaanTipe" value="Tamhid">
+
+          <!-- SUB-FORM A: KITAB TAMHID -->
+          <div id="subFormTamhid">
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="selectTamhidJilid">📚 Jilid Kitab Tamhid</label>
+                <select class="form-select" id="selectTamhidJilid">
+                  <!-- Populated by JS -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inputTamhidHalaman">📄 Halaman / Bab Tamhid</label>
+                <div class="stepper-group">
+                  <button type="button" class="stepper-btn" onclick="App.adjustNumericInput('inputTamhidHalaman', -1)" title="Kurang 1 Halaman">−</button>
+                  <input type="text" class="form-control stepper-input" id="inputTamhidHalaman" value="Halaman 1">
+                  <button type="button" class="stepper-btn" onclick="App.adjustNumericInput('inputTamhidHalaman', 1)" title="Tambah 1 Halaman">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Kelulusan Tamhid -->
+            <div class="form-group" style="margin-top: 14px;">
+              <label class="form-label">📌 Status Tamhid Hari Ini</label>
+              <div class="pill-toggle-group">
+                <button type="button" class="pill-toggle-btn active-blue" id="btnTamhidLanjut" data-val="Lanjut">
+                  <span>✅ Lanjut Halaman</span>
+                </button>
+                <button type="button" class="pill-toggle-btn" id="btnTamhidUlang" data-val="Ulang">
+                  <span>🔄 Ulang Pelajaran</span>
+                </button>
+                <button type="button" class="pill-toggle-btn" id="btnTamhidLulusNaik" data-val="Lulus Tamhid" title="Lulus Kitab Tamhid dan otomatis naik ke jenjang Tartil Al-Qur'an!">
+                  <span>🎓 Lulus Tamhid &rarr; Naik Tartil</span>
+                </button>
+              </div>
+              <input type="hidden" id="inputTamhidStatus" value="Lanjut">
+            </div>
+          </div>
+
+          <!-- SUB-FORM B: TARTIL AL-QUR'AN (CUKUP PILIHAN JUZ & HALAMAN) -->
+          <div id="subFormTartil" style="display: none;">
+            <div class="form-grid form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="selectTartilJuz">📖 Pilihan Juz Tartil</label>
+                <select class="form-select" id="selectTartilJuz">
+                  <!-- Juz 1 s/d 30 -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inputTartilHalaman">📄 Halaman Mushaf (1–604)</label>
+                <div class="stepper-group">
+                  <button type="button" class="stepper-btn" onclick="App.adjustNumericInput('inputTartilHalaman', -1)" title="Kurang 1 Halaman">−</button>
+                  <input type="text" class="form-control stepper-input" id="inputTartilHalaman" value="Halaman 582">
+                  <button type="button" class="stepper-btn" onclick="App.adjustNumericInput('inputTartilHalaman', 1)" title="Tambah 1 Halaman">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Tartil -->
+            <div class="form-group" style="margin-top: 14px;">
+              <label class="form-label">📌 Status Tartil Hari Ini</label>
+              <div class="pill-toggle-group">
+                <button type="button" class="pill-toggle-btn active-pink" id="btnTartilLanjut" data-val="Lanjut">
+                  <span>✅ Lanjut Halaman Tartil</span>
+                </button>
+                <button type="button" class="pill-toggle-btn" id="btnTartilUlang" data-val="Ulang">
+                  <span>🔄 Ulang Halaman</span>
+                </button>
+              </div>
+              <input type="hidden" id="inputTartilStatus" value="Lanjut">
+            </div>
+          </div>
+
+          <!-- Catatan Bimbingan Singkat (Tamhid / Tartil) -->
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="inputBacaanCatatan">✍️ Catatan Fashahah / Tajwid (Opsional)</label>
+            <input type="text" class="form-control" id="inputBacaanCatatan" placeholder="Contoh: Perhatikan panjang mad wajib dan ketepatan makhraj...">
+          </div>
+        </div>
+
+        <!-- ===============================================================
+             SEKSI 2: HAFALAN AL-QUR'AN (TAHFIDZ)
+             =============================================================== -->
+        <div class="card section-hafalan-box">
+          <div class="card-header-styled" style="border-bottom-color: #fde68a;">
+            <div class="section-title" style="color: #92400e;">
+              <span class="section-icon icon-gold">✨</span>
+              <span>2. Hafalan Al-Qur'an (Tahfidz)</span>
+            </div>
+            <span class="meta-badge" style="background:#fef3c7; color:#92400e;">Mutaba'ah Setoran</span>
+          </div>
+
+          <!-- Jenis Setoran: Ziyadah vs Muroja'ah -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label">🎯 Jenis Setoran Hafalan</label>
+            <div class="pill-toggle-group">
+              <button type="button" class="pill-toggle-btn active-blue" id="btnHafalanZiyadah" data-val="Ziyadah">
+                <span>⭐ Ziyadah (Hafalan Baru)</span>
+              </button>
+              <button type="button" class="pill-toggle-btn" id="btnHafalanMurojaah" data-val="Muroja'ah">
+                <span>🔄 Muroja'ah (Pengulangan)</span>
+              </button>
+            </div>
+            <input type="hidden" id="inputHafalanJenis" value="Ziyadah">
+          </div>
+
+          <!-- Batas Hafalan: Surah Awal s/d Surah Akhir dengan Stepper Touch -->
+          <div class="form-grid form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="selectSurahAwal">📖 Surah Awal</label>
+              <select class="form-select" id="selectSurahAwal" required>
+                <option value="">-- Pilih Surah Awal --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inputAyatAwal">🔢 Ayat Awal</label>
+              <div class="stepper-group">
+                <button type="button" class="stepper-btn" onclick="App.adjustAyat('inputAyatAwal', -1)" title="Kurang 1 Ayat">−</button>
+                <input type="number" class="form-control stepper-input" id="inputAyatAwal" min="1" value="1" required>
+                <button type="button" class="stepper-btn" onclick="App.adjustAyat('inputAyatAwal', 1)" title="Tambah 1 Ayat">+</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="selectSurahAkhir">📖 Surah Akhir</label>
+              <select class="form-select" id="selectSurahAkhir" required>
+                <option value="">-- Pilih Surah Akhir --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inputAyatAkhir">🔢 Ayat Akhir</label>
+              <div class="stepper-group">
+                <button type="button" class="stepper-btn" onclick="App.adjustAyat('inputAyatAkhir', -1)" title="Kurang 1 Ayat">−</button>
+                <input type="number" class="form-control stepper-input" id="inputAyatAkhir" min="1" value="10" required>
+                <button type="button" class="stepper-btn" onclick="App.adjustAyat('inputAyatAkhir', 1)" title="Tambah 1 Ayat">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Preset Ayat Khusus HP / Tablet Pengajar -->
+          <div class="quick-ayat-wrapper">
+            <span class="quick-ayat-label">⚡ Pintasan Cepat Ayat (Mudah di HP):</span>
+            <div class="quick-ayat-chips">
+              <button type="button" class="chip-ayat" onclick="App.setAyatSpan(5)">+5 Ayat</button>
+              <button type="button" class="chip-ayat" onclick="App.setAyatSpan(10)">+10 Ayat</button>
+              <button type="button" class="chip-ayat" onclick="App.setAyatSpan(20)">+20 Ayat</button>
+              <button type="button" class="chip-ayat chip-ayat-gold" onclick="App.setFullSurah()">📖 1 Surah Penuh</button>
+            </div>
+          </div>
+
+          <!-- PENILAIAN MUTU (BINTANG 1-5 INTERAKTIF DENGAN TARGET SENTUH JARI BESAR) -->
+          <div style="margin-top: 18px;">
+            <label class="form-label" style="margin-bottom: 8px;">⭐ Penilaian Mutu Hafalan (Bintang 1 - 5)</label>
+            
+            <!-- Tajwid -->
+            <div class="star-rating-row">
+              <div class="star-label">
+                <span>Tajwid & Mad</span>
+                <span class="sub-text">(Panjang pendek, hukum tajwid)</span>
+              </div>
+              <div class="star-inputs" data-rating="tajwid">
+                <button type="button" class="star-btn" data-val="1">★</button>
+                <button type="button" class="star-btn" data-val="2">★</button>
+                <button type="button" class="star-btn" data-val="3">★</button>
+                <button type="button" class="star-btn" data-val="4">★</button>
+                <button type="button" class="star-btn" data-val="5">★</button>
+                <button type="button" class="star-btn-reset" data-reset="tajwid">✕ Batal</button>
+              </div>
+            </div>
+
+            <!-- Kelancaran -->
+            <div class="star-rating-row">
+              <div class="star-label">
+                <span>Kelancaran</span>
+                <span class="sub-text">(Refleks ingatan tanpa tersendat)</span>
+              </div>
+              <div class="star-inputs" data-rating="kelancaran">
+                <button type="button" class="star-btn" data-val="1">★</button>
+                <button type="button" class="star-btn" data-val="2">★</button>
+                <button type="button" class="star-btn" data-val="3">★</button>
+                <button type="button" class="star-btn" data-val="4">★</button>
+                <button type="button" class="star-btn" data-val="5">★</button>
+                <button type="button" class="star-btn-reset" data-reset="kelancaran">✕ Batal</button>
+              </div>
+            </div>
+
+            <!-- Makhraj -->
+            <div class="star-rating-row">
+              <div class="star-label">
+                <span>Makharijul Huruf</span>
+                <span class="sub-text">(Fashahah & ketepatan bunyi)</span>
+              </div>
+              <div class="star-inputs" data-rating="makhraj">
+                <button type="button" class="star-btn" data-val="1">★</button>
+                <button type="button" class="star-btn" data-val="2">★</button>
+                <button type="button" class="star-btn" data-val="3">★</button>
+                <button type="button" class="star-btn" data-val="4">★</button>
+                <button type="button" class="star-btn" data-val="5">★</button>
+                <button type="button" class="star-btn-reset" data-reset="makhraj">✕ Batal</button>
+              </div>
+            </div>
+
+            <!-- Total Bintang & Predikat -->
+            <div class="star-summary-badge">
+              <div class="star-summary-title">
+                <span>🏆 Total Bintang Diperoleh:</span>
+                <span class="meta-badge" id="predikatBadge" style="background:#0284c7; color:#ffffff;">Mumtaz</span>
+              </div>
+              <div class="star-summary-count">
+                <span id="labelTotalBintang">15</span>
+                <span>⭐</span>
+              </div>
+            </div>
+            
+            <input type="hidden" id="inputStarTajwid" value="5">
+            <input type="hidden" id="inputStarKelancaran" value="5">
+            <input type="hidden" id="inputStarMakhraj" value="5">
+            <input type="hidden" id="inputStarTotal" value="15">
+          </div>
+
+          <!-- Tindakan / Status Hafalan -->
+          <div class="form-group" style="margin-top: 16px;">
+            <label class="form-label">📌 Tindakan / Keputusan Hafalan</label>
+            <div class="pill-toggle-group">
+              <button type="button" class="pill-toggle-btn active-blue" id="btnHafalanLulus" data-val="Lulus">
+                <span>✅ LULUS (Lanjut Ayat)</span>
+              </button>
+              <button type="button" class="pill-toggle-btn" id="btnHafalanUlang" data-val="Ulang">
+                <span>🔄 ULANG (Perbaiki Lagi)</span>
+              </button>
+            </div>
+            <input type="hidden" id="inputHafalanStatus" value="Lulus">
+          </div>
+
+          <!-- Catatan Evaluasi Wali Murid -->
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="inputHafalanCatatan">💬 Catatan / Pesan Evaluasi untuk Wali Murid</label>
+            <textarea class="form-control" id="inputHafalanCatatan" rows="2" placeholder="Tuliskan pesan motivasi atau ayat yang perlu diperhatikan di rumah..."></textarea>
+          </div>
+        </div>
+
+        <!-- TOMBOL SIMPAN -->
+        <button type="submit" class="btn-submit-main" id="btnSubmitSetoran">
+          <span>💾 SIMPAN SETORAN SANTRI (TERPADU & REALTIME)</span>
+        </button>
+
+      </form>
+    </section>
+
+
+    <!-- ===================================================================
+         PANEL 4: FOLDER HADITS PENDEK PILIHAN (PALING UJUNG SEBELAH KANAN)
+         =================================================================== -->
+    <section class="tab-panel" id="tab-hadits">
+      
+      <!-- Hero Banner Hadits -->
+      <div class="materi-hero-card">
+        <div class="materi-hero-icon">📜</div>
+        <div class="materi-hero-info">
+          <h2>Folder Hadits Pendek Pilihan (Khusus Anak SD)</h2>
+          <p>
+            Materi hafalan hadits nabawiyyah yang <strong>Shahih</strong>, ringkas, dan mudah dihafal agar para guru di madrasah dan orang tua di rumah <strong>seragam dalam membimbing hafalan ananda</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Search Box & Filter -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <span class="search-box-icon">🔍</span>
+          <input type="text" id="searchHadits" placeholder="Cari hadits (judul, lafadz latin, terjemahan, atau riwayat)...">
+        </div>
+      </div>
+
+      <!-- Kategori Hadits Pilihan -->
+      <div class="materi-tag-scroller" id="haditsCategoryContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Counter -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.82rem; color: var(--text-muted);">
+        <span id="badgeHaditsInfo">Menampilkan hadits hafalan:</span>
+        <span class="meta-badge" id="badgeHaditsCount" style="background:#e0f2fe; color:#0369a1; font-weight:800;">40 Hadits Pilihan</span>
+      </div>
+
+      <!-- Grid Kartu Hadits -->
+      <div class="materi-grid" id="haditsListContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================================
+         PANEL 5: FOLDER DO'A-DO'A HARIAN (PALING UJUNG SEBELAH KANAN)
+         =================================================================== -->
+    <section class="tab-panel" id="tab-doa">
+      
+      <!-- Hero Banner Doa -->
+      <div class="materi-hero-card" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #f43f7a 100%);">
+        <div class="materi-hero-icon">🤲</div>
+        <div class="materi-hero-info">
+          <h2>Folder Do'a-do'a Harian Shahih (Khusus Anak SD)</h2>
+          <p>
+            Kumpulan doa harian shahih dengan <strong>Teks Arab Berharakat, Latin Transliterasi, dan Terjemahan Lengkap</strong> demi keseragaman pengajaran ustadz/ah dan wali murid.
+          </p>
+        </div>
+      </div>
+
+      <!-- Search Box & Filter -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <span class="search-box-icon">🔍</span>
+          <input type="text" id="searchDoa" placeholder="Cari do'a harian (nama doa, teks latin, atau arti)...">
+        </div>
+      </div>
+
+      <!-- Kategori Doa Pilihan -->
+      <div class="materi-tag-scroller" id="doaCategoryContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Counter -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.82rem; color: var(--text-muted);">
+        <span id="badgeDoaInfo">Menampilkan doa harian anak:</span>
+        <span class="meta-badge" id="badgeDoaCount" style="background:#fce7f3; color:#be185d; font-weight:800;">40 Do'a Pilihan</span>
+      </div>
+
+      <!-- Grid Kartu Doa -->
+      <div class="materi-grid" id="doaListContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ===================================================================
+       MODAL: LOGIN USTADZ / USTADZAH (4 PENGAJAR RESMI + SANDI)
+       =================================================================== -->
+  <div class="modal-overlay" id="modalAuth">
+    <div class="modal-dialog" style="max-width: 440px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+        <div style="font-size: 2.8rem; margin-bottom: 4px;">🔐</div>
+      </div>
+
+      <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px;">
+        Masuk Sebagai Ustadz / Ustadzah
+      </h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;">
+        Pilih nama pengajar dan masukkan sandi pengaman untuk membuka formulir input setoran santri.
+      </p>
+
+      <form id="formAuthPin">
+        <!-- Pilihan 4 Pengajar Resmi -->
+        <div class="form-group" style="margin-bottom: 14px; text-align: left;">
+          <label class="form-label" for="selectAuthUstadz">👳‍♂️ Nama Ustadz / Ustadzah Pengampu</label>
+          <select class="form-select" id="selectAuthUstadz" required style="font-weight: 700;">
+            <!-- Populated with 4 official teachers -->
+          </select>
+        </div>
+
+        <!-- Input Sandi Pengaman -->
+        <div class="form-group" style="margin-bottom: 16px; text-align: left;">
+          <label class="form-label" for="inputAuthPin">🔑 Kata Sandi Pengaman</label>
+          <input type="password" class="form-control" id="inputAuthPin" placeholder="Masukkan Sandi..." style="font-size: 1.25rem; text-align: center; letter-spacing: 0.15em; padding: 12px;" required autofocus>
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; display: block; text-align: center;">
+            Sandi bawaan: <code>1234</code> (dapat diubah di pengaturan)
+          </span>
+        </div>
+
+        <button type="submit" class="btn-submit-main" style="margin-top: 4px;">
+          <span>🔓 Buka Akses Pengajar</span>
+        </button>
+
+        <button type="button" class="modal-close" data-close="modalAuth" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 14px; background: none; border: none; cursor: pointer; text-decoration: underline;">
+          Kembali ke Mode Wali Santri
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL: PENGATURAN SPREADSHEET & UBAH SANDI PENGAMAN
+       =================================================================== -->
+  <div class="modal-overlay" id="modalSettings">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>⚙️ Pengaturan Aplikasi RQ Ummul Qasim</span>
+        </div>
+        <button class="modal-close" data-close="modalSettings">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Ubah Sandi Pengaman Ustadz -->
+        <div style="background: #fdf2f8; border: 1.5px solid #fecdd3; border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+          <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--accent-pink-dark); margin-bottom: 8px;">
+            🔑 Ubah Sandi Pengaman Pengajar
+          </h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+            Sandi ini digunakan saat masuk sebagai pengajar agar data santri tetap terlindungi.
+          </p>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" class="form-control" id="inputNewPin" placeholder="Masukkan Sandi baru (misal: 1234)" style="font-weight: 700;">
+            <button type="button" class="btn-submit-main" id="btnSaveNewPin" style="margin-top: 0; width: auto; white-space: nowrap; padding: 10px 16px; background: var(--accent-pink);">
+              Simpan Sandi
+            </button>
+          </div>
+        </div>
+
+        <!-- Google Spreadsheet Integration -->
+        <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px;">
+          📊 Hubungkan ke Google Spreadsheet
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+          Setiap data Tamhid, Tartil, dan Hafalan akan otomatis terupdate realtime ke Google Spreadsheet Anda.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" for="inputSheetsUrl">🔗 URL Google Apps Script Web App</label>
+          <input type="url" class="form-control" id="inputSheetsUrl" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 18px;">
+          <button type="button" class="btn-submit-main" id="btnTestSheets" style="margin-top:0; padding: 10px 14px; font-size: 0.85rem; background:#0284c7;">
+            <span>🔍 Tes Koneksi</span>
+          </button>
+          <button type="button" class="btn-submit-main" id="btnSaveSheets" style="margin-top:0; padding: 10px 14px; font-size: 0.85rem;">
+            <span>💾 Simpan URL</span>
+          </button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--surface-border); margin: 16px 0;">
+
+        <!-- Panduan Apps Script -->
+        <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">
+          📋 Kode Google Apps Script:
+        </h4>
+        <div style="position: relative;">
+          <pre class="code-snippet-box" id="scriptCodeBlock"></pre>
+          <button type="button" id="btnCopyScript" style="position: absolute; right: 10px; top: 10px; background: #334155; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.72rem; cursor: pointer;">
+            📋 Salin Seluruh Kode
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL: TAMBAH SANTRI BARU (DENGAN NOMOR URUT SAJA, TANPA NIS/KODE)
+       =================================================================== -->
+  <div class="modal-overlay" id="modalAddSantri">
+    <div class="modal-dialog" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>➕ Tambah Santri Baru RQ</span>
+        </div>
+        <button class="modal-close" data-close="modalAddSantri">&times;</button>
+      </div>
+
+      <form id="formAddSantri" onsubmit="event.preventDefault(); App.submitNewSantriManual(event);">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="newSantriNama">Nama Lengkap Santri</label>
+          <input type="text" class="form-control" id="newSantriNama" placeholder="Contoh: Muhammad Farhan" required style="font-size: 0.95rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="newSantriHalaqah">Pilih Kelas</label>
+          <select class="form-select" id="newSantriHalaqah" required style="font-weight: 700;">
+            <!-- 4 Kelas Resmi -->
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label">Jenjang Tilawah Awal</label>
+          <select class="form-select" id="newSantriJenjang">
+            <option value="Tamhid">Kitab Tamhid (Dasar)</option>
+            <option value="Tartil Qur'an">Tartil Al-Qur'an (Lulus Tamhid)</option>
+          </select>
+        </div>
+
+        <!-- Unggah Foto Anak (Opsional) -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="newSantriFoto">📷 Foto Santri (Opsional)</label>
+          <input type="file" class="form-control" id="newSantriFoto" accept="image/*">
+          <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Foto akan otomatis dikompres dan tampil di samping nama santri.</span>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label class="form-label">Pilih Avatar Cadangan (Jika belum ada foto)</label>
+          <div style="display: flex; gap: 8px; font-size: 1.5rem;" id="avatarSelector">
+            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👦🏻" checked> 👦🏻</label>
+            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="🧒🏻"> 🧒🏻</label>
+            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👦🏼"> 👦🏼</label>
+            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👧🏻"> 👧🏻</label>
+            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="🧕🏻"> 🧕🏻</label>
+          </div>
+        </div>
+
+        <!-- Tombol Simpan Santri Baru dengan event listener yang aman -->
+        <button type="button" class="btn-submit-main" id="btnSubmitNewSantri" onclick="App.submitNewSantriManual(event)" style="margin-top: 6px;">
+          <span>💾 Simpan Santri Baru</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       NAVIGASI BAWAH KHUSUS LAYAR HP (MOBILE BOTTOM BAR)
+       Urutan: Capaian -> Pantauan -> [SETORAN TERPADU] -> Hadits -> Do'a
+       =================================================================== -->
+  <nav class="mobile-bottom-bar" id="mobileBottomBar">
+    <button type="button" class="mobile-nav-item active" data-tab="tab-leaderboard" title="Papan Peringkat">
+      <span class="mobile-nav-icon">🏆</span>
+      <span class="mobile-nav-label">Capaian</span>
+    </button>
+    
+    <button type="button" class="mobile-nav-item" data-tab="tab-wali" title="Pantauan Wali Santri">
+      <span class="mobile-nav-icon">👨‍👩‍👧</span>
+      <span class="mobile-nav-label">Pantauan</span>
+    </button>
+    
+    <!-- Tombol Khusus Input Setoran Berada di Tengah Menyerupai Super-App / APK -->
+    <button type="button" class="mobile-nav-item mobile-nav-highlight" data-tab="tab-input" title="Input Setoran Ustadz">
+      <div class="mobile-nav-circle">
+        <span class="mobile-nav-icon">📝</span>
+      </div>
+      <span class="mobile-nav-label">Setoran</span>
+    </button>
+    
+    <button type="button" class="mobile-nav-item" data-tab="tab-hadits" title="Folder Hadits Pilihan">
+      <span class="mobile-nav-icon">📜</span>
+      <span class="mobile-nav-label">Hadits</span>
+    </button>
+    
+    <button type="button" class="mobile-nav-item" data-tab="tab-doa" title="Folder Do'a Harian">
+      <span class="mobile-nav-icon">🤲</span>
+      <span class="mobile-nav-label">Do'a</span>
+    </button>
+  </nav>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/sheets.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
