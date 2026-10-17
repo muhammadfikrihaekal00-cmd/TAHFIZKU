@@ -2,11 +2,11 @@
  * INTEGRASI GOOGLE SPREADSHEET & KEAMANAN RQ UMMUL QASIM (v3)
  */
 
-const STORAGE_KEY_SETORAN = "rq_ummul_qasim_setoran_v3";
-const STORAGE_KEY_SETTINGS = "rq_ummul_qasim_settings_v3";
-const STORAGE_KEY_SANTRI = "rq_ummul_qasim_santri_v3";
-const STORAGE_KEY_AUTH = "rq_ummul_qasim_auth_session_v3";
-const STORAGE_KEY_CURRENT_USTADZ = "rq_ummul_qasim_current_ustadz_v3";
+const STORAGE_KEY_SETORAN = "rq_ummul_qasim_setoran_v4";
+const STORAGE_KEY_SETTINGS = "rq_ummul_qasim_settings_v4";
+const STORAGE_KEY_SANTRI = "rq_ummul_qasim_santri_v4";
+const STORAGE_KEY_AUTH = "rq_ummul_qasim_auth_session_v4";
+const STORAGE_KEY_CURRENT_USTADZ = "rq_ummul_qasim_current_ustadz_v4";
 
 const SheetsService = {
   // Autentikasi Ustadz
@@ -135,7 +135,12 @@ const SheetsService = {
   getAllRecords() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SETORAN);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(r => r.namaSantri === "Marcel" || r.namaSantri === "Ratu")) {
+          return parsed;
+        }
+      }
     } catch (e) {
       console.error(e);
     }
@@ -147,7 +152,12 @@ const SheetsService = {
   getAllSantri() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SANTRI);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length >= 36 && parsed.some(s => s.nama === "Marcel" || s.nama === "Ratu")) {
+          return parsed;
+        }
+      }
     } catch (e) {
       console.error(e);
     }

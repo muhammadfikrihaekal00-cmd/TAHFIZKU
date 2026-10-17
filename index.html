@@ -116,13 +116,13 @@
       <!-- CAPAIAN BINTANG: PEKANAN vs BULANAN (REWARD) vs SEMUA WAKTU (TAMPILAN SIMPEL) -->
       <div class="period-filter-wrapper">
         <button type="button" class="period-btn active" data-period="pekanan" id="btnPeriodPekanan">
-          <span>📅 Capaian Bintang Pekan Ini</span>
+          <span>📅 Pekanan</span>
         </button>
         <button type="button" class="period-btn" data-period="bulanan" id="btnPeriodBulanan">
-          <span>🏆 Peringkat Bulan Ini (Reward)</span>
+          <span>🏆 Bulan Ini (Reward)</span>
         </button>
         <button type="button" class="period-btn" data-period="semua" id="btnPeriodSemua">
-          <span>🌟 Akumulasi Semua Waktu</span>
+          <span>🌟 Semua</span>
         </button>
       </div>
 
@@ -140,13 +140,13 @@
       <!-- KATEGORI REWARD: 2 KATEGORI (DASAR & MENENGAH) + SEMUA SANTRI -->
       <div class="category-filter-wrapper">
         <button type="button" class="category-filter-btn" data-kategori="Dasar">
-          <span>🌱 Kategori Kelas Dasar (1 Reward)</span>
+          <span>🌱 Kelas Dasar</span>
         </button>
         <button type="button" class="category-filter-btn active" data-kategori="Menengah">
-          <span>🚀 Kategori Kelas Menengah (1 Reward)</span>
+          <span>🚀 Kelas Menengah</span>
         </button>
         <button type="button" class="category-filter-btn" data-kategori="ALL">
-          <span>🌟 Semua Santri (Gabungan)</span>
+          <span>🌟 Semua Santri</span>
         </button>
       </div>
 
@@ -343,10 +343,10 @@
           <!-- Switcher: Kitab Tamhid (Dasar) vs Tartil Qur'an (Lanjutan) -->
           <div class="stage-switch-wrapper">
             <button type="button" class="stage-switch-btn active" id="btnSwitchTamhid" data-mode="Tamhid">
-              <span>📚 1. Kitab Tamhid (Dasar)</span>
+              <span>📚 Kitab Tamhid</span>
             </button>
             <button type="button" class="stage-switch-btn" id="btnSwitchTartil" data-mode="Tartil">
-              <span>📜 2. Tartil Al-Qur'an (Lulus Tamhid)</span>
+              <span>📜 Tartil Qur'an</span>
             </button>
           </div>
           <input type="hidden" id="inputBacaanTipe" value="Tamhid">
@@ -376,13 +376,13 @@
               <label class="form-label">📌 Status Tamhid Hari Ini</label>
               <div class="pill-toggle-group">
                 <button type="button" class="pill-toggle-btn active-blue" id="btnTamhidLanjut" data-val="Lanjut">
-                  <span>✅ Lanjut Halaman</span>
+                  <span>✅ Lanjut</span>
                 </button>
                 <button type="button" class="pill-toggle-btn" id="btnTamhidUlang" data-val="Ulang">
-                  <span>🔄 Ulang Pelajaran</span>
+                  <span>🔄 Ulang</span>
                 </button>
                 <button type="button" class="pill-toggle-btn" id="btnTamhidLulusNaik" data-val="Lulus Tamhid" title="Lulus Kitab Tamhid dan otomatis naik ke jenjang Tartil Al-Qur'an!">
-                  <span>🎓 Lulus Tamhid &rarr; Naik Tartil</span>
+                  <span>🎓 Lulus &rarr; Tartil</span>
                 </button>
               </div>
               <input type="hidden" id="inputTamhidStatus" value="Lanjut">
@@ -414,10 +414,10 @@
               <label class="form-label">📌 Status Tartil Hari Ini</label>
               <div class="pill-toggle-group">
                 <button type="button" class="pill-toggle-btn active-pink" id="btnTartilLanjut" data-val="Lanjut">
-                  <span>✅ Lanjut Halaman Tartil</span>
+                  <span>✅ Lanjut</span>
                 </button>
                 <button type="button" class="pill-toggle-btn" id="btnTartilUlang" data-val="Ulang">
-                  <span>🔄 Ulang Halaman</span>
+                  <span>🔄 Ulang</span>
                 </button>
               </div>
               <input type="hidden" id="inputTartilStatus" value="Lanjut">
@@ -448,10 +448,10 @@
             <label class="form-label">🎯 Jenis Setoran Hafalan</label>
             <div class="pill-toggle-group">
               <button type="button" class="pill-toggle-btn active-blue" id="btnHafalanZiyadah" data-val="Ziyadah">
-                <span>⭐ Ziyadah (Hafalan Baru)</span>
+                <span>⭐ Ziyadah</span>
               </button>
               <button type="button" class="pill-toggle-btn" id="btnHafalanMurojaah" data-val="Muroja'ah">
-                <span>🔄 Muroja'ah (Pengulangan)</span>
+                <span>🔄 Muroja'ah</span>
               </button>
             </div>
             <input type="hidden" id="inputHafalanJenis" value="Ziyadah">
@@ -516,7 +516,7 @@
                 <button type="button" class="star-btn" data-val="3">★</button>
                 <button type="button" class="star-btn" data-val="4">★</button>
                 <button type="button" class="star-btn" data-val="5">★</button>
-                <button type="button" class="star-btn-reset" data-reset="tajwid">✕ Batal</button>
+                <button type="button" class="star-btn-reset" data-reset="tajwid" title="Batal / Reset Penilaian">✕</button>
               </div>
             </div>
 
@@ -532,7 +532,7 @@
                 <button type="button" class="star-btn" data-val="3">★</button>
                 <button type="button" class="star-btn" data-val="4">★</button>
                 <button type="button" class="star-btn" data-val="5">★</button>
-                <button type="button" class="star-btn-reset" data-reset="kelancaran">✕ Batal</button>
+                <button type="button" class="star-btn-reset" data-reset="kelancaran" title="Batal / Reset Penilaian">✕</button>
               </div>
             </div>
 
@@ -548,7 +548,7 @@
                 <button type="button" class="star-btn" data-val="3">★</button>
                 <button type="button" class="star-btn" data-val="4">★</button>
                 <button type="button" class="star-btn" data-val="5">★</button>
-                <button type="button" class="star-btn-reset" data-reset="makhraj">✕ Batal</button>
+                <button type="button" class="star-btn-reset" data-reset="makhraj" title="Batal / Reset Penilaian">✕</button>
               </div>
             </div>
 

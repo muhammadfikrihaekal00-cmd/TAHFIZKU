@@ -16,6 +16,16 @@ const DEFAULT_SPREADSHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbw
 
 const MASTER_CLASSES = [
   {
+    name: "Kelas Dasar Ikhwan & Akhowat",
+    pengampu: "Ustadzah Ummu Khadijah",
+    kategori: "Dasar"
+  },
+  {
+    name: "Kelas Dasar Ikhwan",
+    pengampu: "Ustadzah Khirfatul Jannah",
+    kategori: "Dasar"
+  },
+  {
     name: "Kelas Menengah Ikhwan",
     pengampu: "Ustadz M. Fikri Haekal, C.LQ",
     kategori: "Menengah"
@@ -24,16 +34,6 @@ const MASTER_CLASSES = [
     name: "Kelas Menengah Akhowat",
     pengampu: "Ustadzah A. Lulu Aprilia Latifa",
     kategori: "Menengah"
-  },
-  {
-    name: "Kelas Dasar 1",
-    pengampu: "Ustadzah Ummu Khadijah",
-    kategori: "Dasar"
-  },
-  {
-    name: "Kelas Dasar 2",
-    pengampu: "Ustadzah Khirfatul Jannah",
-    kategori: "Dasar"
   }
 ];
 
@@ -170,168 +170,60 @@ const TAMHID_JILID_OPTIONS = [
   "Tamhid Jilid 4 (Ghunnah, Ikhfa & Waqaf)"
 ];
 
-// Data santri awal (menggunakan nomor urut, tanpa kode NIS)
+// Data santri resmi RQ Ummul Qasim (36 Santri, 4 Kelas)
 const MASTER_SANTRI = [
-  // 1. KELAS MENENGAH IKHWAN (Pengampu: Ustadz M. Fikri Haekal, C.LQ)
-  {
-    id: "S01",
-    nama: "Ahmad Rayyan Al-Fatih",
-    halaqah: "Kelas Menengah Ikhwan",
-    kategori: "Menengah",
-    avatar: "👦🏻",
-    foto: "",
-    statusBelajar: "Tartil Qur'an"
-  },
-  {
-    id: "S02",
-    nama: "Fathir Daniswara Putra",
-    halaqah: "Kelas Menengah Ikhwan",
-    kategori: "Menengah",
-    avatar: "👦🏼",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S03",
-    nama: "Yusuf Al-Qarni",
-    halaqah: "Kelas Menengah Ikhwan",
-    kategori: "Menengah",
-    avatar: "👦🏽",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S04",
-    nama: "Khalid Basalamah",
-    halaqah: "Kelas Menengah Ikhwan",
-    kategori: "Menengah",
-    avatar: "👦🏻",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
+  // 1. KELAS DASAR IKHWAN & AKHOWAT (Pengampu: Ustadzah Ummu Khadijah) - Kategori Dasar
+  { id: "S01", nama: "Ratu", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👧🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S02", nama: "Quena", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👧🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S03", nama: "Keenan", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S04", nama: "Indira", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👧🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S05", nama: "Khadijah", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👧🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S06", nama: "Harith", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S07", nama: "Firas", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏽", foto: "", statusBelajar: "Tamhid" },
+  { id: "S08", nama: "Razky", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S09", nama: "Aqmar", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏼", foto: "", statusBelajar: "Tamhid" },
 
-  // 2. KELAS MENENGAH AKHOWAT (Pengampu: Ustadzah A. Lulu Aprilia Latifa)
-  {
-    id: "S05",
-    nama: "Fatima Azzahra",
-    halaqah: "Kelas Menengah Akhowat",
-    kategori: "Menengah",
-    avatar: "👧🏻",
-    foto: "",
-    statusBelajar: "Tartil Qur'an"
-  },
-  {
-    id: "S06",
-    nama: "Maryam Humaira",
-    halaqah: "Kelas Menengah Akhowat",
-    kategori: "Menengah",
-    avatar: "🧕🏻",
-    foto: "",
-    statusBelajar: "Tartil Qur'an"
-  },
-  {
-    id: "S07",
-    nama: "Zahra Salsabila",
-    halaqah: "Kelas Menengah Akhowat",
-    kategori: "Menengah",
-    avatar: "🧕🏼",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
+  // 2. KELAS DASAR IKHWAN (Pengampu: Ustadzah Khirfatul Jannah) - Kategori Dasar
+  { id: "S10", nama: "Hafiz", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S11", nama: "Ibad", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S12", nama: "Fahri", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏽", foto: "", statusBelajar: "Tamhid" },
+  { id: "S13", nama: "Reyhan", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S14", nama: "Hafiz Ramadhan", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S15", nama: "Sulaiman", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏽", foto: "", statusBelajar: "Tamhid" },
+  { id: "S16", nama: "Fauzan", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S17", nama: "Adiyatma", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S18", nama: "Rafa", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏽", foto: "", statusBelajar: "Tamhid" },
+  { id: "S19", nama: "M. Rafasya", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
 
-  // 3. KELAS DASAR 1 (Pengampu: Ustadzah Ummu Khadijah)
-  {
-    id: "S08",
-    nama: "Muhammad Ziyad Rabbani",
-    halaqah: "Kelas Dasar 1",
-    kategori: "Dasar",
-    avatar: "🧒🏻",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S09",
-    nama: "Bilal Habasyi Ramadhan",
-    halaqah: "Kelas Dasar 1",
-    kategori: "Dasar",
-    avatar: "👦🏽",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S10",
-    nama: "Ibrahim Khalilullah",
-    halaqah: "Kelas Dasar 1",
-    kategori: "Dasar",
-    avatar: "👦🏻",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S11",
-    nama: "Aisyah Nuha Qanita",
-    halaqah: "Kelas Dasar 1",
-    kategori: "Dasar",
-    avatar: "👧🏻",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
+  // 3. KELAS MENENGAH IKHWAN (Pengampu: Ustadz M. Fikri Haekal, C.LQ) - Kategori Menengah
+  { id: "S20", nama: "Marcel", halaqah: "Kelas Menengah Ikhwan", kategori: "Menengah", avatar: "👦🏻", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S21", nama: "Saka", halaqah: "Kelas Menengah Ikhwan", kategori: "Menengah", avatar: "👦🏼", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S22", nama: "Daffa", halaqah: "Kelas Menengah Ikhwan", kategori: "Menengah", avatar: "👦🏽", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S23", nama: "Aufar", halaqah: "Kelas Menengah Ikhwan", kategori: "Menengah", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S24", nama: "Iffath", halaqah: "Kelas Menengah Ikhwan", kategori: "Menengah", avatar: "👦🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S25", nama: "Ahmad", halaqah: "Kelas Menengah Ikhwan", kategori: "Menengah", avatar: "👦🏽", foto: "", statusBelajar: "Tamhid" },
 
-  // 4. KELAS DASAR 2 (Pengampu: Ustadzah Khirfatul Jannah)
-  {
-    id: "S12",
-    nama: "Hafizh Al-Bukhari",
-    halaqah: "Kelas Dasar 2",
-    kategori: "Dasar",
-    avatar: "🧒🏼",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S13",
-    nama: "Syifa Naura Al-Madina",
-    halaqah: "Kelas Dasar 2",
-    kategori: "Dasar",
-    avatar: "👧🏼",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S14",
-    nama: "Kenzo Ar-Rasyid",
-    halaqah: "Kelas Dasar 2",
-    kategori: "Dasar",
-    avatar: "👦🏻",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S15",
-    nama: "Dzaki Al-Mubarak",
-    halaqah: "Kelas Dasar 2",
-    kategori: "Dasar",
-    avatar: "🧒🏻",
-    foto: "",
-    statusBelajar: "Tamhid"
-  },
-  {
-    id: "S16",
-    nama: "Naila Husna Syafiqah",
-    halaqah: "Kelas Dasar 2",
-    kategori: "Dasar",
-    avatar: "👧🏼",
-    foto: "",
-    statusBelajar: "Tamhid"
-  }
+  // 4. KELAS MENENGAH AKHOWAT (Pengampu: Ustadzah A. Lulu Aprilia Latifa) - Kategori Menengah
+  { id: "S26", nama: "Athifa", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏻", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S27", nama: "Fadiyah", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏼", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S28", nama: "Aura", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏻", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S29", nama: "Rubina", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏼", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S30", nama: "Lutfiyah", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏻", foto: "", statusBelajar: "Tartil Qur'an" },
+  { id: "S31", nama: "Ayla", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S32", nama: "Aulia", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S33", nama: "Inayah", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S34", nama: "Syifa", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏻", foto: "", statusBelajar: "Tamhid" },
+  { id: "S35", nama: "Wafira", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S36", nama: "Adibah", halaqah: "Kelas Menengah Akhowat", kategori: "Menengah", avatar: "🧕🏻", foto: "", statusBelajar: "Tamhid" }
 ];
 
-// Seed awal data mutaba'ah
+// Seed awal data mutaba'ah contoh berdasarkan santri resmi
 const INITIAL_SETORAN_RECORDS = [
   {
     id: "REC-001",
     tanggal: "2026-10-16",
-    santriId: "S01",
-    namaSantri: "Ahmad Rayyan Al-Fatih",
+    santriId: "S20",
+    namaSantri: "Marcel",
     halaqah: "Kelas Menengah Ikhwan",
     kategori: "Menengah",
     ustadz: "Ustadz M. Fikri Haekal, C.LQ",
@@ -350,13 +242,13 @@ const INITIAL_SETORAN_RECORDS = [
     bintangMakhraj: 5,
     totalBintang: 15,
     hafalanStatus: "Lulus",
-    hafalanCatatan: "Mumtaz! Hafalan mantap."
+    hafalanCatatan: "Mumtaz! Hafalan sangat lancar."
   },
   {
     id: "REC-002",
     tanggal: "2026-10-15",
-    santriId: "S01",
-    namaSantri: "Ahmad Rayyan Al-Fatih",
+    santriId: "S20",
+    namaSantri: "Marcel",
     halaqah: "Kelas Menengah Ikhwan",
     kategori: "Menengah",
     ustadz: "Ustadz M. Fikri Haekal, C.LQ",
@@ -380,8 +272,8 @@ const INITIAL_SETORAN_RECORDS = [
   {
     id: "REC-003",
     tanggal: "2026-10-16",
-    santriId: "S05",
-    namaSantri: "Fatima Azzahra",
+    santriId: "S26",
+    namaSantri: "Athifa",
     halaqah: "Kelas Menengah Akhowat",
     kategori: "Menengah",
     ustadz: "Ustadzah A. Lulu Aprilia Latifa",
@@ -405,9 +297,9 @@ const INITIAL_SETORAN_RECORDS = [
   {
     id: "REC-004",
     tanggal: "2026-10-16",
-    santriId: "S08",
-    namaSantri: "Muhammad Ziyad Rabbani",
-    halaqah: "Kelas Dasar 1",
+    santriId: "S01",
+    namaSantri: "Ratu",
+    halaqah: "Kelas Dasar Ikhwan & Akhowat",
     kategori: "Dasar",
     ustadz: "Ustadzah Ummu Khadijah",
     bacaanTipe: "Tamhid",
@@ -430,9 +322,9 @@ const INITIAL_SETORAN_RECORDS = [
   {
     id: "REC-005",
     tanggal: "2026-10-14",
-    santriId: "S08",
-    namaSantri: "Muhammad Ziyad Rabbani",
-    halaqah: "Kelas Dasar 1",
+    santriId: "S01",
+    namaSantri: "Ratu",
+    halaqah: "Kelas Dasar Ikhwan & Akhowat",
     kategori: "Dasar",
     ustadz: "Ustadzah Ummu Khadijah",
     bacaanTipe: "Tamhid",
@@ -455,9 +347,9 @@ const INITIAL_SETORAN_RECORDS = [
   {
     id: "REC-006",
     tanggal: "2026-10-15",
-    santriId: "S12",
-    namaSantri: "Hafizh Al-Bukhari",
-    halaqah: "Kelas Dasar 2",
+    santriId: "S10",
+    namaSantri: "Hafiz",
+    halaqah: "Kelas Dasar Ikhwan",
     kategori: "Dasar",
     ustadz: "Ustadzah Khirfatul Jannah",
     bacaanTipe: "Tamhid",

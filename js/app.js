@@ -12,8 +12,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const CLASS_TEACHER_MAP = {
+  "Kelas Dasar Ikhwan & Akhowat": { ustadz: "Ustadzah Ummu Khadijah", kategori: "Dasar" },
+  "Kelas Dasar Ikhwan": { ustadz: "Ustadzah Khirfatul Jannah", kategori: "Dasar" },
   "Kelas Menengah Ikhwan": { ustadz: "Ustadz M. Fikri Haekal, C.LQ", kategori: "Menengah" },
   "Kelas Menengah Akhowat": { ustadz: "Ustadzah A. Lulu Aprilia Latifa", kategori: "Menengah" },
+  // Backward compatibility:
   "Kelas Dasar 1": { ustadz: "Ustadzah Ummu Khadijah", kategori: "Dasar" },
   "Kelas Dasar 2": { ustadz: "Ustadzah Khirfatul Jannah", kategori: "Dasar" }
 };
@@ -828,11 +831,11 @@ const App = {
         if (bannerIcon) bannerIcon.textContent = "📅";
         if (this.currentCategoryFilter === "Dasar") {
           bannerTitle.textContent = "📅 Capaian Bintang Pekan Ini: Kategori Kelas Dasar (TK s/d 2 SD)";
-          bannerDesc.innerHTML = "Memantau keaktifan dan capaian bintang hafalan santri <strong>Kelas Dasar 1 & 2</strong> sepanjang pekan ini.";
-          if (badgeCategoryLabel) badgeCategoryLabel.textContent = "Santri Kelas Dasar 1 & 2 (Pekan Ini):";
+          bannerDesc.innerHTML = "Memantau keaktifan dan capaian bintang hafalan santri <strong>Kelas Dasar</strong> sepanjang pekan ini.";
+          if (badgeCategoryLabel) badgeCategoryLabel.textContent = "Santri Kelas Dasar (Pekan Ini):";
         } else if (this.currentCategoryFilter === "Menengah") {
           bannerTitle.textContent = "📅 Capaian Bintang Pekan Ini: Kategori Kelas Menengah (3 s/d 6 SD)";
-          bannerDesc.innerHTML = "Memantau keaktifan dan capaian bintang hafalan santri <strong>Kelas Menengah Ikhwan & Akhowat</strong> sepanjang pekan ini.";
+          bannerDesc.innerHTML = "Memantau keaktifan dan capaian bintang hafalan santri <strong>Kelas Menengah</strong> sepanjang pekan ini.";
           if (badgeCategoryLabel) badgeCategoryLabel.textContent = "Santri Kelas Menengah (Pekan Ini):";
         } else {
           bannerTitle.textContent = "📅 Capaian Bintang Pekan Ini (Senin – Ahad)";
@@ -843,7 +846,7 @@ const App = {
         if (bannerIcon) bannerIcon.textContent = "🏆";
         if (this.currentCategoryFilter === "Dasar") {
           bannerTitle.textContent = "🏆 Reward Bulanan: Kategori Kelas Dasar (TK s/d 2 SD)";
-          bannerDesc.innerHTML = "Hanya <strong>Juara 1 Kategori Kelas Dasar</strong> (Gabungan Kelas Dasar 1 & 2) yang berhak mendapatkan <strong>Hadiah Apresiasi (Reward) Bulanan</strong>!";
+          bannerDesc.innerHTML = "Hanya <strong>Juara 1 Kategori Kelas Dasar</strong> (Gabungan Kelas Dasar Ikhwan & Akhowat serta Kelas Dasar Ikhwan) yang berhak mendapatkan <strong>Hadiah Apresiasi (Reward) Bulanan</strong>!";
           if (badgeCategoryLabel) badgeCategoryLabel.textContent = "Peringkat Reward Santri Kelas Dasar:";
         } else if (this.currentCategoryFilter === "Menengah") {
           bannerTitle.textContent = "🏆 Reward Bulanan: Kategori Kelas Menengah (3 s/d 6 SD)";

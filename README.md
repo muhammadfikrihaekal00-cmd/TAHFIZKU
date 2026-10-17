@@ -9,12 +9,12 @@ Aplikasi web mutaba'ah hafalan Al-Qur'an (Tahfidz), Kitab Tamhid, dan Tartil Al-
 1. **4 Kelas Resmi & 4 Pengajar Resmi**:
    - **Kelas Menengah Ikhwan** — Pengampu: *Ustadz M. Fikri Haekal, C.LQ* (Kategori Menengah)
    - **Kelas Menengah Akhowat** — Pengampu: *Ustadzah A. Lulu Aprilia Latifa* (Kategori Menengah)
-   - **Kelas Dasar 1** — Pengampu: *Ustadzah Ummu Khadijah* (Kategori Dasar)
-   - **Kelas Dasar 2** — Pengampu: *Ustadzah Khirfatul Jannah* (Kategori Dasar)
+   - **Kelas Dasar Ikhwan & Akhowat** — Pengampu: *Ustadzah Ummu Khadijah* (Kategori Dasar)
+   - **Kelas Dasar Ikhwan** — Pengampu: *Ustadzah Khirfatul Jannah* (Kategori Dasar)
 
 2. **2 Kategori Capaian Reward Bulanan**:
    - **Kategori Kelas Menengah** (Gabungan Menengah Ikhwan & Akhowat) &rarr; **1 Juara Mendapat Reward**
-   - **Kategori Kelas Dasar** (Gabungan Dasar 1 & 2) &rarr; **1 Juara Mendapat Reward**
+   - **Kategori Kelas Dasar** (Gabungan Kelas Dasar Ikhwan & Akhowat serta Kelas Dasar Ikhwan) &rarr; **1 Juara Mendapat Reward**
 
 3. **Capaian Bintang Pekanan, Bulanan (Reward) & Akumulasi**:
    - Filter sederhana untuk memantau bintang ananda per pekan berjalan (Senin–Ahad) maupun reward bulanan.
