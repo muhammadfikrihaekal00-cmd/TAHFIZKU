@@ -2563,10 +2563,11 @@ body.is-ustadz .tab-btn.ustadz-only {
 }
 
 .login-school-title {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #334155;
-  margin-bottom: 2px;
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
 }
 
 .login-desc-title {
