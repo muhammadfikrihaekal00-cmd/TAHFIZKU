@@ -43,19 +43,19 @@
           <span id="authLabel">Masuk Ustadz/ah</span>
         </button>
 
-        <!-- Google Sheets Connection Status -->
-        <div class="status-pill ustadz-feature" id="sheetStatusPill" title="Pengaturan Spreadsheet" style="display: none;">
+        <!-- Google Sheets Connection Status (Khusus Admin) -->
+        <div class="status-pill ustadz-feature admin-only-feature" id="sheetStatusPill" title="Pengaturan Spreadsheet (Khusus Ustadz M. Fikri Haekal)" style="display: none;">
           <span class="status-dot offline" id="sheetStatusDot"></span>
           <span id="sheetStatusLabel">Spreadsheet</span>
         </div>
         
-        <!-- Add Santri -->
-        <button class="btn-icon ustadz-feature" id="btnAddSantriModal" title="Tambah Santri Baru" style="display: none;">
+        <!-- Add Santri (Khusus Admin) -->
+        <button class="btn-icon ustadz-feature admin-only-feature" id="btnAddSantriModal" title="Tambah & Kelola Santri (Khusus Ustadz M. Fikri Haekal)" style="display: none;">
           <span>➕</span>
         </button>
 
-        <!-- Settings -->
-        <button class="btn-icon ustadz-feature" id="btnOpenSettings" title="Pengaturan Sandi & Spreadsheet" style="display: none;">
+        <!-- Settings (Khusus Admin) -->
+        <button class="btn-icon ustadz-feature admin-only-feature" id="btnOpenSettings" title="Pengaturan Sandi & Spreadsheet (Khusus Ustadz M. Fikri Haekal)" style="display: none;">
           <span>⚙️</span>
         </button>
       </div>
@@ -218,7 +218,12 @@
             </div>
 
             <div class="student-hero-titles">
-              <h3 id="parentHeroName">Ahmad Rayyan Al-Fatih</h3>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <h3 id="parentHeroName">Ahmad Rayyan Al-Fatih</h3>
+                <button type="button" class="btn-text-action admin-only-feature" id="btnParentEditSantri" style="display: none; padding: 4px 10px; font-size: 0.78rem;" title="Edit Data Santri (Khusus Ustadz M. Fikri Haekal)">
+                  ✏️ Edit Santri
+                </button>
+              </div>
               <p id="parentHeroHalaqah">Kelas Menengah Ikhwan</p>
               <div style="margin-top: 6px;">
                 <span class="meta-badge" id="parentHeroRankBadge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: 800;">
@@ -314,7 +319,7 @@
             <div class="clean-field">
               <div class="label-with-action">
                 <label class="clean-label" for="selectSantri">👦 Nama Santri</label>
-                <button type="button" id="btnQuickAddSantri" class="btn-text-action">
+                <button type="button" id="btnQuickAddSantri" class="btn-text-action admin-only-feature" style="display: none;" title="Tambah Santri Baru (Khusus Ustadz M. Fikri Haekal)">
                   <span>➕ Tambah Santri</span>
                 </button>
               </div>
@@ -756,20 +761,39 @@
 
       <div class="modal-body">
         
-        <!-- Ubah Sandi Pengaman Ustadz -->
-        <div style="background: #fdf2f8; border: 1.5px solid #fecdd3; border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
-          <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--accent-pink-dark); margin-bottom: 8px;">
-            🔑 Ubah Sandi Pengaman Pengajar
-          </h4>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-            Sandi ini digunakan saat masuk sebagai pengajar agar data santri tetap terlindungi.
-          </p>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" class="form-control" id="inputNewPin" placeholder="Masukkan Sandi baru (misal: 1234)" style="font-weight: 700;">
-            <button type="button" class="btn-submit-main" id="btnSaveNewPin" style="margin-top: 0; width: auto; white-space: nowrap; padding: 10px 16px; background: var(--accent-pink);">
-              Simpan Sandi
-            </button>
+        <!-- Otoritas Khusus & Perubahan Sandi (Admin Utama: Ustadz M. Fikri Haekal) -->
+        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px solid #a7f3d0; border-radius: var(--radius-md); padding: 18px; margin-bottom: 22px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h4 style="font-size: 0.95rem; font-weight: 800; color: #047857;">
+              👑 Otoritas & Perubahan Sandi (Ustadz M. Fikri Haekal)
+            </h4>
+            <span style="font-size: 0.72rem; background: #047857; color: #fff; padding: 3px 8px; border-radius: 999px; font-weight: 700;">Admin Utama</span>
           </div>
+          <p style="font-size: 0.8rem; color: #065f46; margin-bottom: 14px; line-height: 1.4;">
+            Kelola sandi akses secara terpisah agar Ustadzah pengampu kelas hanya berfokus pada pengimputan setoran harian dan tidak dapat mengubah sandi, konfigurasi sistem, atau menambah santri.
+          </p>
+
+          <!-- 1. Sandi Admin Utama -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" for="inputAdminPin" style="color: #065f46; font-weight: 700;">
+              🔑 Sandi Admin Utama (Ustadz M. Fikri Haekal, C.LQ)
+            </label>
+            <input type="text" class="form-control" id="inputAdminPin" placeholder="Sandi Admin Utama (misal: 1234)" style="font-weight: 700; border-color: #a7f3d0;">
+            <span style="font-size: 0.72rem; color: #047857;">*Hak akses penuh: Mengubah sandi, konfigurasi spreadsheet, dan menginput/mengedit santri.</span>
+          </div>
+
+          <!-- 2. Sandi Pengajar Biasa -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="inputTeacherPin" style="color: #065f46; font-weight: 700;">
+              📖 Sandi Pengajar Biasa (Untuk Para Ustadzah)
+            </label>
+            <input type="text" class="form-control" id="inputTeacherPin" placeholder="Sandi Pengajar Kelas (misal: 1234)" style="font-weight: 700; border-color: #a7f3d0;">
+            <span style="font-size: 0.72rem; color: #047857;">*Sandi yang dibagikan ke Ustadzah (hanya bisa input mutaba'ah harian, fitur edit sistem terkunci).</span>
+          </div>
+
+          <button type="button" class="btn-submit-main" id="btnSaveNewPin" style="margin-top: 4px; width: 100%; padding: 11px 16px; background: #047857;">
+            <span>💾 Simpan Perubahan Sandi</span>
+          </button>
         </div>
 
         <!-- Google Spreadsheet Integration -->
@@ -812,60 +836,141 @@
 
 
   <!-- ===================================================================
-       MODAL: TAMBAH SANTRI BARU (DENGAN NOMOR URUT SAJA, TANPA NIS/KODE)
+       MODAL: TAMBAH & KELOLA SANTRI (KHUSUS USTADZ M. FIKRI HAEKAL)
        =================================================================== -->
   <div class="modal-overlay" id="modalAddSantri">
-    <div class="modal-dialog" style="max-width: 480px;">
+    <div class="modal-dialog" style="max-width: 520px;">
       <div class="modal-header">
         <div class="modal-title">
-          <span>➕ Tambah Santri Baru RQ</span>
+          <span>👥 Kelola & Tambah Santri (Khusus Admin)</span>
         </div>
         <button class="modal-close" data-close="modalAddSantri">&times;</button>
       </div>
 
-      <form id="formAddSantri" onsubmit="event.preventDefault(); App.submitNewSantriManual(event);">
+      <!-- Sub-Tab Navigasi di dalam Modal -->
+      <div class="modal-subnav" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 10px;">
+        <button type="button" class="modal-subnav-btn active" id="btnSubtabAddSantri" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #047857; background: #047857; color: #fff; font-weight: 700; cursor: pointer; font-size: 0.85rem;">
+          ➕ Tambah Santri
+        </button>
+        <button type="button" class="modal-subnav-btn" id="btnSubtabManageSantri" style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: #f8fafc; color: #475569; font-weight: 700; cursor: pointer; font-size: 0.85rem;">
+          📋 Daftar & Edit Santri (<span id="totalSantriBadge">0</span>)
+        </button>
+      </div>
+
+      <!-- PANEL 1: TAMBAH SANTRI BARU -->
+      <div id="panelAddSantri">
+        <form id="formAddSantri" onsubmit="event.preventDefault(); App.submitNewSantriManual(event);">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="newSantriNama">Nama Lengkap Santri</label>
+            <input type="text" class="form-control" id="newSantriNama" placeholder="Contoh: Muhammad Farhan" required style="font-size: 0.95rem;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="newSantriHalaqah">Pilih Kelas</label>
+            <select class="form-select" id="newSantriHalaqah" required style="font-weight: 700;">
+              <!-- 4 Kelas Resmi -->
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="newSantriJenjang">Jenjang Tilawah Awal</label>
+            <select class="form-select" id="newSantriJenjang">
+              <option value="Tamhid">Kitab Tamhid (Dasar)</option>
+              <option value="Tartil Qur'an">Tartil Al-Qur'an (Lulus Tamhid)</option>
+            </select>
+          </div>
+
+          <!-- Unggah Foto Anak (Opsional) -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="newSantriFoto">📷 Foto Santri (Opsional)</label>
+            <input type="file" class="form-control" id="newSantriFoto" accept="image/*">
+            <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Foto akan otomatis dikompres dan tampil di samping nama santri.</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label">Pilih Avatar Cadangan (Jika belum ada foto)</label>
+            <div style="display: flex; gap: 8px; font-size: 1.5rem;" id="avatarSelector">
+              <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👦🏻" checked> 👦🏻</label>
+              <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="🧒🏻"> 🧒🏻</label>
+              <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👦🏼"> 👦🏼</label>
+              <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👧🏻"> 👧🏻</label>
+              <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="🧕🏻"> 🧕🏻</label>
+            </div>
+          </div>
+
+          <!-- Tombol Simpan Santri Baru -->
+          <button type="button" class="btn-submit-main" id="btnSubmitNewSantri" onclick="App.submitNewSantriManual(event)" style="margin-top: 6px; background: #047857;">
+            <span>💾 Simpan Santri Baru</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- PANEL 2: DAFTAR & EDIT DATA SANTRI -->
+      <div id="panelManageSantri" style="display: none;">
+        <div style="margin-bottom: 12px;">
+          <input type="text" class="form-control" id="searchManageSantri" placeholder="🔍 Cari nama santri..." style="font-size: 0.88rem; padding: 9px 12px;">
+        </div>
+        <div id="manageSantriListContainer" style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+          <!-- Baris santri rendered dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: EDIT DATA SANTRI (KHUSUS USTADZ M. FIKRI HAEKAL)
+       =================================================================== -->
+  <div class="modal-overlay" id="modalEditSantri">
+    <div class="modal-dialog" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>✏️ Edit Data Santri (Khusus Admin)</span>
+        </div>
+        <button class="modal-close" data-close="modalEditSantri">&times;</button>
+      </div>
+
+      <form id="formEditSantri" onsubmit="event.preventDefault(); App.submitEditSantri(event);">
+        <input type="hidden" id="editSantriId">
+
         <div class="form-group" style="margin-bottom: 14px;">
-          <label class="form-label" for="newSantriNama">Nama Lengkap Santri</label>
-          <input type="text" class="form-control" id="newSantriNama" placeholder="Contoh: Muhammad Farhan" required style="font-size: 0.95rem;">
+          <label class="form-label" for="editSantriNama">Nama Lengkap Santri</label>
+          <input type="text" class="form-control" id="editSantriNama" required style="font-size: 0.95rem; font-weight: 700;">
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
-          <label class="form-label" for="newSantriHalaqah">Pilih Kelas</label>
-          <select class="form-select" id="newSantriHalaqah" required style="font-weight: 700;">
+          <label class="form-label" for="editSantriHalaqah">Pilih Kelas</label>
+          <select class="form-select" id="editSantriHalaqah" required style="font-weight: 700;">
             <!-- 4 Kelas Resmi -->
           </select>
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
-          <label class="form-label">Jenjang Tilawah Awal</label>
-          <select class="form-select" id="newSantriJenjang">
+          <label class="form-label" for="editSantriJenjang">Jenjang Tilawah</label>
+          <select class="form-select" id="editSantriJenjang">
             <option value="Tamhid">Kitab Tamhid (Dasar)</option>
             <option value="Tartil Qur'an">Tartil Al-Qur'an (Lulus Tamhid)</option>
           </select>
         </div>
 
-        <!-- Unggah Foto Anak (Opsional) -->
-        <div class="form-group" style="margin-bottom: 14px;">
-          <label class="form-label" for="newSantriFoto">📷 Foto Santri (Opsional)</label>
-          <input type="file" class="form-control" id="newSantriFoto" accept="image/*">
-          <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Foto akan otomatis dikompres dan tampil di samping nama santri.</span>
-        </div>
-
         <div class="form-group" style="margin-bottom: 18px;">
-          <label class="form-label">Pilih Avatar Cadangan (Jika belum ada foto)</label>
-          <div style="display: flex; gap: 8px; font-size: 1.5rem;" id="avatarSelector">
-            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👦🏻" checked> 👦🏻</label>
-            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="🧒🏻"> 🧒🏻</label>
-            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👦🏼"> 👦🏼</label>
-            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="👧🏻"> 👧🏻</label>
-            <label style="cursor: pointer;"><input type="radio" name="santriAvatar" value="🧕🏻"> 🧕🏻</label>
+          <label class="form-label">Ganti Avatar Emoji</label>
+          <div style="display: flex; gap: 8px; font-size: 1.5rem;" id="editAvatarSelector">
+            <label style="cursor: pointer;"><input type="radio" name="editSantriAvatar" value="👦🏻"> 👦🏻</label>
+            <label style="cursor: pointer;"><input type="radio" name="editSantriAvatar" value="🧒🏻"> 🧒🏻</label>
+            <label style="cursor: pointer;"><input type="radio" name="editSantriAvatar" value="👦🏼"> 👦🏼</label>
+            <label style="cursor: pointer;"><input type="radio" name="editSantriAvatar" value="👧🏻"> 👧🏻</label>
+            <label style="cursor: pointer;"><input type="radio" name="editSantriAvatar" value="🧕🏻"> 🧕🏻</label>
           </div>
         </div>
 
-        <!-- Tombol Simpan Santri Baru dengan event listener yang aman -->
-        <button type="button" class="btn-submit-main" id="btnSubmitNewSantri" onclick="App.submitNewSantriManual(event)" style="margin-top: 6px;">
-          <span>💾 Simpan Santri Baru</span>
-        </button>
+        <div style="display: flex; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-submit-main" id="btnSaveEditSantri" onclick="App.submitEditSantri(event)" style="flex: 2; margin-top: 0; background: #047857;">
+            <span>💾 Simpan Perubahan</span>
+          </button>
+          <button type="button" class="btn-submit-main" id="btnDeleteSantri" onclick="App.confirmDeleteSantri()" style="flex: 1; margin-top: 0; background: #e11d48;">
+            <span>🗑️ Hapus</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>

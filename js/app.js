@@ -51,6 +51,7 @@ const App = {
     this.setupDoaModule();
     this.setupSettingsModal();
     this.setupAddSantriModal();
+    this.setupEditSantriModal();
     this.setupPhotoUpload();
     this.updateSheetsStatusIndicator();
 
@@ -135,10 +136,11 @@ const App = {
     if (btnAuthToggle) {
       btnAuthToggle.addEventListener("click", () => {
         if (SheetsService.isUstadzLoggedIn()) {
-          if (confirm("Kunci kembali akses Pengajar dan kembali ke Panel Depan?")) {
+          const roleLabel = SheetsService.isAdmin() ? "Admin Utama (Ustadz M. Fikri Haekal)" : "Pengajar";
+          if (confirm(`Kunci kembali akses ${roleLabel} dan kembali ke Mode Wali Santri?`)) {
             SheetsService.logoutUstadz();
             this.setAuthState(false);
-            this.showToast("Akses pengajar telah dikunci 🔒", "success");
+            this.showToast(`Akses ${roleLabel} telah dikunci 🔒`, "success");
             if (loginPortal) {
               if (portalInputPin) portalInputPin.value = "";
               loginPortal.classList.add("active");
@@ -169,7 +171,12 @@ const App = {
         if (SheetsService.loginUstadz(ustadzName, pin)) {
           this.setAuthState(true, ustadzName);
           if (loginPortal) loginPortal.classList.remove("active");
-          this.showToast(`Ahlan wa Sahlan, ${ustadzName}! Akses pengajar terbuka 👳‍♂️`, "success");
+          const isAdmin = SheetsService.isAdmin();
+          if (isAdmin) {
+            this.showToast(`Ahlan wa Sahlan, ${ustadzName}! Akses Admin Utama aktif 👑`, "success");
+          } else {
+            this.showToast(`Ahlan wa Sahlan, ${ustadzName}! Akses Pengajar aktif 📖`, "success");
+          }
           
           // Cari kelas yang diampu pengajar ini dan set otomatis
           const foundClass = Object.keys(CLASS_TEACHER_MAP).find(k => CLASS_TEACHER_MAP[k].ustadz === ustadzName);
@@ -186,7 +193,11 @@ const App = {
 
           this.switchTab("tab-input");
         } else {
-          this.showToast("Kata sandi pengajar salah! Silakan coba lagi.", "error");
+          if (SheetsService.isAdminName(ustadzName)) {
+            this.showToast("Kata sandi salah! Profil Ustadz M. Fikri Haekal memerlukan Sandi Admin Utama khusus.", "error");
+          } else {
+            this.showToast("Kata sandi pengajar salah! Silakan coba lagi.", "error");
+          }
           if (portalInputPin) {
             portalInputPin.select();
           }
@@ -201,21 +212,71 @@ const App = {
     const btnAuth = document.getElementById("btnAuthToggle");
     const ustadzFeatures = document.querySelectorAll(".ustadz-feature");
     const headerTeacherText = document.getElementById("headerTeacherText");
+    const btnQuickAddSantri = document.getElementById("btnQuickAddSantri");
+    const btnParentEditSantri = document.getElementById("btnParentEditSantri");
+
+    const isAdmin = isUstadz && SheetsService.isAdmin();
 
     if (isUstadz) {
       document.body.classList.add("is-ustadz");
-      if (authIcon) authIcon.textContent = "🔓";
-      if (authLabel) authLabel.textContent = "Keluar Ustadz";
-      if (btnAuth) btnAuth.classList.add("logged-in");
-      if (headerTeacherText) headerTeacherText.textContent = `${ustadzName || "Pengampu RQ"} (Aktif)`;
-      ustadzFeatures.forEach(el => el.style.display = "inline-flex");
+      if (isAdmin) {
+        document.body.classList.add("is-admin");
+      } else {
+        document.body.classList.remove("is-admin");
+      }
+
+      if (authIcon) authIcon.textContent = isAdmin ? "👑" : "🔓";
+      if (authLabel) authLabel.textContent = isAdmin ? "Keluar (Admin)" : "Keluar (Pengajar)";
+      if (btnAuth) {
+        btnAuth.classList.add("logged-in");
+        if (isAdmin) {
+          btnAuth.classList.add("admin-badge");
+          btnAuth.title = "Login sebagai Admin Utama (Ustadz M. Fikri Haekal)";
+        } else {
+          btnAuth.classList.remove("admin-badge");
+          btnAuth.title = "Login sebagai Pengajar";
+        }
+      }
+      
+      if (headerTeacherText) {
+        headerTeacherText.textContent = isAdmin 
+          ? `${ustadzName || "Ustadz M. Fikri Haekal"} (Admin Utama 👑)`
+          : `${ustadzName || "Pengampu RQ"} (Pengajar 📖)`;
+      }
+
+      ustadzFeatures.forEach(el => {
+        if (el.classList.contains("admin-only-feature")) {
+          el.style.display = isAdmin ? "inline-flex" : "none";
+        } else {
+          el.style.display = "inline-flex";
+        }
+      });
+
+      if (btnQuickAddSantri) {
+        btnQuickAddSantri.style.display = isAdmin ? "inline-flex" : "none";
+      }
+      if (btnParentEditSantri) {
+        btnParentEditSantri.style.display = isAdmin ? "inline-flex" : "none";
+      }
+
     } else {
       document.body.classList.remove("is-ustadz");
+      document.body.classList.remove("is-admin");
       if (authIcon) authIcon.textContent = "🔒";
       if (authLabel) authLabel.textContent = "Masuk Ustadz/ah";
-      if (btnAuth) btnAuth.classList.remove("logged-in");
+      if (btnAuth) {
+        btnAuth.classList.remove("logged-in");
+        btnAuth.classList.remove("admin-badge");
+        btnAuth.title = "Beralih peran Ustadz / Wali Santri";
+      }
       if (headerTeacherText) headerTeacherText.textContent = "Portal Mutaba'ah & Kontrol Hafalan";
       ustadzFeatures.forEach(el => el.style.display = "none");
+      if (btnQuickAddSantri) {
+        btnQuickAddSantri.style.display = "none";
+      }
+      if (btnParentEditSantri) {
+        btnParentEditSantri.style.display = "none";
+      }
     }
   },
 
@@ -515,10 +576,15 @@ const App = {
       });
     }
 
-    // Quick Add Santri Button inside input panel
+    // Quick Add Santri Button inside input panel (Khusus Admin Utama)
     const btnQuickAddSantri = document.getElementById("btnQuickAddSantri");
     if (btnQuickAddSantri) {
       btnQuickAddSantri.addEventListener("click", () => {
+        if (!SheetsService.isAdmin()) {
+          this.showToast("Akses Terbatas: Hanya Ustadz M. Fikri Haekal yang berwenang menambahkan santri baru.", "error");
+          return;
+        }
+        this.switchSantriModalSubtab("add");
         const modal = document.getElementById("modalAddSantri");
         if (modal) modal.classList.add("active");
       });
@@ -1217,7 +1283,7 @@ const App = {
     }
   },
 
-  // 8. Fitur Upload Foto Santri
+  // 8. Fitur Upload Foto Santri (Khusus Admin Utama: Ustadz M. Fikri Haekal)
   setupPhotoUpload() {
     const fileInput = document.getElementById("globalPhotoInput");
     if (!fileInput) return;
@@ -1225,6 +1291,13 @@ const App = {
     fileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file || !this.targetPhotoSantriId) return;
+
+      if (!SheetsService.isAdmin()) {
+        this.showToast("Akses Terbatas: Hanya Ustadz M. Fikri Haekal yang berwenang mengubah foto santri.", "error");
+        fileInput.value = "";
+        this.targetPhotoSantriId = null;
+        return;
+      }
 
       this.compressAndSavePhoto(file, (compressedBase64) => {
         SheetsService.updateSantriPhoto(this.targetPhotoSantriId, compressedBase64);
@@ -1249,6 +1322,10 @@ const App = {
   },
 
   triggerPhotoUpload(santriId) {
+    if (!SheetsService.isAdmin()) {
+      this.showToast("Akses Khusus: Hanya Ustadz M. Fikri Haekal yang berwenang mengunggah/mengubah foto santri.", "info");
+      return;
+    }
     this.targetPhotoSantriId = santriId;
     const fileInput = document.getElementById("globalPhotoInput");
     if (fileInput) fileInput.click();
@@ -1363,6 +1440,12 @@ const App = {
     document.getElementById("parentHeroName").textContent = santri.nama;
     document.getElementById("parentHeroHalaqah").textContent = `${santri.halaqah} (Kategori ${santri.kategori})`;
     
+    const btnEditSantri = document.getElementById("btnParentEditSantri");
+    if (btnEditSantri) {
+      btnEditSantri.onclick = () => this.openEditSantri(santri.id);
+      btnEditSantri.style.display = SheetsService.isAdmin() ? "inline-flex" : "none";
+    }
+    
     const rankBadge = document.getElementById("parentHeroRankBadge");
     if (rankBadge) {
       if (rankIndex === 1) {
@@ -1461,11 +1544,18 @@ const App = {
             ? `<span class="meta-badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">✅ Lulus</span>`
             : `<span class="meta-badge" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca;">🔄 Perbaiki</span>`;
 
+          const adminDelBtn = SheetsService.isAdmin()
+            ? `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${r.id}')" style="padding:2px 8px; font-size:0.7rem; margin-left:8px;" title="Hapus catatan evaluasi ini (Khusus Admin)">🗑️ Hapus</button>`
+            : '';
+
           return `
             <div class="timeline-card">
               <div class="timeline-header">
                 <span class="timeline-date">📅 ${dateStr}</span>
-                <span class="timeline-ustadz">👳‍♂️ ${r.ustadz || "Pengampu RQ"}</span>
+                <div style="display:flex; align-items:center;">
+                  <span class="timeline-ustadz">👳‍♂️ ${r.ustadz || "Pengampu RQ"}</span>
+                  ${adminDelBtn}
+                </div>
               </div>
 
               <div class="timeline-body-grid">
@@ -1567,7 +1657,8 @@ const App = {
     const btnTest = document.getElementById("btnTestSheets");
     const btnCopy = document.getElementById("btnCopyScript");
     const codeBlock = document.getElementById("scriptCodeBlock");
-    const inputNewPin = document.getElementById("inputNewPin");
+    const inputAdminPin = document.getElementById("inputAdminPin");
+    const inputTeacherPin = document.getElementById("inputTeacherPin");
     const btnSaveNewPin = document.getElementById("btnSaveNewPin");
 
     if (codeBlock) {
@@ -1672,9 +1763,14 @@ function createJsonResponse(data) {
     }
 
     const openModal = () => {
+      if (!SheetsService.isAdmin()) {
+        this.showToast("Akses Khusus: Menu Pengaturan hanya dapat diakses oleh Ustadz M. Fikri Haekal, C.LQ.", "error");
+        return;
+      }
       const settings = SheetsService.getSettings();
       if (inputUrl) inputUrl.value = settings.endpointUrl || "";
-      if (inputNewPin) inputNewPin.value = SheetsService.getSecurityPin();
+      if (inputAdminPin) inputAdminPin.value = SheetsService.getAdminPin();
+      if (inputTeacherPin) inputTeacherPin.value = SheetsService.getTeacherPin();
       modal.classList.add("active");
     };
 
@@ -1687,18 +1783,31 @@ function createJsonResponse(data) {
 
     if (btnSaveNewPin) {
       btnSaveNewPin.addEventListener("click", () => {
-        const newPin = inputNewPin.value.trim();
-        if (!newPin) {
-          this.showToast("Sandi tidak boleh kosong!", "error");
+        if (!SheetsService.isAdmin()) {
+          this.showToast("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang mengubah sandi!", "error");
           return;
         }
-        SheetsService.setSecurityPin(newPin);
-        this.showToast(`Sandi pengaman berhasil diperbarui menjadi: "${newPin}"`, "success");
+        const adminPin = inputAdminPin ? inputAdminPin.value.trim() : "";
+        const teacherPin = inputTeacherPin ? inputTeacherPin.value.trim() : "";
+        if (!adminPin || !teacherPin) {
+          this.showToast("Sandi Admin dan Sandi Pengajar tidak boleh kosong!", "error");
+          return;
+        }
+        const res = SheetsService.setSecurityPins(adminPin, teacherPin);
+        if (res.success) {
+          this.showToast("Sandi Admin Utama & Sandi Pengajar berhasil diperbarui! 🔑", "success");
+        } else {
+          this.showToast(res.message, "error");
+        }
       });
     }
 
     if (btnSave) {
       btnSave.addEventListener("click", () => {
+        if (!SheetsService.isAdmin()) {
+          this.showToast("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang mengubah integrasi spreadsheet!", "error");
+          return;
+        }
         const url = inputUrl.value.trim();
         const settings = SheetsService.getSettings();
         settings.endpointUrl = url;
@@ -1775,24 +1884,270 @@ function createJsonResponse(data) {
     }, 20000);
   },
 
-  // 11. Modal Tambah Santri Baru (DIPERBAIKI 100% AMAN & NOMOR URUT SAJA)
+  // 11. Modal Tambah & Kelola Santri (Khusus Ustadz M. Fikri Haekal)
   setupAddSantriModal() {
     const modal = document.getElementById("modalAddSantri");
     const btnOpen = document.getElementById("btnAddSantriModal");
     const closeBtns = document.querySelectorAll('[data-close="modalAddSantri"]');
+    const btnSubtabAdd = document.getElementById("btnSubtabAddSantri");
+    const btnSubtabManage = document.getElementById("btnSubtabManageSantri");
+    const halaqahSelect = document.getElementById("newSantriHalaqah");
+    const searchInput = document.getElementById("searchManageSantri");
+
+    if (halaqahSelect) {
+      halaqahSelect.innerHTML = MASTER_HALAQAH.map(h => `<option value="${h}">${h}</option>`).join("");
+    }
 
     if (btnOpen) {
-      btnOpen.addEventListener("click", () => modal.classList.add("active"));
+      btnOpen.addEventListener("click", () => {
+        if (!SheetsService.isAdmin()) {
+          this.showToast("Akses Terbatas: Hanya Ustadz M. Fikri Haekal yang berwenang menambah & mengelola santri.", "error");
+          return;
+        }
+        this.switchSantriModalSubtab("add");
+        modal.classList.add("active");
+      });
     }
 
     closeBtns.forEach(btn => {
       btn.addEventListener("click", () => modal.classList.remove("active"));
     });
+
+    if (btnSubtabAdd) {
+      btnSubtabAdd.addEventListener("click", () => this.switchSantriModalSubtab("add"));
+    }
+    if (btnSubtabManage) {
+      btnSubtabManage.addEventListener("click", () => this.switchSantriModalSubtab("manage"));
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener("input", () => this.renderManageSantriList());
+    }
   },
 
-  // Fungsi Tambah Santri Langsung (Bisa dipanggil dari form submit maupun tombol klik)
+  switchSantriModalSubtab(tab) {
+    const panelAdd = document.getElementById("panelAddSantri");
+    const panelManage = document.getElementById("panelManageSantri");
+    const btnAdd = document.getElementById("btnSubtabAddSantri");
+    const btnManage = document.getElementById("btnSubtabManageSantri");
+
+    if (tab === "add") {
+      if (panelAdd) panelAdd.style.display = "block";
+      if (panelManage) panelManage.style.display = "none";
+      if (btnAdd) btnAdd.classList.add("active");
+      if (btnManage) btnManage.classList.remove("active");
+    } else {
+      if (panelAdd) panelAdd.style.display = "none";
+      if (panelManage) panelManage.style.display = "block";
+      if (btnAdd) btnAdd.classList.remove("active");
+      if (btnManage) btnManage.classList.add("active");
+      this.renderManageSantriList();
+    }
+  },
+
+  renderManageSantriList() {
+    const container = document.getElementById("manageSantriListContainer");
+    const badge = document.getElementById("totalSantriBadge");
+    const searchVal = (document.getElementById("searchManageSantri")?.value || "").toLowerCase().trim();
+    const allSantri = SheetsService.getAllSantri();
+
+    if (badge) badge.textContent = allSantri.length;
+    if (!container) return;
+
+    let filtered = allSantri;
+    if (searchVal) {
+      filtered = filtered.filter(s => s.nama.toLowerCase().includes(searchVal) || s.halaqah.toLowerCase().includes(searchVal));
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 25px; color: var(--text-muted); background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+          Tidak ada santri yang cocok dengan pencarian "${searchVal}"
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(s => {
+      const avatarHtml = s.foto 
+        ? `<img src="${s.foto}" alt="${s.nama}">` 
+        : `<span>${s.avatar || "👦🏻"}</span>`;
+      return `
+        <div class="manage-santri-row">
+          <div class="manage-santri-info">
+            <div class="manage-santri-avatar" onclick="App.triggerPhotoUpload('${s.id}')" style="cursor: pointer;" title="Klik untuk ganti foto">
+              ${avatarHtml}
+            </div>
+            <div class="manage-santri-details">
+              <div class="manage-santri-name">${s.nama}</div>
+              <div class="manage-santri-sub">${s.halaqah} • ${s.statusBelajar || "Tamhid"}</div>
+            </div>
+          </div>
+          <div class="manage-santri-actions">
+            <button type="button" class="btn-manage-edit" onclick="App.openEditSantri('${s.id}')" title="Edit data santri">
+              ✏️ Edit
+            </button>
+            <button type="button" class="btn-manage-del" onclick="App.deleteSantriDirect('${s.id}')" title="Hapus santri ini">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  },
+
+  // 12. Modal Edit Data Santri (Khusus Ustadz M. Fikri Haekal)
+  setupEditSantriModal() {
+    const modal = document.getElementById("modalEditSantri");
+    const closeBtns = document.querySelectorAll('[data-close="modalEditSantri"]');
+    const editHalaqahSelect = document.getElementById("editSantriHalaqah");
+
+    if (editHalaqahSelect) {
+      editHalaqahSelect.innerHTML = MASTER_HALAQAH.map(h => `<option value="${h}">${h}</option>`).join("");
+    }
+
+    closeBtns.forEach(btn => {
+      btn.addEventListener("click", () => modal && modal.classList.remove("active"));
+    });
+  },
+
+  openEditSantri(santriId) {
+    if (!SheetsService.isAdmin()) {
+      this.showToast("Akses Terbatas: Hanya Ustadz M. Fikri Haekal yang berwenang mengedit data santri.", "error");
+      return;
+    }
+    const santri = SheetsService.getAllSantri().find(s => s.id === santriId);
+    if (!santri) return;
+
+    const modal = document.getElementById("modalEditSantri");
+    const inputId = document.getElementById("editSantriId");
+    const inputNama = document.getElementById("editSantriNama");
+    const selectHalaqah = document.getElementById("editSantriHalaqah");
+    const selectJenjang = document.getElementById("editSantriJenjang");
+    const avatarRadios = document.querySelectorAll('input[name="editSantriAvatar"]');
+
+    if (inputId) inputId.value = santri.id;
+    if (inputNama) inputNama.value = santri.nama;
+    if (selectHalaqah) selectHalaqah.value = santri.halaqah;
+    if (selectJenjang) selectJenjang.value = santri.statusBelajar || "Tamhid";
+
+    avatarRadios.forEach(radio => {
+      radio.checked = (radio.value === santri.avatar);
+    });
+
+    if (modal) modal.classList.add("active");
+  },
+
+  submitEditSantri(event) {
+    if (event) event.preventDefault();
+    if (!SheetsService.isAdmin()) {
+      this.showToast("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang mengubah data santri.", "error");
+      return;
+    }
+
+    const id = document.getElementById("editSantriId")?.value;
+    const nama = document.getElementById("editSantriNama")?.value.trim();
+    const halaqah = document.getElementById("editSantriHalaqah")?.value;
+    const statusBelajar = document.getElementById("editSantriJenjang")?.value;
+    const avatar = document.querySelector('input[name="editSantriAvatar"]:checked')?.value || "👦🏻";
+
+    if (!id || !nama) {
+      this.showToast("Nama santri tidak boleh kosong!", "error");
+      return;
+    }
+
+    const kategori = (CLASS_TEACHER_MAP[halaqah] && CLASS_TEACHER_MAP[halaqah].kategori) ? CLASS_TEACHER_MAP[halaqah].kategori : "Menengah";
+
+    try {
+      SheetsService.updateSantri(id, { nama, halaqah, kategori, statusBelajar, avatar });
+      this.refreshSantriDropdowns();
+      this.renderLeaderboard();
+      this.renderParentPortal();
+      this.renderManageSantriList();
+
+      const modal = document.getElementById("modalEditSantri");
+      if (modal) modal.classList.remove("active");
+
+      this.showToast(`Data santri "${nama}" berhasil diperbarui! ✅`, "success");
+    } catch (e) {
+      this.showToast("Gagal memperbarui santri: " + e.message, "error");
+    }
+  },
+
+  confirmDeleteSantri() {
+    const id = document.getElementById("editSantriId")?.value;
+    const nama = document.getElementById("editSantriNama")?.value;
+    if (!id) return;
+    if (!SheetsService.isAdmin()) {
+      this.showToast("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menghapus santri.", "error");
+      return;
+    }
+
+    if (confirm(`Apakah Anda yakin ingin menghapus santri "${nama}" dari database?`)) {
+      try {
+        SheetsService.deleteSantri(id);
+        this.refreshSantriDropdowns();
+        this.renderLeaderboard();
+        this.renderParentPortal();
+        this.renderManageSantriList();
+
+        const modal = document.getElementById("modalEditSantri");
+        if (modal) modal.classList.remove("active");
+
+        this.showToast(`Santri "${nama}" telah dihapus.`, "success");
+      } catch (e) {
+        this.showToast("Gagal menghapus santri: " + e.message, "error");
+      }
+    }
+  },
+
+  deleteSantriDirect(santriId) {
+    if (!SheetsService.isAdmin()) {
+      this.showToast("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menghapus santri.", "error");
+      return;
+    }
+    const santri = SheetsService.getAllSantri().find(s => s.id === santriId);
+    const nama = santri ? santri.nama : "santri ini";
+
+    if (confirm(`Apakah Anda yakin ingin menghapus santri "${nama}"?`)) {
+      try {
+        SheetsService.deleteSantri(santriId);
+        this.refreshSantriDropdowns();
+        this.renderLeaderboard();
+        this.renderParentPortal();
+        this.renderManageSantriList();
+        this.showToast(`Santri "${nama}" berhasil dihapus.`, "success");
+      } catch (e) {
+        this.showToast("Gagal menghapus santri: " + e.message, "error");
+      }
+    }
+  },
+
+  deleteSetoranRecord(recordId) {
+    if (!SheetsService.isAdmin()) {
+      this.showToast("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menghapus evaluasi setoran.", "error");
+      return;
+    }
+    if (confirm("Apakah Anda yakin ingin menghapus catatan evaluasi ini?")) {
+      const res = SheetsService.deleteRecord(recordId);
+      if (res.success) {
+        this.renderLeaderboard();
+        this.renderParentPortal();
+        this.showToast("Catatan evaluasi setoran berhasil dihapus.", "success");
+      } else {
+        this.showToast(res.message, "error");
+      }
+    }
+  },
+
+  // Fungsi Tambah Santri Langsung (Khusus Ustadz M. Fikri Haekal)
   submitNewSantriManual(event) {
     if (event) event.preventDefault();
+
+    if (!SheetsService.isAdmin()) {
+      this.showToast("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menginput data santri baru!", "error");
+      return;
+    }
 
     const namaInput = document.getElementById("newSantriNama");
     const halaqahSelect = document.getElementById("newSantriHalaqah");
@@ -1830,6 +2185,7 @@ function createJsonResponse(data) {
         SheetsService.addSantri(newSantri);
         this.refreshSantriDropdowns();
         this.renderLeaderboard();
+        this.renderManageSantriList();
 
         this.showToast(`Santri "${nama}" berhasil ditambahkan ke ${halaqah}! 🎉`, "success");
         if (form) form.reset();

@@ -9,16 +9,48 @@ const STORAGE_KEY_AUTH = "rq_ummul_qasim_auth_session_v4";
 const STORAGE_KEY_CURRENT_USTADZ = "rq_ummul_qasim_current_ustadz_v4";
 
 const SheetsService = {
-  // Autentikasi Ustadz
-  getSecurityPin() {
+  // Autentikasi Pengajar & Pembagian Hak Akses (Khusus Ustadz M. Fikri Haekal sebagai Admin Utama)
+  isAdminName(name) {
+    if (!name) return false;
+    const lower = name.toLowerCase();
+    return lower.includes("fikri") || lower.includes("haekal");
+  },
+
+  isAdmin() {
+    if (!this.isUstadzLoggedIn()) return false;
+    return this.isAdminName(this.getCurrentUstadz());
+  },
+
+  getAdminPin() {
     const settings = this.getSettings();
-    return settings.securityPin || DEFAULT_SECURITY_PIN;
+    return (settings.adminPin || settings.securityPin || DEFAULT_SECURITY_PIN).trim();
+  },
+
+  getTeacherPin() {
+    const settings = this.getSettings();
+    return (settings.teacherPin || settings.securityPin || DEFAULT_SECURITY_PIN).trim();
+  },
+
+  getSecurityPin() {
+    return this.getAdminPin();
+  },
+
+  setSecurityPins(adminPin, teacherPin) {
+    if (!this.isAdmin()) {
+      return { success: false, message: "Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang mengubah sandi pengaman." };
+    }
+    const settings = this.getSettings();
+    if (adminPin && adminPin.trim()) settings.adminPin = adminPin.trim();
+    if (teacherPin && teacherPin.trim()) settings.teacherPin = teacherPin.trim();
+    settings.securityPin = settings.adminPin; // backward compatibility
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    return { success: true, message: "Sandi pengaman berhasil diperbarui!" };
   },
 
   setSecurityPin(newPin) {
-    const settings = this.getSettings();
-    settings.securityPin = newPin.trim();
-    this.saveSettings(settings);
+    if (!this.isAdmin()) return false;
+    const res = this.setSecurityPins(newPin, null);
+    return res.success;
   },
 
   isUstadzLoggedIn() {
@@ -34,13 +66,30 @@ const SheetsService = {
   },
 
   loginUstadz(ustadzName, enteredPin) {
-    const correctPin = this.getSecurityPin();
-    if (enteredPin.trim() === correctPin) {
-      localStorage.setItem(STORAGE_KEY_AUTH, "true");
-      localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName || MASTER_USTADZ[0]);
-      return true;
+    const cleanPin = (enteredPin || "").trim();
+    if (!cleanPin) return false;
+
+    const isTargetAdmin = this.isAdminName(ustadzName);
+    const adminPin = this.getAdminPin();
+    const teacherPin = this.getTeacherPin();
+
+    if (isTargetAdmin) {
+      // Khusus Ustadz M. Fikri Haekal: WAJIB mencocokkan Sandi Admin
+      if (cleanPin === adminPin) {
+        localStorage.setItem(STORAGE_KEY_AUTH, "true");
+        localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName || MASTER_USTADZ[0]);
+        return true;
+      }
+      return false;
+    } else {
+      // Pengajar lain (Ustadzah): dapat menggunakan Sandi Pengajar ATAU Sandi Admin
+      if (cleanPin === teacherPin || cleanPin === adminPin) {
+        localStorage.setItem(STORAGE_KEY_AUTH, "true");
+        localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName);
+        return true;
+      }
+      return false;
     }
-    return false;
   },
 
   logoutUstadz() {
@@ -66,12 +115,19 @@ const SheetsService = {
     }
     return {
       endpointUrl: (typeof DEFAULT_SPREADSHEET_ENDPOINT !== "undefined") ? DEFAULT_SPREADSHEET_ENDPOINT : "",
-      securityPin: DEFAULT_SECURITY_PIN
+      securityPin: DEFAULT_SECURITY_PIN,
+      adminPin: DEFAULT_SECURITY_PIN,
+      teacherPin: DEFAULT_SECURITY_PIN
     };
   },
 
   saveSettings(settings) {
+    if (!this.isAdmin()) {
+      console.warn("Hanya Ustadz M. Fikri Haekal yang berwenang menyimpan konfigurasi spreadsheet.");
+      return false;
+    }
     localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    return true;
   },
 
   // Simpan data setoran
@@ -148,7 +204,7 @@ const SheetsService = {
     return [...INITIAL_SETORAN_RECORDS];
   },
 
-  // Master Santri & Update Foto
+  // Master Santri, Kelola Santri & Update Foto (Khusus Ustadz M. Fikri Haekal)
   getAllSantri() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SANTRI);
@@ -166,13 +222,44 @@ const SheetsService = {
   },
 
   addSantri(santri) {
+    if (!this.isAdmin()) {
+      throw new Error("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menambahkan santri baru.");
+    }
     const santriList = this.getAllSantri();
     santriList.push(santri);
     localStorage.setItem(STORAGE_KEY_SANTRI, JSON.stringify(santriList));
     return santriList;
   },
 
+  updateSantri(santriId, updatedFields) {
+    if (!this.isAdmin()) {
+      throw new Error("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang mengubah data santri.");
+    }
+    const santriList = this.getAllSantri();
+    const idx = santriList.findIndex(s => s.id === santriId);
+    if (idx !== -1) {
+      santriList[idx] = { ...santriList[idx], ...updatedFields };
+      localStorage.setItem(STORAGE_KEY_SANTRI, JSON.stringify(santriList));
+      return santriList[idx];
+    }
+    return null;
+  },
+
+  deleteSantri(santriId) {
+    if (!this.isAdmin()) {
+      throw new Error("Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menghapus data santri.");
+    }
+    let santriList = this.getAllSantri();
+    santriList = santriList.filter(s => s.id !== santriId);
+    localStorage.setItem(STORAGE_KEY_SANTRI, JSON.stringify(santriList));
+    return santriList;
+  },
+
   updateSantriPhoto(santriId, photoDataUrl) {
+    if (!this.isAdmin()) {
+      console.warn("Akses ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang mengubah foto santri.");
+      return false;
+    }
     const santriList = this.getAllSantri();
     const found = santriList.find(s => s.id === santriId);
     if (found) {
@@ -181,6 +268,16 @@ const SheetsService = {
       return true;
     }
     return false;
+  },
+
+  deleteRecord(recordId) {
+    if (!this.isAdmin()) {
+      return { success: false, message: "Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menghapus riwayat setoran." };
+    }
+    let records = this.getAllRecords();
+    records = records.filter(r => r.id !== recordId);
+    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(records));
+    return { success: true };
   },
 
   async testConnection(url) {
