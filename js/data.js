@@ -9,7 +9,9 @@
  * Kategori Reward: HANYA 2 (1 Juara Kelas Menengah & 1 Juara Kelas Dasar)
  */
 
-const DEFAULT_SECURITY_PIN = "1234";
+const DEFAULT_SECURITY_PIN = "1122";
+const DEFAULT_ADMIN_PIN = "1122";
+const DEFAULT_TEACHER_PIN = "1234";
 
 // URL Google Apps Script Web App Bawaan (Dapat diisi di sini agar seluruh perangkat/wali langsung tersambung otomatis)
 const DEFAULT_SPREADSHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbwVJvHXK2s_M9J-gs94m0W-0cJYNCvzDThKaseEmtdOJRLtD8R4IurpLngCC_ZMuyFa/exec";

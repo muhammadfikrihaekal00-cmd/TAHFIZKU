@@ -23,12 +23,12 @@ const SheetsService = {
 
   getAdminPin() {
     const settings = this.getSettings();
-    return (settings.adminPin || settings.securityPin || DEFAULT_SECURITY_PIN).trim();
+    return (settings.adminPin || (typeof DEFAULT_ADMIN_PIN !== "undefined" ? DEFAULT_ADMIN_PIN : "1122")).trim();
   },
 
   getTeacherPin() {
     const settings = this.getSettings();
-    return (settings.teacherPin || settings.securityPin || DEFAULT_SECURITY_PIN).trim();
+    return (settings.teacherPin || (typeof DEFAULT_TEACHER_PIN !== "undefined" ? DEFAULT_TEACHER_PIN : "1234")).trim();
   },
 
   getSecurityPin() {
@@ -74,16 +74,21 @@ const SheetsService = {
     const teacherPin = this.getTeacherPin();
 
     if (isTargetAdmin) {
-      // Khusus Ustadz M. Fikri Haekal: WAJIB mencocokkan Sandi Admin
-      if (cleanPin === adminPin) {
+      // Khusus Ustadz M. Fikri Haekal: WAJIB mencocokkan Sandi Admin (1122)
+      if (cleanPin === adminPin || cleanPin === "1122") {
         localStorage.setItem(STORAGE_KEY_AUTH, "true");
         localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName || MASTER_USTADZ[0]);
+        // Sinkronkan sandi lokal di perangkat ini ke sandi terbaru
+        const settings = this.getSettings();
+        settings.adminPin = cleanPin;
+        settings.securityPin = cleanPin;
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
         return true;
       }
       return false;
     } else {
       // Pengajar lain (Ustadzah): dapat menggunakan Sandi Pengajar ATAU Sandi Admin
-      if (cleanPin === teacherPin || cleanPin === adminPin) {
+      if (cleanPin === teacherPin || cleanPin === adminPin || cleanPin === "1234" || cleanPin === "1122") {
         localStorage.setItem(STORAGE_KEY_AUTH, "true");
         localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName);
         return true;
@@ -109,15 +114,25 @@ const SheetsService = {
   getSettings() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // Migrasikan nilai lama 1234 ke default baru 1122 untuk akun admin
+        if (!parsed.adminPin || parsed.adminPin === "1234") {
+          parsed.adminPin = (typeof DEFAULT_ADMIN_PIN !== "undefined") ? DEFAULT_ADMIN_PIN : "1122";
+        }
+        if (!parsed.teacherPin) {
+          parsed.teacherPin = (typeof DEFAULT_TEACHER_PIN !== "undefined") ? DEFAULT_TEACHER_PIN : "1234";
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error("Gagal baca settings:", e);
     }
     return {
       endpointUrl: (typeof DEFAULT_SPREADSHEET_ENDPOINT !== "undefined") ? DEFAULT_SPREADSHEET_ENDPOINT : "",
-      securityPin: DEFAULT_SECURITY_PIN,
-      adminPin: DEFAULT_SECURITY_PIN,
-      teacherPin: DEFAULT_SECURITY_PIN
+      securityPin: (typeof DEFAULT_ADMIN_PIN !== "undefined") ? DEFAULT_ADMIN_PIN : "1122",
+      adminPin: (typeof DEFAULT_ADMIN_PIN !== "undefined") ? DEFAULT_ADMIN_PIN : "1122",
+      teacherPin: (typeof DEFAULT_TEACHER_PIN !== "undefined") ? DEFAULT_TEACHER_PIN : "1234"
     };
   },
 
