@@ -71,61 +71,107 @@ const App = {
     }
   },
 
-  // 1. Autentikasi Pengajar (Hanya 4 Pengajar Resmi)
+  // 1. Autentikasi Pengajar & Panel Login (Seperti Gambar 2)
   setupAuthentication() {
     const btnAuthToggle = document.getElementById("btnAuthToggle");
-    const modalAuth = document.getElementById("modalAuth");
-    const formAuthPin = document.getElementById("formAuthPin");
-    const selectAuthUstadz = document.getElementById("selectAuthUstadz");
-    const inputAuthPin = document.getElementById("inputAuthPin");
-    const closeBtns = document.querySelectorAll('[data-close="modalAuth"]');
+    const loginPortal = document.getElementById("loginPortalScreen");
+    const formPortalLogin = document.getElementById("formPortalLogin");
+    const portalSelectUstadz = document.getElementById("portalSelectUstadz");
+    const portalInputPin = document.getElementById("portalInputPin");
+    const portalBtnToggleEye = document.getElementById("portalBtnToggleEye");
+    const portalBtnParentMode = document.getElementById("portalBtnParentMode");
+    const portalBtnClose = document.getElementById("portalBtnClose");
 
-    // Tampilkan hanya 4 Pengajar Resmi
-    if (selectAuthUstadz) {
-      selectAuthUstadz.innerHTML = "";
+    // Tampilkan 4 Pengajar Resmi di Select Portal
+    if (portalSelectUstadz) {
+      portalSelectUstadz.innerHTML = `<option value="">-- Pilih Profil Anda --</option>`;
       MASTER_USTADZ.forEach(u => {
-        selectAuthUstadz.add(new Option(u, u));
+        portalSelectUstadz.add(new Option(u, u));
       });
-      selectAuthUstadz.value = SheetsService.getCurrentUstadz();
+      portalSelectUstadz.value = SheetsService.getCurrentUstadz();
     }
 
+    // Cek Status Login Saat Ini
     if (SheetsService.isUstadzLoggedIn()) {
       this.setAuthState(true, SheetsService.getCurrentUstadz());
+      if (loginPortal) loginPortal.classList.remove("active");
     } else {
       this.setAuthState(false);
+      // Buka Panel Login pada awal akses (Sesuai Gambar 2)
+      if (loginPortal) loginPortal.classList.add("active");
     }
 
+    // Toggle Tampilkan / Sembunyikan PIN (Ikon Mata)
+    if (portalBtnToggleEye && portalInputPin) {
+      portalBtnToggleEye.addEventListener("click", () => {
+        if (portalInputPin.type === "password") {
+          portalInputPin.type = "text";
+          portalBtnToggleEye.textContent = "🙈";
+        } else {
+          portalInputPin.type = "password";
+          portalBtnToggleEye.textContent = "👁️";
+        }
+      });
+    }
+
+    // Tombol Pantau Hafalan Anak (Mode Wali Santri - Tanpa Sandi)
+    if (portalBtnParentMode) {
+      portalBtnParentMode.addEventListener("click", () => {
+        if (loginPortal) loginPortal.classList.remove("active");
+        this.setAuthState(false);
+        this.switchTab("tab-wali");
+        this.showToast("Masuk sebagai Wali Santri. Selamat memantau ananda 👨‍👩‍👦", "info");
+      });
+    }
+
+    // Tombol Tutup Panel
+    if (portalBtnClose) {
+      portalBtnClose.addEventListener("click", () => {
+        if (loginPortal) loginPortal.classList.remove("active");
+      });
+    }
+
+    // Tombol Header: Buka Login Panel atau Logout
     if (btnAuthToggle) {
       btnAuthToggle.addEventListener("click", () => {
         if (SheetsService.isUstadzLoggedIn()) {
-          if (confirm("Kunci kembali akses Pengajar dan kembali ke Mode Wali Santri?")) {
+          if (confirm("Kunci kembali akses Pengajar dan kembali ke Panel Depan?")) {
             SheetsService.logoutUstadz();
             this.setAuthState(false);
             this.showToast("Akses pengajar telah dikunci 🔒", "success");
-            this.switchTab("tab-leaderboard");
+            if (loginPortal) {
+              if (portalInputPin) portalInputPin.value = "";
+              loginPortal.classList.add("active");
+            }
           }
         } else {
-          if (modalAuth) {
-            if (inputAuthPin) inputAuthPin.value = "";
-            modalAuth.classList.add("active");
-            setTimeout(() => inputAuthPin && inputAuthPin.focus(), 200);
+          if (loginPortal) {
+            if (portalInputPin) portalInputPin.value = "";
+            loginPortal.classList.add("active");
+            setTimeout(() => portalInputPin && portalInputPin.focus(), 250);
           }
         }
       });
     }
 
-    if (formAuthPin) {
-      formAuthPin.addEventListener("submit", (e) => {
+    // Submit Form Login Pengajar
+    if (formPortalLogin) {
+      formPortalLogin.addEventListener("submit", (e) => {
         e.preventDefault();
-        const ustadzName = selectAuthUstadz ? selectAuthUstadz.value : MASTER_USTADZ[0];
-        const pin = inputAuthPin.value;
+        const ustadzName = portalSelectUstadz ? portalSelectUstadz.value : "";
+        const pin = portalInputPin ? portalInputPin.value : "";
+
+        if (!ustadzName) {
+          this.showToast("Silakan pilih profil pengajar terlebih dahulu!", "error");
+          return;
+        }
 
         if (SheetsService.loginUstadz(ustadzName, pin)) {
           this.setAuthState(true, ustadzName);
-          modalAuth.classList.remove("active");
+          if (loginPortal) loginPortal.classList.remove("active");
           this.showToast(`Ahlan wa Sahlan, ${ustadzName}! Akses pengajar terbuka 👳‍♂️`, "success");
           
-          // Cari kelas yang diampu pengajar ini
+          // Cari kelas yang diampu pengajar ini dan set otomatis
           const foundClass = Object.keys(CLASS_TEACHER_MAP).find(k => CLASS_TEACHER_MAP[k].ustadz === ustadzName);
           const selectHalaqah = document.getElementById("selectHalaqah");
           const inputUstadz = document.getElementById("inputUstadz");
@@ -140,15 +186,13 @@ const App = {
 
           this.switchTab("tab-input");
         } else {
-          this.showToast("Sandi pengaman salah! Silakan coba lagi.", "error");
-          inputAuthPin.select();
+          this.showToast("Kata sandi pengajar salah! Silakan coba lagi.", "error");
+          if (portalInputPin) {
+            portalInputPin.select();
+          }
         }
       });
     }
-
-    closeBtns.forEach(btn => {
-      btn.addEventListener("click", () => modalAuth.classList.remove("active"));
-    });
   },
 
   setAuthState(isUstadz, ustadzName = "") {
@@ -210,8 +254,8 @@ const App = {
         const targetId = btn.dataset.tab;
         
         if (targetId === "tab-input" && !SheetsService.isUstadzLoggedIn()) {
-          const modalAuth = document.getElementById("modalAuth");
-          if (modalAuth) modalAuth.classList.add("active");
+          const loginPortal = document.getElementById("loginPortalScreen");
+          if (loginPortal) loginPortal.classList.add("active");
           return;
         }
 
@@ -244,6 +288,9 @@ const App = {
     // Sinkronisasi otomatis jika Ayat Akhir lebih kecil dari Ayat Awal
     const elAwal = document.getElementById("inputAyatAwal");
     const elAkhir = document.getElementById("inputAyatAkhir");
+    const selAwal = document.getElementById("selectAyatAwal");
+    const selAkhir = document.getElementById("selectAyatAkhir");
+
     if (elAwal && elAkhir && surahAwalEl && surahAkhirEl && surahAwalEl.value === surahAkhirEl.value) {
       const vAwal = parseInt(elAwal.value, 10) || 1;
       const vAkhir = parseInt(elAkhir.value, 10) || 1;
@@ -253,11 +300,17 @@ const App = {
         elAwal.value = vAkhir;
       }
     }
+
+    // Sinkronkan ke elemen dropdown select
+    if (selAwal && elAwal) selAwal.value = elAwal.value;
+    if (selAkhir && elAkhir) selAkhir.value = elAkhir.value;
   },
 
   setAyatSpan(spanCount) {
     const elAwal = document.getElementById("inputAyatAwal");
     const elAkhir = document.getElementById("inputAyatAkhir");
+    const selAwal = document.getElementById("selectAyatAwal");
+    const selAkhir = document.getElementById("selectAyatAkhir");
     const surahAwalEl = document.getElementById("selectSurahAwal");
     const surahAkhirEl = document.getElementById("selectSurahAkhir");
 
@@ -275,6 +328,9 @@ const App = {
     }
 
     if (elAkhir) elAkhir.value = targetAkhir;
+    if (selAwal && elAwal) selAwal.value = elAwal.value;
+    if (selAkhir && elAkhir) selAkhir.value = elAkhir.value;
+
     this.showToast(`Batas hafalan disetel: Ayat ${vAwal} s/d ${targetAkhir}`, "info");
   },
 
@@ -283,6 +339,8 @@ const App = {
     const surahAkhirEl = document.getElementById("selectSurahAkhir");
     const elAwal = document.getElementById("inputAyatAwal");
     const elAkhir = document.getElementById("inputAyatAkhir");
+    const selAwal = document.getElementById("selectAyatAwal");
+    const selAkhir = document.getElementById("selectAyatAkhir");
 
     if (!surahAwalEl || !surahAwalEl.value) return;
     const surahName = surahAwalEl.value;
@@ -293,6 +351,8 @@ const App = {
 
     if (elAwal) elAwal.value = 1;
     if (elAkhir) elAkhir.value = totalAyat;
+    if (selAwal) selAwal.value = 1;
+    if (selAkhir) selAkhir.value = totalAyat;
 
     this.showToast(`Hafalan 1 Surah Penuh: ${surahName} (Ayat 1 - ${totalAyat})`, "success");
   },
@@ -306,6 +366,17 @@ const App = {
     if (num < 1) num = 1;
     if (inputId === "inputTartilHalaman" && num > 604) num = 604;
     el.value = `Halaman ${num}`;
+  },
+
+  populateAyatDropdown(selectEl, totalVerses, currentVal = 1) {
+    if (!selectEl) return;
+    selectEl.innerHTML = "";
+    for (let i = 1; i <= totalVerses; i++) {
+      selectEl.add(new Option(`Ayat ${i}`, i));
+    }
+    if (currentVal && currentVal <= totalVerses) {
+      selectEl.value = currentVal;
+    }
   },
 
   // 2. Populasi Dropdown Static & 4 Kelas Resmi
@@ -363,12 +434,19 @@ const App = {
       selectTartilJuz.value = "30";
     }
 
-    // Surah Hafalan
+    // Surah Hafalan (Clean Minimalist Select)
     const selectSurahAwal = document.getElementById("selectSurahAwal");
     const selectSurahAkhir = document.getElementById("selectSurahAkhir");
+    const selectAyatAwal = document.getElementById("selectAyatAwal");
+    const selectAyatAkhir = document.getElementById("selectAyatAkhir");
+    const inputAwal = document.getElementById("inputAyatAwal");
+    const inputAkhir = document.getElementById("inputAyatAkhir");
+
+    if (selectSurahAwal) selectSurahAwal.innerHTML = "";
+    if (selectSurahAkhir) selectSurahAkhir.innerHTML = "";
 
     QURAN_SURAHS.forEach(s => {
-      const text = `${s.no}. ${s.name} (${s.verses} ayat) - Juz ${s.juz}`;
+      const text = `${s.no}. ${s.name} (${s.verses} ayat)`;
       if (selectSurahAwal) selectSurahAwal.add(new Option(text, s.name));
       if (selectSurahAkhir) selectSurahAkhir.add(new Option(text, s.name));
     });
@@ -376,19 +454,63 @@ const App = {
     if (selectSurahAwal) selectSurahAwal.value = "An-Naba'";
     if (selectSurahAkhir) selectSurahAkhir.value = "An-Naba'";
 
+    const defaultSurah = QURAN_SURAHS.find(s => s.name === "An-Naba'") || QURAN_SURAHS[0];
+    if (selectAyatAwal && defaultSurah) {
+      this.populateAyatDropdown(selectAyatAwal, defaultSurah.verses, 1);
+    }
+    if (selectAyatAkhir && defaultSurah) {
+      this.populateAyatDropdown(selectAyatAkhir, defaultSurah.verses, Math.min(10, defaultSurah.verses));
+    }
+
+    if (selectAyatAwal && inputAwal) {
+      selectAyatAwal.addEventListener("change", (e) => {
+        const val = parseInt(e.target.value, 10) || 1;
+        inputAwal.value = val;
+        if (selectSurahAwal && selectSurahAkhir && selectSurahAwal.value === selectSurahAkhir.value) {
+          const vAkhir = parseInt(inputAkhir.value, 10) || 1;
+          if (val > vAkhir) {
+            inputAkhir.value = val;
+            if (selectAyatAkhir) selectAyatAkhir.value = val;
+          }
+        }
+      });
+    }
+
+    if (selectAyatAkhir && inputAkhir) {
+      selectAyatAkhir.addEventListener("change", (e) => {
+        const val = parseInt(e.target.value, 10) || 1;
+        inputAkhir.value = val;
+        if (selectSurahAwal && selectSurahAkhir && selectSurahAwal.value === selectSurahAkhir.value) {
+          const vAwal = parseInt(inputAwal.value, 10) || 1;
+          if (val < vAwal) {
+            inputAwal.value = val;
+            if (selectAyatAwal) selectAyatAwal.value = val;
+          }
+        }
+      });
+    }
+
     this.refreshSantriDropdowns();
 
     if (selectSurahAwal) {
       selectSurahAwal.addEventListener("change", (e) => {
         const found = QURAN_SURAHS.find(s => s.name === e.target.value);
         if (found) {
-          if (selectSurahAkhir) {
-            selectSurahAkhir.value = found.name;
-          }
-          const inputAwal = document.getElementById("inputAyatAwal");
-          const inputAkhir = document.getElementById("inputAyatAkhir");
+          if (selectSurahAkhir) selectSurahAkhir.value = found.name;
           if (inputAwal) inputAwal.value = 1;
           if (inputAkhir) inputAkhir.value = Math.min(10, found.verses);
+          this.populateAyatDropdown(selectAyatAwal, found.verses, 1);
+          this.populateAyatDropdown(selectAyatAkhir, found.verses, Math.min(10, found.verses));
+        }
+      });
+    }
+
+    if (selectSurahAkhir) {
+      selectSurahAkhir.addEventListener("change", (e) => {
+        const found = QURAN_SURAHS.find(s => s.name === e.target.value);
+        if (found) {
+          if (inputAkhir) inputAkhir.value = Math.min(10, found.verses);
+          this.populateAyatDropdown(selectAyatAkhir, found.verses, Math.min(10, found.verses));
         }
       });
     }
@@ -498,13 +620,13 @@ const App = {
     }
   },
 
-  // 4. Rating Bintang Interaktif
+  // 4. Rating Bintang Interaktif (Dengan Dukungan Tombol Batal seperti Gambar 1)
   setupStarRatings() {
-    const starContainers = document.querySelectorAll(".star-inputs");
+    const starContainers = document.querySelectorAll(".star-inputs, .star-inputs-clean");
     starContainers.forEach(container => {
       const category = container.dataset.rating;
-      const stars = container.querySelectorAll(".star-btn");
-      const resetBtn = container.querySelector(".star-btn-reset");
+      const stars = container.querySelectorAll(".star-btn, .star-btn-clean");
+      const resetBtn = container.querySelector(".star-btn-reset, .btn-cancel-rating");
 
       stars.forEach(star => {
         star.addEventListener("click", () => {
@@ -526,14 +648,29 @@ const App = {
       this.renderCategoryStars(container, this.ratings[category] || 5);
     });
 
+    // Handle tombol ❌ Batal di luar container jika ada
+    const cancelBtns = document.querySelectorAll(".btn-cancel-rating");
+    cancelBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const cat = btn.dataset.rating;
+        if (cat && this.ratings[cat] !== undefined) {
+          this.ratings[cat] = 0;
+          const targetCont = document.querySelector(`[data-rating="${cat}"].star-inputs-clean, [data-rating="${cat}"].star-inputs`);
+          if (targetCont) this.renderCategoryStars(targetCont, 0);
+          this.updateTotalStars();
+          this.showToast(`Penilaian ${cat} dibatalkan`, "info");
+        }
+      });
+    });
+
     this.updateTotalStars();
   },
 
   renderCategoryStars(container, count) {
-    const stars = container.querySelectorAll(".star-btn");
+    const stars = container.querySelectorAll(".star-btn, .star-btn-clean");
     stars.forEach(star => {
       const val = parseInt(star.dataset.val, 10);
-      if (val <= count) star.classList.add("active");
+      if (val <= count && count > 0) star.classList.add("active");
       else star.classList.remove("active");
     });
   },
@@ -557,16 +694,24 @@ const App = {
     if (predikatBadge) {
       if (total >= 14) {
         predikatBadge.textContent = "Mumtaz (Istimewa)";
-        predikatBadge.style.background = "#0284c7";
+        predikatBadge.style.background = "#ecfdf5";
+        predikatBadge.style.color = "#047857";
+        predikatBadge.style.borderColor = "#d1fae5";
       } else if (total >= 11) {
         predikatBadge.textContent = "Jayyid Jiddan (Sangat Baik)";
-        predikatBadge.style.background = "#f43f7a";
+        predikatBadge.style.background = "#f0fdf4";
+        predikatBadge.style.color = "#059669";
+        predikatBadge.style.borderColor = "#a7f3d0";
       } else if (total >= 8) {
         predikatBadge.textContent = "Jayyid (Baik)";
-        predikatBadge.style.background = "#d97706";
+        predikatBadge.style.background = "#fffbeb";
+        predikatBadge.style.color = "#b45309";
+        predikatBadge.style.borderColor = "#fde68a";
       } else {
         predikatBadge.textContent = "Maqbul (Perlu Bimbingan)";
-        predikatBadge.style.background = "#dc2626";
+        predikatBadge.style.background = "#fef2f2";
+        predikatBadge.style.color = "#dc2626";
+        predikatBadge.style.borderColor = "#fecaca";
       }
     }
   },
@@ -579,13 +724,13 @@ const App = {
 
     if (btnTamhidLanjut && btnTamhidUlang) {
       btnTamhidLanjut.addEventListener("click", () => {
-        btnTamhidLanjut.className = "pill-toggle-btn active-blue";
-        btnTamhidUlang.className = "pill-toggle-btn";
+        btnTamhidLanjut.className = "pill-btn-clean active-green";
+        btnTamhidUlang.className = "pill-btn-clean";
         inputTamhidStatus.value = "Lanjut";
       });
       btnTamhidUlang.addEventListener("click", () => {
-        btnTamhidUlang.className = "pill-toggle-btn active-amber";
-        btnTamhidLanjut.className = "pill-toggle-btn";
+        btnTamhidUlang.className = "pill-btn-clean active-amber";
+        btnTamhidLanjut.className = "pill-btn-clean";
         inputTamhidStatus.value = "Ulang";
       });
     }
@@ -597,13 +742,13 @@ const App = {
 
     if (btnTartilLanjut && btnTartilUlang) {
       btnTartilLanjut.addEventListener("click", () => {
-        btnTartilLanjut.className = "pill-toggle-btn active-pink";
-        btnTartilUlang.className = "pill-toggle-btn";
+        btnTartilLanjut.className = "pill-btn-clean active-green";
+        btnTartilUlang.className = "pill-btn-clean";
         inputTartilStatus.value = "Lanjut";
       });
       btnTartilUlang.addEventListener("click", () => {
-        btnTartilUlang.className = "pill-toggle-btn active-amber";
-        btnTartilLanjut.className = "pill-toggle-btn";
+        btnTartilUlang.className = "pill-btn-clean active-amber";
+        btnTartilLanjut.className = "pill-btn-clean";
         inputTartilStatus.value = "Ulang";
       });
     }
@@ -615,31 +760,31 @@ const App = {
 
     if (btnHafalanZiyadah && btnHafalanMurojaah) {
       btnHafalanZiyadah.addEventListener("click", () => {
-        btnHafalanZiyadah.className = "pill-toggle-btn active-blue";
-        btnHafalanMurojaah.className = "pill-toggle-btn";
+        btnHafalanZiyadah.className = "pill-btn-clean active-green";
+        btnHafalanMurojaah.className = "pill-btn-clean";
         inputHafalanJenis.value = "Ziyadah";
       });
       btnHafalanMurojaah.addEventListener("click", () => {
-        btnHafalanMurojaah.className = "pill-toggle-btn active-pink";
-        btnHafalanZiyadah.className = "pill-toggle-btn";
+        btnHafalanMurojaah.className = "pill-btn-clean active-green";
+        btnHafalanZiyadah.className = "pill-btn-clean";
         inputHafalanJenis.value = "Muroja'ah";
       });
     }
 
-    // Hafalan Status
+    // Hafalan Status (Lulus vs Ulang - Gambar 1)
     const btnHafalanLulus = document.getElementById("btnHafalanLulus");
     const btnHafalanUlang = document.getElementById("btnHafalanUlang");
     const inputHafalanStatus = document.getElementById("inputHafalanStatus");
 
     if (btnHafalanLulus && btnHafalanUlang) {
       btnHafalanLulus.addEventListener("click", () => {
-        btnHafalanLulus.className = "pill-toggle-btn active-blue";
-        btnHafalanUlang.className = "pill-toggle-btn";
+        btnHafalanLulus.className = "btn-action-tindakan active-lulus";
+        btnHafalanUlang.className = "btn-action-tindakan";
         inputHafalanStatus.value = "Lulus";
       });
       btnHafalanUlang.addEventListener("click", () => {
-        btnHafalanUlang.className = "pill-toggle-btn active-red";
-        btnHafalanLulus.className = "pill-toggle-btn";
+        btnHafalanUlang.className = "btn-action-tindakan active-ulang";
+        btnHafalanLulus.className = "btn-action-tindakan";
         inputHafalanStatus.value = "Ulang";
       });
     }

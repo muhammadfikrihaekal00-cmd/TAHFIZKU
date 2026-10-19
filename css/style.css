@@ -1,24 +1,24 @@
 /* ==========================================================================
-   RQ UMMUL QASIM - DESIGN SYSTEM & STYLESHEET (v3)
-   Warna Brand: Sky Blue (#0284c7) & Coral Rose Pink (#f43f7a)
-   Fitur: Foto Santri, Kategori Jenjang (Dasar vs Menengah), Tartil Simpel
+   RQ UMMUL QASIM - DESIGN SYSTEM & STYLESHEET (v4 Minimalis)
+   Warna Brand: Soothing Islamic Emerald (#047857) & Warm Amber (#d97706)
+   Desain: Minimalis, Rapi, Sejuk & Ramah di Mata
    ========================================================================== */
 
 :root {
-  --primary: #0284c7;
-  --primary-dark: #0369a1;
-  --primary-light: #38bdf8;
-  --primary-subtle: #f0f9ff;
-  --primary-border: #bae6fd;
+  --primary: #047857;
+  --primary-dark: #064e3b;
+  --primary-light: #10b981;
+  --primary-subtle: #f0fdf4;
+  --primary-border: #d1fae5;
 
   --accent-pink: #f43f7a;
   --accent-pink-dark: #e11d48;
   --accent-pink-light: #fff1f2;
   --accent-pink-border: #fecdd3;
 
-  --accent-gold: #f59e0b;
+  --accent-gold: #d97706;
   --accent-gold-light: #fef3c7;
-  --accent-gold-dark: #b45309;
+  --accent-gold-dark: #92400e;
 
   --silver: #94a3b8;
   --silver-light: #f1f5f9;
@@ -26,7 +26,7 @@
   --bronze-light: #ffedd5;
 
   --surface: #ffffff;
-  --surface-ground: #f8fafc;
+  --surface-ground: #f8faf9;
   --surface-card: #ffffff;
   --surface-border: #e2e8f0;
 
@@ -39,10 +39,10 @@
   --radius-lg: 20px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 14px rgba(2, 132, 199, 0.1);
-  --shadow-lg: 0 10px 28px rgba(2, 132, 199, 0.15);
-  --shadow-gold: 0 4px 18px rgba(245, 158, 11, 0.28);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 14px rgba(4, 120, 87, 0.08);
+  --shadow-lg: 0 10px 28px rgba(4, 120, 87, 0.12);
+  --shadow-gold: 0 4px 18px rgba(217, 119, 6, 0.2);
 
   --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-arabic: 'Amiri', serif;
@@ -56,7 +56,7 @@
 
 body {
   font-family: var(--font-main);
-  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 40%, #fdf2f8 100%);
+  background: #f8faf9;
   min-height: 100vh;
   color: var(--text-main);
   line-height: 1.5;
@@ -66,13 +66,13 @@ body {
 
 /* Header */
 .app-header {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #f43f7a 100%);
+  background: linear-gradient(135deg, #065f46 0%, #047857 50%, #0f766e 100%);
   color: #ffffff;
-  padding: 14px 20px;
+  padding: 12px 20px;
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.2);
+  box-shadow: 0 4px 20px rgba(6, 95, 70, 0.15);
 }
 
 .header-container {
@@ -2462,6 +2462,833 @@ body.is-ustadz .tab-btn.ustadz-only {
     font-size: 0.78rem !important;
     justify-content: center !important;
   }
+}
+
+/* ==========================================================================
+   PANEL LOGIN PENGAJAR & WALI SANTRI (SEPERTI GAMBAR 2)
+   ========================================================================== */
+.login-portal-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: radial-gradient(circle at center, #edf7f2 0%, #f4f7f5 70%, #e5ede7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.login-portal-screen.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.login-portal-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 34px 26px 28px;
+  box-shadow: 0 16px 40px rgba(6, 95, 70, 0.08), 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid #e1ebe4;
+  text-align: center;
+  animation: slideUpModal 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.login-portal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.login-portal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.login-emblem-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.login-emblem-circle {
+  width: 78px;
+  height: 78px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 2px solid #059669;
+  padding: 5px;
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-emblem-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login-app-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #065f46;
+  margin-bottom: 3px;
+  letter-spacing: -0.01em;
+}
+
+.login-school-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 2px;
+}
+
+.login-desc-title {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 22px;
+}
+
+.login-field-item {
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.login-field-label {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 7px;
+  text-align: center;
+}
+
+.login-field-select {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1.5px solid #d1fae5;
+  background-color: #fbfdfc;
+  font-family: var(--font-main);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.login-field-select:focus {
+  outline: none;
+  border-color: #059669;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+.login-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-field-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 46px 0 16px;
+  border-radius: 12px;
+  border: 1.5px solid #d1fae5;
+  background-color: #fbfdfc;
+  font-family: var(--font-main);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: center;
+  letter-spacing: 0.12em;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.login-field-input:focus {
+  outline: none;
+  border-color: #059669;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+.btn-toggle-pin {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 4px;
+  color: #64748b;
+  opacity: 0.7;
+}
+
+.btn-toggle-pin:hover {
+  opacity: 1;
+}
+
+.login-pin-hint {
+  display: block;
+  text-align: center;
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 5px;
+}
+
+.btn-login-submit {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  background: #047857;
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.btn-login-submit:hover {
+  background: #065f46;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(4, 120, 87, 0.35);
+}
+
+.login-divider-line {
+  margin: 20px 0;
+  border-top: 1.5px dashed #cbd5e1;
+}
+
+.btn-login-parent {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  background: #d97706;
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-login-parent:hover {
+  background: #b45309;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.35);
+}
+
+.login-parent-caption {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   MINIMALIST INPUT SETORAN (SEPERTI GAMBAR 1 - RAMAH DI MATA & RAPI)
+   ========================================================================== */
+.form-setoran-clean {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.card-clean {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  padding: 22px 20px;
+  margin-bottom: 18px;
+  transition: box-shadow 0.2s ease;
+}
+
+.card-clean:hover {
+  box-shadow: 0 4px 16px rgba(4, 120, 87, 0.06);
+}
+
+/* Section Header with Signature Vertical Bar */
+.section-heading-minimal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #065f46;
+  margin-bottom: 16px;
+  padding-bottom: 4px;
+}
+
+.section-heading-minimal .bar-accent {
+  width: 4px;
+  height: 20px;
+  background: #047857;
+  border-radius: 4px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.date-badge-clean {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  padding: 3px 9px;
+  border-radius: 9999px;
+}
+
+.badge-stage-indicator {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #047857;
+  padding: 3px 10px;
+  border-radius: 9999px;
+}
+
+.clean-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .clean-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.clean-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.clean-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.label-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-text-action {
+  background: none;
+  border: none;
+  color: #047857;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-text-action:hover {
+  text-decoration: underline;
+}
+
+.clean-input, .clean-select {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background-color: #fafbfc;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+  transition: all 0.2s ease;
+}
+
+.clean-input:focus, .clean-select:focus {
+  outline: none;
+  border-color: #059669;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.clean-input-readonly {
+  background-color: #f1f5f9;
+  color: #475569;
+  cursor: default;
+}
+
+/* Stepper Clean */
+.stepper-clean {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fafbfc;
+  overflow: hidden;
+}
+
+.stepper-btn-clean {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: #f1f5f9;
+  color: #065f46;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.stepper-btn-clean:hover {
+  background: #e2e8f0;
+}
+
+.stepper-input-clean {
+  flex: 1;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.stepper-input-clean:focus {
+  outline: none;
+}
+
+/* Pill Group Clean */
+.pill-group-clean {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+}
+
+.pill-btn-clean {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-family: var(--font-main);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.pill-btn-clean.active-green {
+  background: #047857;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
+}
+
+.pill-btn-clean.active-amber {
+  background: #d97706;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+}
+
+/* Stage Switcher Clean */
+.stage-switch-clean {
+  display: flex;
+  background: #e6f4ea;
+  padding: 4px;
+  border-radius: 12px;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.stage-btn-clean {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #065f46;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.stage-btn-clean.active {
+  background: #ffffff;
+  color: #047857;
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.12);
+  border: 1px solid #a7f3d0;
+}
+
+/* Batas Hafalan Grid (Gambar 1) */
+.batas-hafalan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.batas-hafalan-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.select-surah-clean {
+  height: 46px;
+  font-size: 0.88rem;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.ayat-select-wrap {
+  width: 100%;
+}
+
+.select-ayat-clean {
+  height: 42px;
+  font-size: 0.85rem;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 600;
+  color: #334155;
+  background-color: #f8fafc;
+}
+
+/* Quick Chips Bar */
+.quick-chips-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.quick-chips-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.quick-chips-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-btn-clean {
+  border: 1px solid #d1fae5;
+  background: #f0fdf4;
+  color: #065f46;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-btn-clean:hover {
+  background: #047857;
+  color: #ffffff;
+  border-color: #047857;
+}
+
+.chip-btn-clean.chip-btn-gold {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.chip-btn-clean.chip-btn-gold:hover {
+  background: #d97706;
+  color: #ffffff;
+  border-color: #d97706;
+}
+
+/* Penilaian Mutu Box (Gambar 1) */
+.penilaian-mutu-container {
+  background: #fbfdfc;
+  border: 1px solid #e1eee6;
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+
+.mutu-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f0;
+}
+
+.mutu-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+
+.mutu-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.btn-cancel-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fee2e2;
+  border: none;
+  padding: 2px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: fit-content;
+}
+
+.btn-cancel-rating:hover {
+  background: #fecaca;
+}
+
+.star-inputs-clean {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.star-btn-clean {
+  background: none;
+  border: none;
+  font-size: 1.65rem;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.star-btn-clean:hover {
+  transform: scale(1.2);
+}
+
+.star-btn-clean.active {
+  color: #f59e0b;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+}
+
+.mutu-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  margin-top: 4px;
+  font-size: 0.82rem;
+}
+
+.mutu-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.badge-predikat-clean {
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid #d1fae5;
+}
+
+.mutu-summary-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.mutu-star-total {
+  font-weight: 800;
+  color: #d97706;
+}
+
+/* Tindakan Action Group (Gambar 1) */
+.tindakan-action-group {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-action-tindakan {
+  flex: 1;
+  height: 48px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fafbfc;
+  color: #64748b;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-action-tindakan:hover {
+  background: #f1f5f9;
+}
+
+.btn-action-tindakan.active-lulus {
+  border-color: #059669;
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.12);
+}
+
+.btn-action-tindakan.active-ulang {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Catatan Optional */
+.clean-label-optional {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.clean-textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fafbfc;
+  padding: 12px 14px;
+  font-family: var(--font-main);
+  font-size: 0.88rem;
+  color: #0f172a;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.clean-textarea:focus {
+  outline: none;
+  border-color: #059669;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+/* Tombol Simpan Emerald */
+.btn-submit-emerald {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(4, 120, 87, 0.25);
+  transition: all 0.2s ease;
+  margin-top: 6px;
+}
+
+.btn-submit-emerald:hover {
+  background: #064e3b;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(4, 120, 87, 0.35);
 }
 
 
