@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=4.3">
+  <link rel="stylesheet" href="css/style.css?v=4.4">
 </head>
 <body>
 
@@ -41,6 +41,11 @@
         <button class="btn-auth-role" id="btnAuthToggle" title="Beralih peran Ustadz / Wali Santri">
           <span id="authIcon">🔒</span>
           <span id="authLabel">Masuk Ustadz/ah</span>
+        </button>
+
+        <!-- Download / Cetak Laporan (PDF & Excel) -->
+        <button class="btn-icon" id="btnOpenExportModal" title="Unduh & Cetak Laporan Mutaba'ah (PDF / Excel)" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1.5px solid #bae6fd;">
+          <span>📄</span>
         </button>
 
         <!-- Google Sheets Connection Status (Khusus Admin) -->
@@ -197,11 +202,31 @@
       <!-- Search Card for Parents -->
       <div class="parent-search-card">
         <h2>👨‍👩‍👧 Portal Pantauan Santri RQ Ummul Qasim</h2>
-        <p>Pilih nama ananda untuk melihat perkembangan bimbingan Kitab Tamhid, Tartil Al-Qur'an, hafalan tahfidz, dan bintang prestasi secara realtime.</p>
+        <p>Pilih kelas bimbingan dan nama ananda untuk melihat perkembangan bimbingan Kitab Tamhid, Tartil Al-Qur'an, hafalan tahfidz, dan bintang prestasi secara realtime.</p>
         
-        <div class="form-group">
+        <!-- Filter Pemisah Pantauan Per Kelas (Permintaan User: Pisahkan pantauan pada masing-masing kelas) -->
+        <div class="pantauan-class-filter-bar">
+          <span class="pantauan-class-filter-title">🏫 Pilih Kelas Bimbingan Ananda:</span>
+          <div class="pantauan-class-pills" id="parentClassFilterPills">
+            <button type="button" class="pantauan-class-pill active" data-class="ALL">🌟 Semua Kelas</button>
+            <button type="button" class="pantauan-class-pill" data-class="Kelas Dasar Ikhwan & Akhowat">🌿 Dasar Ikhwan & Akhowat</button>
+            <button type="button" class="pantauan-class-pill" data-class="Kelas Dasar Ikhwan">👦 Dasar Ikhwan</button>
+            <button type="button" class="pantauan-class-pill" data-class="Kelas Menengah Ikhwan">🚀 Menengah Ikhwan</button>
+            <button type="button" class="pantauan-class-pill" data-class="Kelas Menengah Akhowat">🌸 Menengah Akhowat</button>
+          </div>
+        </div>
+
+        <!-- Quick Santri Chips di Kelas yang Dipilih -->
+        <div class="parent-quick-santri-wrap">
+          <div class="parent-quick-santri-label">Tap langsung nama ananda:</div>
+          <div class="parent-quick-santri-chips" id="parentQuickSantriChips">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 14px;">
           <select class="form-select" id="selectParentSantri" style="font-size: 1rem; padding: 12px 16px; border-radius: var(--radius-md); font-weight: 700; border-color: #ffffff;">
-            <option value="">-- Pilih Nama Ananda --</option>
+            <option value="">-- Atau Pilih Nama Ananda dari Dropdown --</option>
           </select>
         </div>
       </div>
@@ -429,65 +454,130 @@
           </div>
         </div>
 
-        <!-- CARD 3: BATAS HAFALAN (SEPERTI GAMBAR 1) -->
+        <!-- CARD 3: BATAS HAFALAN (PISAHKAN ZIYADAH & MUROJA'AH DENGAN PILIHAN SURAH MASING-MASING) -->
         <div class="card-clean">
-          <div class="section-heading-minimal">
-            <span class="bar-accent"></span>
-            <span>Batas Hafalan</span>
-          </div>
-
-          <!-- Jenis Setoran: Ziyadah vs Muroja'ah -->
-          <div class="clean-field" style="margin-bottom: 14px;">
-            <div class="pill-group-clean">
-              <button type="button" class="pill-btn-clean active-green" id="btnHafalanZiyadah" data-val="Ziyadah">
-                <span>⭐ Ziyadah (Hafalan Baru)</span>
-              </button>
-              <button type="button" class="pill-btn-clean" id="btnHafalanMurojaah" data-val="Muroja'ah">
-                <span>🔄 Muroja'ah (Ulang Hafalan)</span>
-              </button>
+          <div class="section-heading-minimal" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center;">
+              <span class="bar-accent"></span>
+              <span>Batas Hafalan (Ziyadah & Muroja'ah)</span>
             </div>
-            <input type="hidden" id="inputHafalanJenis" value="Ziyadah">
+            <span class="meta-badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.72rem;">✨ Surah Terpisah</span>
           </div>
 
-          <!-- Batas Hafalan 2-Kolom Grid: Surah & Ayat -->
-          <div class="batas-hafalan-grid">
-            <!-- Kolom Kiri: Surah & Ayat Awal -->
-            <div class="batas-hafalan-col">
-              <select class="clean-select select-surah-clean" id="selectSurahAwal" required>
-                <!-- Populated with surahs -->
-              </select>
-              <div class="ayat-select-wrap">
-                <select class="clean-select select-ayat-clean" id="selectAyatAwal">
-                  <option value="1">- Ayat -</option>
-                </select>
-                <input type="hidden" id="inputAyatAwal" value="1">
+          <!-- SUB-SEKSI 1: ZIYADAH (HAFALAN BARU) -->
+          <div class="hafalan-subcard" id="cardZiyadahSection">
+            <div class="hafalan-subcard-header">
+              <label class="hafalan-toggle-label">
+                <input type="checkbox" id="checkEnableZiyadah" checked onchange="App.toggleZiyadahActive()">
+                <span class="hafalan-subcard-title">⭐ Ziyadah (Hafalan Baru)</span>
+              </label>
+              <span class="meta-badge" id="badgeZiyadahStatus" style="background: #dcfce7; color: #15803d; font-size: 0.7rem;">Aktif</span>
+            </div>
+
+            <div id="containerZiyadahInputs">
+              <div class="batas-hafalan-grid">
+                <!-- Kolom Kiri: Surah & Ayat Awal Ziyadah -->
+                <div class="batas-hafalan-col">
+                  <label class="field-micro-label">Surah Awal Ziyadah</label>
+                  <select class="clean-select select-surah-clean" id="selectZiyadahSurahAwal">
+                    <!-- Populated with surahs -->
+                  </select>
+                  <div class="ayat-select-wrap">
+                    <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAwal">
+                      <option value="1">- Ayat -</option>
+                    </select>
+                    <input type="hidden" id="inputZiyadahAyatAwal" value="1">
+                  </div>
+                </div>
+
+                <!-- Kolom Kanan: Surah & Ayat Akhir Ziyadah -->
+                <div class="batas-hafalan-col">
+                  <label class="field-micro-label">Surah Akhir Ziyadah</label>
+                  <select class="clean-select select-surah-clean" id="selectZiyadahSurahAkhir">
+                    <!-- Populated with surahs -->
+                  </select>
+                  <div class="ayat-select-wrap">
+                    <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAkhir">
+                      <option value="10">- Ayat -</option>
+                    </select>
+                    <input type="hidden" id="inputZiyadahAyatAkhir" value="10">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Presets Ziyadah -->
+              <div class="quick-chips-bar" style="margin-top: 8px;">
+                <span class="quick-chips-title">⚡ Pintasan Ziyadah:</span>
+                <div class="quick-chips-group">
+                  <button type="button" class="chip-btn-clean" onclick="App.setZiyadahAyatSpan(5)">+5 Ayat</button>
+                  <button type="button" class="chip-btn-clean" onclick="App.setZiyadahAyatSpan(10)">+10 Ayat</button>
+                  <button type="button" class="chip-btn-clean" onclick="App.setZiyadahAyatSpan(20)">+20 Ayat</button>
+                  <button type="button" class="chip-btn-clean chip-btn-gold" onclick="App.setZiyadahFullSurah()">📖 1 Surah Penuh</button>
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- Kolom Kanan: Surah & Ayat Akhir -->
-            <div class="batas-hafalan-col">
-              <select class="clean-select select-surah-clean" id="selectSurahAkhir" required>
-                <!-- Populated with surahs -->
-              </select>
-              <div class="ayat-select-wrap">
-                <select class="clean-select select-ayat-clean" id="selectAyatAkhir">
-                  <option value="10">- Ayat -</option>
-                </select>
-                <input type="hidden" id="inputAyatAkhir" value="10">
+          <!-- SUB-SEKSI 2: MUROJA'AH (ULANG HAFALAN) -->
+          <div class="hafalan-subcard" id="cardMurojaahSection" style="margin-top: 14px;">
+            <div class="hafalan-subcard-header">
+              <label class="hafalan-toggle-label">
+                <input type="checkbox" id="checkEnableMurojaah" checked onchange="App.toggleMurojaahActive()">
+                <span class="hafalan-subcard-title">🔄 Muroja'ah (Ulang Hafalan)</span>
+              </label>
+              <span class="meta-badge" id="badgeMurojaahStatus" style="background: #e0f2fe; color: #0369a1; font-size: 0.7rem;">Aktif</span>
+            </div>
+
+            <div id="containerMurojaahInputs">
+              <div class="batas-hafalan-grid">
+                <!-- Kolom Kiri: Surah & Ayat Awal Muroja'ah -->
+                <div class="batas-hafalan-col">
+                  <label class="field-micro-label">Surah Awal Muroja'ah</label>
+                  <select class="clean-select select-surah-clean" id="selectMurojaahSurahAwal">
+                    <!-- Populated with surahs -->
+                  </select>
+                  <div class="ayat-select-wrap">
+                    <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAwal">
+                      <option value="1">- Ayat -</option>
+                    </select>
+                    <input type="hidden" id="inputMurojaahAyatAwal" value="1">
+                  </div>
+                </div>
+
+                <!-- Kolom Kanan: Surah & Ayat Akhir Muroja'ah -->
+                <div class="batas-hafalan-col">
+                  <label class="field-micro-label">Surah Akhir Muroja'ah</label>
+                  <select class="clean-select select-surah-clean" id="selectMurojaahSurahAkhir">
+                    <!-- Populated with surahs -->
+                  </select>
+                  <div class="ayat-select-wrap">
+                    <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAkhir">
+                      <option value="20">- Ayat -</option>
+                    </select>
+                    <input type="hidden" id="inputMurojaahAyatAkhir" value="20">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Presets Muroja'ah -->
+              <div class="quick-chips-bar" style="margin-top: 8px;">
+                <span class="quick-chips-title">⚡ Pintasan Muroja'ah:</span>
+                <div class="quick-chips-group">
+                  <button type="button" class="chip-btn-clean" onclick="App.setMurojaahAyatSpan(5)">+5 Ayat</button>
+                  <button type="button" class="chip-btn-clean" onclick="App.setMurojaahAyatSpan(10)">+10 Ayat</button>
+                  <button type="button" class="chip-btn-clean" onclick="App.setMurojaahAyatSpan(20)">+20 Ayat</button>
+                  <button type="button" class="chip-btn-clean chip-btn-gold" onclick="App.setMurojaahFullSurah()">📖 1 Surah Penuh</button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Quick Preset Ayat Khusus HP / Tablet Pengajar (Sederhana & Rapi) -->
-          <div class="quick-chips-bar">
-            <span class="quick-chips-title">⚡ Pintasan Cepat:</span>
-            <div class="quick-chips-group">
-              <button type="button" class="chip-btn-clean" onclick="App.setAyatSpan(5)">+5 Ayat</button>
-              <button type="button" class="chip-btn-clean" onclick="App.setAyatSpan(10)">+10 Ayat</button>
-              <button type="button" class="chip-btn-clean" onclick="App.setAyatSpan(20)">+20 Ayat</button>
-              <button type="button" class="chip-btn-clean chip-btn-gold" onclick="App.setFullSurah()">📖 1 Surah Penuh</button>
-            </div>
-          </div>
+          <!-- Hidden Backward Compatibility Inputs -->
+          <input type="hidden" id="inputHafalanJenis" value="Ziyadah & Muroja'ah">
+          <input type="hidden" id="selectSurahAwal" value="An-Naba'">
+          <input type="hidden" id="selectSurahAkhir" value="An-Naba'">
+          <input type="hidden" id="inputAyatAwal" value="1">
+          <input type="hidden" id="inputAyatAkhir" value="10">
         </div>
 
         <!-- CARD 4: PENILAIAN MUTU (SEPERTI GAMBAR 1 DENGAN TOMBOL BATAL) -->
@@ -596,6 +686,13 @@
         <button type="submit" class="btn-submit-emerald" id="btnSubmitSetoran">
           <span>💾 SIMPAN SETORAN SANTRI</span>
         </button>
+
+        <!-- KELOLA SETORAN TERAKHIR / BATALKAN INPUT KELIRU (Permintaan User: Input keliru tidak bisa dihapus) -->
+        <div style="text-align: center; margin-top: 14px; margin-bottom: 24px;">
+          <button type="button" class="btn-text-action" id="btnOpenRecentSetoranModal" style="color: #475569; font-size: 0.85rem; font-weight: 700; background: #f8fafc; padding: 10px 18px; border-radius: 99px; border: 1.5px solid #cbd5e1; display: inline-flex; align-items: center; gap: 6px;">
+            <span>📋 Riwayat Setoran Terakhir (Hapus Kesalahan Input)</span>
+          </button>
+        </div>
 
       </form>
     </section>
@@ -977,6 +1074,108 @@
 
 
   <!-- ===================================================================
+       MODAL 5: UNDUH LAPORAN RESMI (TAMHID, TARTIL & HAFALAN MASING-MASING KELAS)
+       =================================================================== -->
+  <div class="modal" id="modalExportReport">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.5rem;">📄</span>
+          <div>
+            <h3>Unduh Laporan Mutaba'ah Resmi</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Rumah Qur'an Ummul Qasim</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btnCloseExportModal">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px;">
+        <!-- Pilihan Kelas -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="exportClassSelect">🏫 Pilih Kelas Bimbingan</label>
+          <select class="form-select" id="exportClassSelect">
+            <option value="ALL">Semua Kelas (Seluruh Santri)</option>
+            <option value="Kelas Dasar Ikhwan & Akhowat">Kelas Dasar Ikhwan & Akhowat (Ustdzh Ummu Khadijah)</option>
+            <option value="Kelas Dasar Ikhwan">Kelas Dasar Ikhwan (Ustdzh Khirfatul Jannah)</option>
+            <option value="Kelas Menengah Ikhwan">Kelas Menengah Ikhwan (Ustadz M. Fikri Haekal)</option>
+            <option value="Kelas Menengah Akhowat">Kelas Menengah Akhowat (Ustdzh A. Lulu Aprilia)</option>
+          </select>
+        </div>
+
+        <!-- Pilihan Jenis Laporan -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label">📊 Jenis Laporan yang Diunduh</label>
+          <div class="report-type-selector">
+            <label class="report-type-item">
+              <input type="radio" name="reportTypeRadio" value="tamhid" checked>
+              <div class="report-type-content">
+                <strong>📚 Laporan Kitab Tamhid (Jilid 1 - 5)</strong>
+                <span>Capaian jilid, halaman, status lanjut/ulang & catatan fashahah</span>
+              </div>
+            </label>
+            <label class="report-type-item">
+              <input type="radio" name="reportTypeRadio" value="tartil">
+              <div class="report-type-content">
+                <strong>📜 Laporan Tartil Al-Qur'an</strong>
+                <span>Capaian juz, mushaf tilawah, status kelancaran & tajwid</span>
+              </div>
+            </label>
+            <label class="report-type-item">
+              <input type="radio" name="reportTypeRadio" value="hafalan">
+              <div class="report-type-content">
+                <strong>✨ Laporan Batas Hafalan (Ziyadah & Muroja'ah)</strong>
+                <span>Rekap surah & rentang ayat ziyadah & muroja'ah per santri</span>
+              </div>
+            </label>
+            <label class="report-type-item">
+              <input type="radio" name="reportTypeRadio" value="lengkap">
+              <div class="report-type-content">
+                <strong>🏆 Rekapitulasi Mutaba'ah & Bintang Prestasi</strong>
+                <span>Seluruh materi tilawah, tahfidz, total bintang & ranking reward</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Format File Unduh -->
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+          <button type="button" class="btn-submit-main" onclick="App.generatePrintableReport('pdf')" style="flex: 1; background: #0284c7; margin-top: 0;">
+            <span>🖨️ Cetak / Simpan PDF</span>
+          </button>
+          <button type="button" class="btn-submit-main" onclick="App.generateExcelCsvReport()" style="flex: 1; background: #059669; margin-top: 0;">
+            <span>📊 Unduh File Excel</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 6: RIWAYAT SETORAN TERAKHIR (UNTUK HAPUS KESALAHAN INPUT)
+       =================================================================== -->
+  <div class="modal" id="modalRecentSetoran">
+    <div class="modal-content" style="max-width: 560px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.5rem;">📋</span>
+          <div>
+            <h3>Riwayat Input Setoran Terakhir</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Batalkan atau hapus setoran jika terjadi kekeliruan input</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btnCloseRecentSetoranModal">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px;">
+        <div id="recentSetoranListContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
        NAVIGASI BAWAH KHUSUS LAYAR HP (MOBILE BOTTOM BAR)
        Urutan: Capaian -> Pantauan -> [SETORAN TERPADU] -> Hadits -> Do'a
        =================================================================== -->
@@ -1020,9 +1219,12 @@
   <!-- TOAST CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Scripts (Cache Buster v4.3) -->
-  <script src="js/data.js?v=4.3"></script>
-  <script src="js/sheets.js?v=4.3"></script>
-  <script src="js/app.js?v=4.3"></script>
+  <!-- PRINTABLE REPORT CONTAINER -->
+  <div id="printableReportArea" style="display: none;"></div>
+
+  <!-- Scripts (Cache Buster v4.4) -->
+  <script src="js/data.js?v=4.4"></script>
+  <script src="js/sheets.js?v=4.4"></script>
+  <script src="js/app.js?v=4.4"></script>
 </body>
 </html>

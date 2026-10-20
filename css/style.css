@@ -3436,5 +3436,252 @@ body.is-admin .admin-only-feature {
   color: #ffffff;
 }
 
+/* ===================================================================
+   MOBILE-FIRST FRIENDLY UX & GESTURE NAVIGATION ENHANCEMENT
+   =================================================================== */
+html, body {
+  overscroll-behavior-x: none; /* Mencegah swipe ke samping keluar aplikasi browser */
+}
+
+/* Sub-card Batas Hafalan (Ziyadah & Muroja'ah Terpisah) */
+.hafalan-subcard {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  transition: all 0.2s ease;
+}
+
+.hafalan-subcard.disabled {
+  opacity: 0.55;
+  background: #f1f5f9;
+}
+
+.hafalan-subcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.hafalan-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hafalan-toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #047857;
+  cursor: pointer;
+}
+
+.hafalan-subcard-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.field-micro-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Pemisah Kelas di Portal Pantauan Anak */
+.pantauan-class-filter-bar {
+  margin-top: 14px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.pantauan-class-filter-title {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.pantauan-class-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pantauan-class-pill {
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pantauan-class-pill:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.pantauan-class-pill.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+.parent-quick-santri-wrap {
+  margin-top: 12px;
+}
+
+.parent-quick-santri-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.parent-quick-santri-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.quick-santri-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quick-santri-chip:hover, .quick-santri-chip.active {
+  background: #ecfdf5;
+  border-color: #10b981;
+  color: #065f46;
+  transform: translateY(-1px);
+}
+
+/* Report Selector Styling */
+.report-type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-type-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.report-type-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.report-type-item input[type="radio"] {
+  margin-top: 3px;
+  accent-color: #0284c7;
+}
+
+.report-type-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-type-content strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.report-type-content span {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Recent Setoran Modal Items */
+.recent-setoran-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.recent-setoran-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recent-setoran-name {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.recent-setoran-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Cetak / Print Styles untuk Laporan Resmi */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableReportArea, #printableReportArea * {
+    visibility: visible;
+  }
+  #printableReportArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+    background: #ffffff;
+    color: #000000;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
 
 

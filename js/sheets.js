@@ -65,35 +65,110 @@ const SheetsService = {
     return localStorage.getItem(STORAGE_KEY_CURRENT_USTADZ) || MASTER_USTADZ[0];
   },
 
+  // Keamanan Login & Perlindungan Brute-force
+  checkLoginLockout() {
+    try {
+      const raw = localStorage.getItem("rq_login_lockout_v4");
+      if (raw) {
+        const lockData = JSON.parse(raw);
+        const now = Date.now();
+        if (lockData.lockedUntil && lockData.lockedUntil > now) {
+          const remainingSec = Math.ceil((lockData.lockedUntil - now) / 1000);
+          return { locked: true, remainingSec };
+        }
+      }
+    } catch (e) {}
+    return { locked: false, remainingSec: 0 };
+  },
+
+  recordFailedLoginAttempt() {
+    try {
+      const raw = localStorage.getItem("rq_login_lockout_v4") || "{}";
+      const data = JSON.parse(raw);
+      const attempts = (data.attempts || 0) + 1;
+      const now = Date.now();
+
+      if (attempts >= 5) {
+        // Kunci selama 60 detik jika salah 5 kali berturut-turut
+        localStorage.setItem("rq_login_lockout_v4", JSON.stringify({
+          attempts: attempts,
+          lockedUntil: now + (60 * 1000)
+        }));
+        return { locked: true, remainingSec: 60 };
+      } else {
+        localStorage.setItem("rq_login_lockout_v4", JSON.stringify({
+          attempts: attempts,
+          lockedUntil: 0
+        }));
+        return { locked: false, remainingSec: 0, attemptsLeft: 5 - attempts };
+      }
+    } catch (e) {
+      return { locked: false, remainingSec: 0 };
+    }
+  },
+
+  resetLoginAttempts() {
+    try {
+      localStorage.removeItem("rq_login_lockout_v4");
+    } catch (e) {}
+  },
+
   loginUstadz(ustadzName, enteredPin) {
+    const lockCheck = this.checkLoginLockout();
+    if (lockCheck.locked) {
+      return {
+        success: false,
+        locked: true,
+        message: `Terlalu banyak percobaan sandi salah demi keamanan! Silakan tunggu ${lockCheck.remainingSec} detik.`
+      };
+    }
+
     const cleanPin = (enteredPin || "").trim();
-    if (!cleanPin) return false;
+    if (!cleanPin) {
+      return { success: false, message: "Sandi PIN tidak boleh kosong." };
+    }
 
     const isTargetAdmin = this.isAdminName(ustadzName);
     const adminPin = this.getAdminPin();
     const teacherPin = this.getTeacherPin();
 
+    let isSuccess = false;
     if (isTargetAdmin) {
-      // Khusus Ustadz M. Fikri Haekal: WAJIB mencocokkan Sandi Admin (1122)
+      // Khusus Ustadz M. Fikri Haekal: WAJIB Sandi Admin
       if (cleanPin === adminPin || cleanPin === "1122") {
-        localStorage.setItem(STORAGE_KEY_AUTH, "true");
-        localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName || MASTER_USTADZ[0]);
-        // Sinkronkan sandi lokal di perangkat ini ke sandi terbaru
+        isSuccess = true;
+      }
+    } else {
+      // Pengajar lain (Ustadzah): dapat menggunakan Sandi Pengajar ATAU Sandi Admin
+      if (cleanPin === teacherPin || cleanPin === adminPin || cleanPin === "1234" || cleanPin === "1122") {
+        isSuccess = true;
+      }
+    }
+
+    if (isSuccess) {
+      this.resetLoginAttempts();
+      localStorage.setItem(STORAGE_KEY_AUTH, "true");
+      localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName || MASTER_USTADZ[0]);
+      if (isTargetAdmin) {
         const settings = this.getSettings();
         settings.adminPin = cleanPin;
         settings.securityPin = cleanPin;
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
-        return true;
       }
-      return false;
+      return { success: true };
     } else {
-      // Pengajar lain (Ustadzah): dapat menggunakan Sandi Pengajar ATAU Sandi Admin
-      if (cleanPin === teacherPin || cleanPin === adminPin || cleanPin === "1234" || cleanPin === "1122") {
-        localStorage.setItem(STORAGE_KEY_AUTH, "true");
-        localStorage.setItem(STORAGE_KEY_CURRENT_USTADZ, ustadzName);
-        return true;
+      const lockRes = this.recordFailedLoginAttempt();
+      if (lockRes.locked) {
+        return {
+          success: false,
+          locked: true,
+          message: `Sandi PIN salah 5 kali! Akun dikunci sementara selama 60 detik demi keamanan.`
+        };
       }
-      return false;
+      return {
+        success: false,
+        message: `Sandi PIN salah! Sisa percobaan: ${lockRes.attemptsLeft} kali.`
+      };
     }
   },
 
@@ -208,12 +283,12 @@ const SheetsService = {
       const raw = localStorage.getItem(STORAGE_KEY_SETORAN);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(r => r.namaSantri === "Marcel" || r.namaSantri === "Ratu")) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed;
         }
       }
     } catch (e) {
-      console.error(e);
+      console.error("Gagal parse local records:", e);
     }
     localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(INITIAL_SETORAN_RECORDS));
     return [...INITIAL_SETORAN_RECORDS];
@@ -225,7 +300,7 @@ const SheetsService = {
       const raw = localStorage.getItem(STORAGE_KEY_SANTRI);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length >= 36 && parsed.some(s => s.nama === "Marcel" || s.nama === "Ratu")) {
+        if (Array.isArray(parsed) && parsed.length >= 30) {
           return parsed;
         }
       }
@@ -285,14 +360,32 @@ const SheetsService = {
     return false;
   },
 
-  deleteRecord(recordId) {
-    if (!this.isAdmin()) {
-      return { success: false, message: "Akses Ditolak: Hanya Ustadz M. Fikri Haekal yang berwenang menghapus riwayat setoran." };
+  async deleteRecord(recordId) {
+    if (!this.isUstadzLoggedIn()) {
+      return { success: false, message: "Akses Ditolak: Masuk sebagai Ustadz/ah atau Admin untuk menghapus setoran." };
     }
     let records = this.getAllRecords();
+    const target = records.find(r => r.id === recordId);
+    if (!target) {
+      return { success: false, message: "Data setoran tidak ditemukan atau sudah terhapus." };
+    }
     records = records.filter(r => r.id !== recordId);
     localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(records));
-    return { success: true };
+
+    // Kirim perintah hapus ke Google Spreadsheet (Apps Script)
+    const endpoint = this.getEndpoint();
+    if (endpoint) {
+      try {
+        fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "delete", id: recordId })
+        }).catch(err => console.warn("Google Sheet sync delete notice:", err));
+      } catch (err) {
+        console.warn("Spreadsheet delete call error:", err);
+      }
+    }
+    return { success: true, record: target };
   },
 
   async testConnection(url) {

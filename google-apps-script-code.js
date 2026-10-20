@@ -29,6 +29,21 @@ function doGet(e) {
       return createJsonResponse({ status: "success", message: "Koneksi Google Spreadsheet RQ Ummul Qasim Berhasil!" });
     }
 
+    if (action === "delete") {
+      const deleteId = e.parameter.id;
+      if (deleteId) {
+        const sheet = getOrCreateSheet(ss, SHEET_NAME_SETORAN);
+        const data = sheet.getDataRange().getValues();
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][0]).trim() === String(deleteId).trim()) {
+            sheet.deleteRow(i + 1);
+            return createJsonResponse({ status: "success", message: "Setoran berhasil dihapus dari Spreadsheet!" });
+          }
+        }
+      }
+      return createJsonResponse({ status: "error", message: "ID setoran tidak ditemukan." });
+    }
+
     if (action === "read") {
       const sheet = getOrCreateSheet(ss, SHEET_NAME_SETORAN);
       const data = sheet.getDataRange().getValues();
@@ -48,7 +63,15 @@ function doGet(e) {
         if (d[2] instanceof Date) {
           tglStr = Utilities.formatDate(d[2], "GMT+7", "yyyy-MM-dd");
         } else if (d[2]) {
-          tglStr = String(d[2]).split("T")[0];
+          tglStr = String(d[2]).split("T")[0].trim();
+          // Standarisasi jika DD/MM/YYYY atau DD-MM-YYYY
+          const dmyMatch = tglStr.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+          if (dmyMatch) {
+            const day = dmyMatch[1].padStart(2, "0");
+            const month = dmyMatch[2].padStart(2, "0");
+            const year = dmyMatch[3];
+            tglStr = `${year}-${month}-${day}`;
+          }
         }
 
         rows.push({
@@ -108,7 +131,21 @@ function doPost(e) {
     if (e.postData && e.postData.contents) {
       payload = JSON.parse(e.postData.contents);
     } else {
-      payload = e.parameter;
+      payload = e.parameter || {};
+    }
+
+    if (payload.action === "delete") {
+      const deleteId = payload.id;
+      if (deleteId) {
+        const data = sheet.getDataRange().getValues();
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][0]).trim() === String(deleteId).trim()) {
+            sheet.deleteRow(i + 1);
+            return createJsonResponse({ status: "success", message: "Baris data setoran berhasil dihapus." });
+          }
+        }
+      }
+      return createJsonResponse({ status: "error", message: "ID setoran tidak ditemukan untuk dihapus." });
     }
 
     const timestamp = new Date();
