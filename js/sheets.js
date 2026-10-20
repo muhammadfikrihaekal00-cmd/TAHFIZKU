@@ -220,11 +220,93 @@ const SheetsService = {
     return true;
   },
 
+  // Normalisasi data & perbaiki tanggal kosong/invalid dari Spreadsheet
+  normalizeRecordDates(records) {
+    if (!Array.isArray(records)) return [];
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    return records.map(r => {
+      if (!r) return r;
+      let tgl = r.tanggal ? String(r.tanggal).trim() : "";
+      
+      // Tangani format teks spreadsheet aneh seperti "Sat Oct 17 2026 00:00:00 GM"
+      if (tgl && (tgl.includes("GM") || /[A-Za-z]{3}\s+\d+/.test(tgl))) {
+        const dMatch = tgl.match(/([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/);
+        if (dMatch) {
+          const parsedD = new Date(dMatch[1]);
+          if (!isNaN(parsedD.getTime())) {
+            const yyyy = parsedD.getFullYear();
+            const mm = String(parsedD.getMonth() + 1).padStart(2, "0");
+            const dd = String(parsedD.getDate()).padStart(2, "0");
+            tgl = `${yyyy}-${mm}-${dd}`;
+          }
+        }
+      }
+
+      // Format DD/MM/YYYY atau DD-MM-YYYY
+      if (tgl) {
+        const dmyMatch = tgl.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+        if (dmyMatch) {
+          const day = dmyMatch[1].padStart(2, "0");
+          const month = dmyMatch[2].padStart(2, "0");
+          const year = dmyMatch[3];
+          tgl = `${year}-${month}-${day}`;
+        }
+      }
+
+      // Jika tanggal kosong ("" atau "-"), ekstrak dari timestamp atau ID
+      if (!tgl || tgl === "" || tgl === "-") {
+        if (r.timestamp) {
+          const parsedTs = new Date(r.timestamp);
+          if (!isNaN(parsedTs.getTime())) {
+            const yyyy = parsedTs.getFullYear();
+            const mm = String(parsedTs.getMonth() + 1).padStart(2, "0");
+            const dd = String(parsedTs.getDate()).padStart(2, "0");
+            tgl = `${yyyy}-${mm}-${dd}`;
+          }
+        }
+        if (!tgl && r.id) {
+          const m = String(r.id).match(/REC-(\d+)/);
+          if (m) {
+            const parsedId = new Date(Number(m[1]));
+            if (!isNaN(parsedId.getTime())) {
+              const yyyy = parsedId.getFullYear();
+              const mm = String(parsedId.getMonth() + 1).padStart(2, "0");
+              const dd = String(parsedId.getDate()).padStart(2, "0");
+              tgl = `${yyyy}-${mm}-${dd}`;
+            }
+          }
+        }
+        if (!tgl) {
+          tgl = todayStr;
+        }
+      }
+
+      return {
+        ...r,
+        tanggal: tgl,
+        totalBintang: Number(r.totalBintang) || 0,
+        bintangTajwid: Number(r.bintangTajwid) || 0,
+        bintangKelancaran: Number(r.bintangKelancaran) || 0,
+        bintangMakhraj: Number(r.bintangMakhraj) || 0
+      };
+    });
+  },
+
   // Simpan data setoran
   async submitSetoran(record) {
+    if (!record.tanggal || String(record.tanggal).trim() === "") {
+      record.tanggal = new Date().toISOString().split("T")[0];
+    }
+    if (!record.timestamp) {
+      record.timestamp = new Date().toISOString();
+    }
+    record.totalBintang = Number(record.totalBintang) || 0;
+
     const localRecords = this.getAllRecords();
     localRecords.unshift(record);
-    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(localRecords));
+    const normalizedLocal = this.normalizeRecordDates(localRecords);
+    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(normalizedLocal));
 
     const endpoint = this.getEndpoint();
     if (!endpoint) {
@@ -267,10 +349,19 @@ const SheetsService = {
       const response = await fetch(url, { method: "GET" });
       const res = await response.json();
       if (res && res.status === "success" && Array.isArray(res.data)) {
-        if (res.data.length > 0) {
-          localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(res.data));
-        }
-        return res.data;
+        const normalizedRemote = this.normalizeRecordDates(res.data);
+        
+        // Smart merge: gabungkan data remote dengan catatan lokal yang baru diinput agar tidak hilang
+        const local = this.getAllRecords();
+        const map = new Map();
+        // Masukkan remote dulu
+        normalizedRemote.forEach(r => { if (r && r.id) map.set(r.id, r); });
+        // Masukkan lokal yang belum ada di remote
+        local.forEach(r => { if (r && r.id && !map.has(r.id)) map.set(r.id, r); });
+        const merged = Array.from(map.values());
+
+        localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(merged));
+        return merged;
       }
     } catch (err) {
       console.error("Gagal fetch Google Sheets:", err);
@@ -284,14 +375,15 @@ const SheetsService = {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return this.normalizeRecordDates(parsed);
         }
       }
     } catch (e) {
       console.error("Gagal parse local records:", e);
     }
-    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(INITIAL_SETORAN_RECORDS));
-    return [...INITIAL_SETORAN_RECORDS];
+    const initialNormalized = this.normalizeRecordDates(INITIAL_SETORAN_RECORDS);
+    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(initialNormalized));
+    return [...initialNormalized];
   },
 
   // Master Santri, Kelola Santri & Update Foto (Khusus Ustadz M. Fikri Haekal)

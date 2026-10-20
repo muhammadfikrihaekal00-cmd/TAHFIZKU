@@ -74,6 +74,26 @@ function doGet(e) {
           }
         }
 
+        // Fallback jika tanggal kosong di sheet: ambil dari timestamp (kolom B) atau ID (kolom A)
+        if (!tglStr || tglStr === "" || tglStr === "-") {
+          if (d[1]) {
+            if (d[1] instanceof Date) {
+              tglStr = Utilities.formatDate(d[1], "GMT+7", "yyyy-MM-dd");
+            } else {
+              tglStr = String(d[1]).split("T")[0].trim();
+            }
+          }
+          if (!tglStr && d[0]) {
+            const matchId = String(d[0]).match(/REC-(\d+)/);
+            if (matchId) {
+              const dFromId = new Date(Number(matchId[1]));
+              if (!isNaN(dFromId.getTime())) {
+                tglStr = Utilities.formatDate(dFromId, "GMT+7", "yyyy-MM-dd");
+              }
+            }
+          }
+        }
+
         rows.push({
           id: String(d[0] || ""),
           timestamp: d[1] || "",
@@ -149,7 +169,10 @@ function doPost(e) {
     }
 
     const timestamp = new Date();
-    const tgl = payload.tanggal || Utilities.formatDate(timestamp, "GMT+7", "yyyy-MM-dd");
+    let tgl = payload.tanggal ? String(payload.tanggal).trim() : "";
+    if (!tgl || tgl === "-") {
+      tgl = Utilities.formatDate(timestamp, "GMT+7", "yyyy-MM-dd");
+    }
 
     const row = [
       payload.id || ("REC-" + Date.now()),

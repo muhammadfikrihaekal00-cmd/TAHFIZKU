@@ -261,6 +261,19 @@ const App = {
         btnParentEditSantri.style.display = isAdmin ? "inline-flex" : "none";
       }
 
+      // Sinkronkan kategori default leaderboard sesuai pengajar yang login
+      const uName = ustadzName || "";
+      if (uName.includes("Khadijah") || uName.includes("Khirfatul")) {
+        this.currentCategoryFilter = "Dasar";
+      } else if (uName.includes("Fikri") || uName.includes("Lulu")) {
+        this.currentCategoryFilter = "Menengah";
+      }
+      const catBtns = document.querySelectorAll(".category-filter-btn");
+      catBtns.forEach(b => {
+        if (b.dataset.kategori === this.currentCategoryFilter) b.classList.add("active");
+        else b.classList.remove("active");
+      });
+
     } else {
       document.body.classList.remove("is-ustadz");
       document.body.classList.remove("is-admin");
@@ -1072,9 +1085,14 @@ const App = {
       else if (!isZiyadahActive && isMurojaahActive) hafalanJenis = "Muroja'ah";
       else if (!isZiyadahActive && !isMurojaahActive) hafalanJenis = "Tilawah Saja";
 
+      const rawTanggal = document.getElementById("inputTanggal")?.value;
+      const todayStr = new Date().toISOString().split("T")[0];
+      const tanggalVal = (rawTanggal && rawTanggal.trim()) ? rawTanggal.trim() : todayStr;
+
       const record = {
         id: "REC-" + Date.now(),
-        tanggal: document.getElementById("inputTanggal").value,
+        timestamp: new Date().toISOString(),
+        tanggal: tanggalVal,
         santriId: santriId,
         namaSantri: namaSantri,
         halaqah: document.getElementById("selectHalaqah").value,
@@ -1136,6 +1154,16 @@ const App = {
         this.ratings = { tajwid: 5, kelancaran: 5, makhraj: 5 };
         this.setupStarRatings();
 
+        // Sesuaikan kategori papan peringkat dengan kategori santri yang baru dinilai
+        if (kategoriSantri) {
+          this.currentCategoryFilter = kategoriSantri;
+          const catBtns = document.querySelectorAll(".category-filter-btn");
+          catBtns.forEach(b => {
+            if (b.dataset.kategori === kategoriSantri) b.classList.add("active");
+            else b.classList.remove("active");
+          });
+        }
+
         this.renderLeaderboard();
         this.refreshParentPortalIfActive(santriId);
         this.renderRecentSetoranList();
@@ -1151,9 +1179,26 @@ const App = {
   },
 
   // 6. Helper Tanggal Pekanan & Bulanan (Robust Date Parsing - Memperbaiki Bintang Peringkat Pekanan & Bulanan)
-  parseDateSafe(dateVal) {
-    if (!dateVal) return null;
-    if (dateVal instanceof Date) return isNaN(dateVal.getTime()) ? null : dateVal;
+  parseDateSafe(dateVal, fallbackRecord = null) {
+    // 1. Jika tanggal kosong/falsy, coba ekstrak dari fallbackRecord (timestamp atau ID)
+    if (!dateVal || dateVal === "" || dateVal === "-") {
+      if (fallbackRecord) {
+        if (fallbackRecord.timestamp) {
+          const d = new Date(fallbackRecord.timestamp);
+          if (!isNaN(d.getTime())) return d;
+        }
+        if (fallbackRecord.id) {
+          const m = String(fallbackRecord.id).match(/REC-(\d+)/);
+          if (m) {
+            const d = new Date(Number(m[1]));
+            if (!isNaN(d.getTime())) return d;
+          }
+        }
+      }
+      return new Date(); // Fallback ke hari ini agar data setoran baru tidak pernah hilang
+    }
+
+    if (dateVal instanceof Date) return isNaN(dateVal.getTime()) ? new Date() : dateVal;
     
     let s = String(dateVal).trim();
     if (s.includes("T")) s = s.split("T")[0].trim();
@@ -1168,13 +1213,28 @@ const App = {
     if (m) {
       return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
     }
+
+    // Format teks seperti "Sat Oct 17 2026..."
+    if (s.includes("GM") || /[A-Za-z]{3}\s+\d+/.test(s)) {
+      const matchMonth = s.match(/([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/);
+      if (matchMonth) {
+        const d = new Date(matchMonth[1]);
+        if (!isNaN(d.getTime())) return d;
+      }
+    }
+
     const d = new Date(s);
-    return isNaN(d.getTime()) ? null : d;
+    if (!isNaN(d.getTime())) return d;
+
+    if (fallbackRecord) {
+      return this.parseDateSafe(null, fallbackRecord);
+    }
+    return new Date();
   },
 
-  isDateInCurrentWeek(dateStr) {
-    const targetDate = this.parseDateSafe(dateStr);
-    if (!targetDate) return false;
+  isDateInCurrentWeek(dateStr, fallbackRecord = null) {
+    const targetDate = this.parseDateSafe(dateStr, fallbackRecord);
+    if (!targetDate) return true; // Amankan agar setoran terhitung
     
     const target = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
     const now = new Date();
@@ -1186,9 +1246,9 @@ const App = {
     return target >= monday && target <= sunday;
   },
 
-  isDateInCurrentMonth(dateStr) {
-    const targetDate = this.parseDateSafe(dateStr);
-    if (!targetDate) return false;
+  isDateInCurrentMonth(dateStr, fallbackRecord = null) {
+    const targetDate = this.parseDateSafe(dateStr, fallbackRecord);
+    if (!targetDate) return true;
     const now = new Date();
     return targetDate.getFullYear() === now.getFullYear() && targetDate.getMonth() === now.getMonth();
   },
@@ -1310,12 +1370,12 @@ const App = {
       const totalSetoran = allSantriRecords.length;
 
       // Filter Pekanan (Senin - Ahad pekan ini)
-      const weekRecords = allSantriRecords.filter(r => this.isDateInCurrentWeek(r.tanggal));
+      const weekRecords = allSantriRecords.filter(r => this.isDateInCurrentWeek(r.tanggal, r));
       const weekStars = weekRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
       const weekSetoran = weekRecords.length;
 
       // Filter Bulanan (Bulan ini)
-      const monthRecords = allSantriRecords.filter(r => this.isDateInCurrentMonth(r.tanggal));
+      const monthRecords = allSantriRecords.filter(r => this.isDateInCurrentMonth(r.tanggal, r));
       const monthStars = monthRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
       const monthSetoran = monthRecords.length;
 
