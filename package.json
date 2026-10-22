@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Portal Mutaba'ah & Kontrol Hafalan RQ Ummul Qasim (Kitab Tamhid, Tartil Al-Qur'an & Tahfidz)",
   "scripts": {
-    "start": "powershell -ExecutionPolicy Bypass -File ./serve.ps1"
+    "start": "powershell -ExecutionPolicy Bypass -File ./serve.ps1",
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./deploy.ps1"
   },
   "keywords": [
     "tahfidz",
