@@ -21,6 +21,17 @@ const CLASS_TEACHER_MAP = {
   "Kelas Dasar 2": { ustadz: "Ustadzah Khirfatul Jannah", kategori: "Dasar" }
 };
 
+// Fungsi Sanitasi HTML Universal (Mencegah XSS - Cross-Site Scripting)
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const App = {
   currentCategoryFilter: "Menengah", // Default ke Menengah atau Dasar
   currentPeriodFilter: "pekanan", // Default ke Capaian Bintang Pekanan (Simpel)
@@ -1137,14 +1148,16 @@ const App = {
       };
 
       const originalBtnText = submitBtn.innerHTML;
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳ Menyimpan ke Google Spreadsheet...</span>`;
 
       try {
-        await SheetsService.submitSetoran(record);
+        // 1. Simpan seketika (0 ms delay - Optimistic Save)
+        SheetsService.submitSetoranInstant(record);
 
-        this.showToast(`Setoran ${namaSantri} berhasil disimpan! ⭐ +${record.totalBintang} Bintang`, "success");
+        // 2. Tampilkan umpan balik sukses seketika pada tombol
+        submitBtn.innerHTML = `<span>✅ Setoran Berhasil Disimpan!</span>`;
+        submitBtn.style.background = "#059669";
         
+        // 3. Langsung reset input formulir agar ustadz bisa langsung input santri berikutnya
         document.getElementById("inputTamhidHalaman").value = "";
         document.getElementById("inputTartilHalaman").value = "";
         document.getElementById("inputBacaanCatatan").value = "";
@@ -1154,7 +1167,9 @@ const App = {
         this.ratings = { tajwid: 5, kelancaran: 5, makhraj: 5 };
         this.setupStarRatings();
 
-        // Sesuaikan kategori papan peringkat dengan kategori santri yang baru dinilai
+        this.showToast(`Alhamdulillah! Setoran ${escapeHtml(namaSantri)} tersimpan seketika. ⭐ +${record.totalBintang} Bintang`, "success");
+
+        // 4. Langsung update tampilan Leaderboard, Pantauan Anak, dan Riwayat
         if (kategoriSantri) {
           this.currentCategoryFilter = kategoriSantri;
           const catBtns = document.querySelectorAll(".category-filter-btn");
@@ -1168,12 +1183,19 @@ const App = {
         this.refreshParentPortalIfActive(santriId);
         this.renderRecentSetoranList();
 
+        // 5. Kembalikan teks tombol dalam 900ms
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+          submitBtn.style.background = "";
+        }, 900);
+
       } catch (err) {
         console.error(err);
         this.showToast("Terjadi kendala saat menyimpan data: " + err.message, "error");
-      } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnText;
+        submitBtn.style.background = "";
       }
     });
   },
@@ -1745,6 +1767,7 @@ const App = {
   },
 
   renderParentStudentDetail(santriId) {
+    this.currentParentStudentId = santriId;
     const detailBox = document.getElementById("parentStudentDetail");
     const emptyBox = document.getElementById("parentEmptyState");
 
@@ -1873,10 +1896,10 @@ const App = {
                   ${tartilBadge}
                 </div>
                 <div style="font-weight:800; font-size:0.88rem; color:#9f1239;">
-                  Juz ${r.tartilJuz}
+                  Juz ${escapeHtml(r.tartilJuz)}
                 </div>
-                <div style="font-size:0.78rem; color:#be123c; margin-top:2px;">Posisi: ${r.tartilHalaman || "-"}</div>
-                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.75rem; color:#881337; margin-top:4px; font-style:italic;">Catatan: "${r.bacaanCatatan}"</div>` : ""}
+                <div style="font-size:0.78rem; color:#be123c; margin-top:2px;">Posisi: ${escapeHtml(r.tartilHalaman || "-")}</div>
+                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.75rem; color:#881337; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
               </div>
             `;
           } else {
@@ -1890,9 +1913,9 @@ const App = {
                   <span>📚 Kitab Tamhid</span>
                   ${tamhidBadge}
                 </div>
-                <div style="font-weight:800; font-size:0.88rem; color:#0c4a6e;">${r.tamhidJilid || "Tamhid"}</div>
-                <div style="font-size:0.78rem; color:#0284c7; margin-top:2px;">Posisi: ${r.tamhidHalaman || "-"}</div>
-                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.75rem; color:#0369a1; margin-top:4px; font-style:italic;">Catatan: "${r.bacaanCatatan}"</div>` : ""}
+                <div style="font-weight:800; font-size:0.88rem; color:#0c4a6e;">${escapeHtml(r.tamhidJilid || "Tamhid")}</div>
+                <div style="font-size:0.78rem; color:#0284c7; margin-top:2px;">Posisi: ${escapeHtml(r.tamhidHalaman || "-")}</div>
+                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.75rem; color:#0369a1; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
               </div>
             `;
           }
@@ -1901,38 +1924,36 @@ const App = {
             ? `<span class="meta-badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">✅ Lulus</span>`
             : `<span class="meta-badge" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca;">🔄 Perbaiki</span>`;
 
-          // Tombol hapus setoran keliru: Bisa diakses oleh Ustadz/Admin yang login
-          const delBtn = SheetsService.isUstadzLoggedIn()
-            ? `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${r.id}')" style="padding:3px 9px; font-size:0.72rem; margin-left:8px; border-radius:6px;" title="Hapus catatan evaluasi ini (koreksi salah input)">🗑️ Hapus Setoran</button>`
-            : '';
+          // Tombol hapus setoran keliru: Bisa diakses langsung dengan konfirmasi PIN & hilangkan instan dari layar
+          const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:4px 10px; font-size:0.75rem; margin-left:8px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">🗑️ Hapus</button>`;
 
           // Rincian Hafalan Ziyadah & Muroja'ah Terpisah
           let hafalanDetailsHtml = "";
           if (r.ziyadahSurah && r.murojaahSurah) {
             hafalanDetailsHtml = `
               <div style="font-weight:800; font-size:0.86rem; color:#78350f;">
-                ⭐ Ziyadah: Surah ${r.ziyadahSurah} (Ayat ${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
+                ⭐ Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (Ayat ${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
               </div>
               <div style="font-weight:700; font-size:0.82rem; color:#92400e; margin-top:3px;">
-                🔄 Muroja'ah: Surah ${r.murojaahSurah} (Ayat ${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
+                🔄 Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (Ayat ${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
               </div>
             `;
           } else if (r.ziyadahSurah) {
             hafalanDetailsHtml = `
               <div style="font-weight:800; font-size:0.86rem; color:#78350f;">
-                ⭐ Ziyadah: Surah ${r.ziyadahSurah} (Ayat ${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
+                ⭐ Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (Ayat ${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
               </div>
             `;
           } else if (r.murojaahSurah) {
             hafalanDetailsHtml = `
               <div style="font-weight:800; font-size:0.86rem; color:#78350f;">
-                🔄 Muroja'ah: Surah ${r.murojaahSurah} (Ayat ${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
+                🔄 Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (Ayat ${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
               </div>
             `;
           } else {
             hafalanDetailsHtml = `
               <div style="font-weight:800; font-size:0.88rem; color:#78350f;">
-                Surah ${r.surahAwal || "-"} (Ayat ${r.ayatAwal || 1} - ${r.ayatAkhir || 1})
+                Surah ${escapeHtml(r.surahAwal || "-")} (Ayat ${r.ayatAwal || 1} - ${r.ayatAkhir || 1})
               </div>
             `;
           }
@@ -1940,9 +1961,9 @@ const App = {
           return `
             <div class="timeline-card">
               <div class="timeline-header">
-                <span class="timeline-date">📅 ${dateStr}</span>
+                <span class="timeline-date">📅 ${escapeHtml(dateStr)}</span>
                 <div style="display:flex; align-items:center;">
-                  <span class="timeline-ustadz">👳‍♂️ ${r.ustadz || "Pengampu RQ"}</span>
+                  <span class="timeline-ustadz">👳‍♂️ ${escapeHtml(r.ustadz || "Pengampu RQ")}</span>
                   ${delBtn}
                 </div>
               </div>
@@ -2510,21 +2531,58 @@ function createJsonResponse(data) {
     }
   },
 
-  async deleteSetoranRecord(recordId) {
+  async deleteSetoranRecord(recordId, btnEl = null) {
+    let bypassAuth = false;
+
+    // Verifikasi keamanan jika belum login
     if (!SheetsService.isUstadzLoggedIn()) {
-      this.showToast("Akses Ditolak: Hanya Pengajar yang berwenang menghapus catatan evaluasi setoran.", "error");
-      return;
+      const pin = prompt("Konfirmasi Keamanan Pengajar / Admin:\nMasukkan PIN Anda untuk menghapus catatan setoran ini:");
+      if (!pin) return;
+      const verify = SheetsService.verifyAnyPin(pin);
+      if (!verify.valid) {
+        this.showToast("PIN salah! Penghapusan dibatalkan demi keamanan.", "error");
+        return;
+      }
+      bypassAuth = true;
+      // Simpan status otentikasi agar pengajar tidak perlu mengetik PIN berulang kali
+      localStorage.setItem("rq_ummul_qasim_auth_session_v4", "true");
+    } else {
+      if (!confirm("Apakah Anda yakin ingin menghapus catatan evaluasi ini? Data yang terhapus tidak dapat dikembalikan.")) {
+        return;
+      }
     }
-    if (confirm("Apakah Anda yakin ingin menghapus catatan evaluasi ini? Data yang terhapus tidak dapat dikembalikan.")) {
-      const res = await SheetsService.deleteRecord(recordId);
+
+    // Efek visual seketika: langsung hilangkan baris item dari layar (0 delay UX)
+    if (btnEl) {
+      const rowItem = btnEl.closest(".recent-setoran-item") || btnEl.closest(".timeline-card");
+      if (rowItem) {
+        rowItem.style.transition = "all 0.2s ease-out";
+        rowItem.style.opacity = "0";
+        rowItem.style.transform = "scale(0.92)";
+        rowItem.style.maxHeight = "0";
+        rowItem.style.padding = "0";
+        rowItem.style.margin = "0";
+        rowItem.style.overflow = "hidden";
+        setTimeout(() => rowItem.remove(), 200);
+      }
+    }
+
+    try {
+      const res = await SheetsService.deleteRecord(recordId, bypassAuth);
       if (res.success) {
         this.renderLeaderboard();
         this.renderParentPortal();
         this.renderRecentSetoranList();
-        this.showToast("Catatan evaluasi setoran berhasil dihapus. ✅", "success");
+        if (this.currentParentStudentId) {
+          this.renderParentStudentDetail(this.currentParentStudentId);
+        }
+        this.showToast("Catatan evaluasi setoran berhasil dihapus permanen. 🗑️", "success");
       } else {
         this.showToast(res.message || "Gagal menghapus catatan setoran.", "error");
       }
+    } catch (err) {
+      console.error("Error deleting setoran:", err);
+      this.showToast("Terjadi kendala saat menghapus: " + err.message, "error");
     }
   },
 
@@ -2961,24 +3019,24 @@ function createJsonResponse(data) {
   setupRecentSetoranModal() {
     const modal = document.getElementById("modalRecentSetoran");
     const openBtn = document.getElementById("btnOpenRecentSetoranModal");
+    const headerBtn = document.getElementById("btnHeaderRecentSetoran");
     const closeBtn = document.getElementById("btnCloseRecentSetoranModal");
 
+    const openHandler = () => {
+      this.renderRecentSetoranList();
+      if (modal) {
+        modal.classList.add("active");
+        try {
+          history.pushState({ modal: "modalRecentSetoran" }, "");
+        } catch (e) {}
+      }
+    };
+
     if (openBtn) {
-      openBtn.addEventListener("click", () => {
-        if (!SheetsService.isUstadzLoggedIn()) {
-          this.showToast("Akses Terbatas: Hanya Pengajar yang berwenang mengelola & menghapus riwayat setoran.", "error");
-          const loginPortal = document.getElementById("loginPortalScreen");
-          if (loginPortal) loginPortal.classList.add("active");
-          return;
-        }
-        this.renderRecentSetoranList();
-        if (modal) {
-          modal.classList.add("active");
-          try {
-            history.pushState({ modal: "modalRecentSetoran" }, "");
-          } catch (e) {}
-        }
-      });
+      openBtn.addEventListener("click", openHandler);
+    }
+    if (headerBtn) {
+      headerBtn.addEventListener("click", openHandler);
     }
 
     if (closeBtn && modal) {
@@ -3009,41 +3067,41 @@ function createJsonResponse(data) {
     container.innerHTML = recentRecords.map(r => {
       let hafalanText = "";
       if (r.ziyadahSurah && r.murojaahSurah) {
-        hafalanText = `⭐ Ziyadah: ${r.ziyadahSurah} (${r.ziyadahAyatAwal || 1}-${r.ziyadahAyatAkhir || 1}) • 🔄 Muroja'ah: ${r.murojaahSurah} (${r.murojaahAyatAwal || 1}-${r.murojaahAyatAkhir || 1})`;
+        hafalanText = `⭐ Ziyadah: ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal || 1}-${r.ziyadahAyatAkhir || 1}) • 🔄 Muroja'ah: ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal || 1}-${r.murojaahAyatAkhir || 1})`;
       } else if (r.ziyadahSurah) {
-        hafalanText = `⭐ Ziyadah: ${r.ziyadahSurah} (${r.ziyadahAyatAwal || 1}-${r.ziyadahAyatAkhir || 1})`;
+        hafalanText = `⭐ Ziyadah: ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal || 1}-${r.ziyadahAyatAkhir || 1})`;
       } else if (r.murojaahSurah) {
-        hafalanText = `🔄 Muroja'ah: ${r.murojaahSurah} (${r.murojaahAyatAwal || 1}-${r.murojaahAyatAkhir || 1})`;
+        hafalanText = `🔄 Muroja'ah: ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal || 1}-${r.murojaahAyatAkhir || 1})`;
       } else if (r.surahAwal) {
-        hafalanText = `${r.surahAwal} (${r.ayatAwal || 1}-${r.ayatAkhir || 1})`;
+        hafalanText = `${escapeHtml(r.surahAwal)} (${r.ayatAwal || 1}-${r.ayatAkhir || 1})`;
       } else {
         hafalanText = "Tilawah saja";
       }
 
       let tilawahText = "";
       if (r.bacaanTipe === "Tartil") {
-        tilawahText = `📜 Tartil: Juz ${r.tartilJuz || "30"} (${r.tartilHalaman || "-"})`;
+        tilawahText = `📜 Tartil: Juz ${escapeHtml(r.tartilJuz || "30")} (${escapeHtml(r.tartilHalaman || "-")})`;
       } else {
-        tilawahText = `📖 ${r.tamhidJilid || "Tamhid"} (${r.tamhidHalaman || "-"})`;
+        tilawahText = `📖 ${escapeHtml(r.tamhidJilid || "Tamhid")} (${escapeHtml(r.tamhidHalaman || "-")})`;
       }
 
       return `
         <div class="recent-setoran-item">
           <div class="recent-setoran-info">
             <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="recent-setoran-name">${r.namaSantri || "Santri RQ"}</span>
-              <span class="meta-badge" style="font-size: 0.68rem; padding: 2px 6px;">${r.halaqah || "Kelas"}</span>
+              <span class="recent-setoran-name">${escapeHtml(r.namaSantri || "Santri RQ")}</span>
+              <span class="meta-badge" style="font-size: 0.68rem; padding: 2px 6px;">${escapeHtml(r.halaqah || "Kelas")}</span>
             </div>
             <div class="recent-setoran-meta">
-              <span>📅 ${r.tanggal || "-"}</span> • 
+              <span>📅 ${escapeHtml(r.tanggal || "-")}</span> • 
               <span>${tilawahText}</span> • 
-              <span style="color: #b45309; font-weight: 700;">⭐ +${r.totalBintang || 0}</span>
+              <span style="color: #b45309; font-weight: 700;">⭐ +${Number(r.totalBintang) || 0}</span>
             </div>
             <div style="font-size: 0.74rem; color: #475569; margin-top: 2px;">
               ${hafalanText}
             </div>
           </div>
-          <button type="button" class="btn-delete-row" onclick="App.deleteSetoranRecord('${r.id}')" title="Hapus catatan setoran yang keliru ini" style="background: #fee2e2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
+          <button type="button" class="btn-delete-row" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" title="Hapus catatan setoran yang keliru ini" style="background: #fee2e2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
             <span>🗑️ Hapus</span>
           </button>
         </div>
@@ -3348,6 +3406,16 @@ function createJsonResponse(data) {
 
     let csvContent = "\uFEFF"; // UTF-8 BOM
     
+    // Pembersih sel CSV dari Formula Injection
+    const cleanCsvCell = (val) => {
+      if (val === null || val === undefined) return '""';
+      let str = String(val).replace(/"/g, '""');
+      if (/^[=+\-@\t\r]/.test(str)) {
+        str = "'" + str;
+      }
+      return `"${str}"`;
+    };
+
     csvContent += `"LAPORAN PERKEMBANGAN MUTABA'AH RQ UMMUL QASIM"\r\n`;
     csvContent += `"Kelas: ${chosenClass} | Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}"\r\n\r\n`;
 
@@ -3359,8 +3427,8 @@ function createJsonResponse(data) {
         const jilid = latest && latest.tamhidJilid ? latest.tamhidJilid : (s.statusBelajar === "Tartil Qur'an" ? "Tartil" : "Jilid 1");
         const hal = latest && latest.tamhidHalaman ? latest.tamhidHalaman : "-";
         const status = latest && latest.bacaanStatus ? latest.bacaanStatus : "Lanjut";
-        const catatan = (latest && latest.bacaanCatatan ? latest.bacaanCatatan : "-").replace(/"/g, '""');
-        csvContent += `"${idx + 1}","${s.nama}","${s.halaqah}","${s.statusBelajar}","${jilid}","${hal}","${status}","${catatan}"\r\n`;
+        const catatan = latest && latest.bacaanCatatan ? latest.bacaanCatatan : "-";
+        csvContent += `${cleanCsvCell(idx + 1)},${cleanCsvCell(s.nama)},${cleanCsvCell(s.halaqah)},${cleanCsvCell(s.statusBelajar)},${cleanCsvCell(jilid)},${cleanCsvCell(hal)},${cleanCsvCell(status)},${cleanCsvCell(catatan)}\r\n`;
       });
     } else if (reportType === "tartil") {
       csvContent += `"No","Nama Santri","Kelas","Mushaf Tartil","Halaman","Status","Bintang Tajwid","Bintang Kelancaran"\r\n`;
@@ -3372,7 +3440,7 @@ function createJsonResponse(data) {
         const status = latest && latest.bacaanStatus ? latest.bacaanStatus : "-";
         const tajwid = latest ? latest.bintangTajwid || 5 : 5;
         const kelancaran = latest ? latest.bintangKelancaran || 5 : 5;
-        csvContent += `"${idx + 1}","${s.nama}","${s.halaqah}","${juz}","${hal}","${status}","${tajwid}","${kelancaran}"\r\n`;
+        csvContent += `${cleanCsvCell(idx + 1)},${cleanCsvCell(s.nama)},${cleanCsvCell(s.halaqah)},${cleanCsvCell(juz)},${cleanCsvCell(hal)},${cleanCsvCell(status)},${cleanCsvCell(tajwid)},${cleanCsvCell(kelancaran)}\r\n`;
       });
     } else if (reportType === "hafalan") {
       csvContent += `"No","Nama Santri","Kelas","Batas Ziyadah","Batas Muroja'ah","Total Bintang"\r\n`;
@@ -3387,7 +3455,7 @@ function createJsonResponse(data) {
           else if (latest.surahAwal) ziyadah = `${latest.surahAwal} (${latest.ayatAwal}-${latest.ayatAkhir})`;
           if (latest.murojaahSurah) murojaah = `${latest.murojaahSurah} (${latest.murojaahAyatAwal || 1}-${latest.murojaahAyatAkhir || 1})`;
         }
-        csvContent += `"${idx + 1}","${s.nama}","${s.halaqah}","${ziyadah}","${murojaah}","${totalStars}"\r\n`;
+        csvContent += `${cleanCsvCell(idx + 1)},${cleanCsvCell(s.nama)},${cleanCsvCell(s.halaqah)},${cleanCsvCell(ziyadah)},${cleanCsvCell(murojaah)},${cleanCsvCell(totalStars)}\r\n`;
       });
     } else {
       csvContent += `"No","Nama Santri","Kelas","Capaian Tilawah","Batas Ziyadah","Batas Muroja'ah","Total Bintang","Total Evaluasi"\r\n`;
@@ -3398,7 +3466,7 @@ function createJsonResponse(data) {
         let tilawah = latest ? (latest.bacaanTipe === "Tartil" ? `Tartil Juz ${latest.tartilJuz || "30"} Hal. ${latest.tartilHalaman || "-"}` : `${latest.tamhidJilid || "Tamhid"} Hal. ${latest.tamhidHalaman || "-"}`) : "-";
         let ziyadah = latest ? (latest.ziyadahSurah ? `${latest.ziyadahSurah} (${latest.ziyadahAyatAwal || 1}-${latest.ziyadahAyatAkhir || 1})` : (latest.surahAwal || "-")) : "-";
         let murojaah = latest ? (latest.murojaahSurah ? `${latest.murojaahSurah} (${latest.murojaahAyatAwal || 1}-${latest.murojaahAyatAkhir || 1})` : "-") : "-";
-        csvContent += `"${idx + 1}","${s.nama}","${s.halaqah}","${tilawah}","${ziyadah}","${murojaah}","${totalStars}","${studentRecords.length}"\r\n`;
+        csvContent += `${cleanCsvCell(idx + 1)},${cleanCsvCell(s.nama)},${cleanCsvCell(s.halaqah)},${cleanCsvCell(tilawah)},${cleanCsvCell(ziyadah)},${cleanCsvCell(murojaah)},${cleanCsvCell(totalStars)},${cleanCsvCell(studentRecords.length)}\r\n`;
       });
     }
 

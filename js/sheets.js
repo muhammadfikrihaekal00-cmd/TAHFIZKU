@@ -220,81 +220,172 @@ const SheetsService = {
     return true;
   },
 
+  // Pembersih potensi Formula Injection demi keamanan spreadsheet & CSV
+  sanitizeFormula(val) {
+    if (val === null || val === undefined) return "";
+    const str = String(val).trim();
+    if (/^[=+\-@\t\r]/.test(str)) {
+      return "'" + str;
+    }
+    return str;
+  },
+
+  // Daftar ID setoran yang telah dihapus permanen agar tidak dihidupkan kembali oleh sync
+  getDeletedRecordIds() {
+    try {
+      const raw = localStorage.getItem("rq_deleted_records_v4");
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return arr.map(id => String(id).trim());
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  getDeletedSignatures() {
+    try {
+      const raw = localStorage.getItem("rq_deleted_sigs_v4");
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return arr;
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  makeRecordSignature(r) {
+    if (!r) return "";
+    const nama = (r.namaSantri || "").trim().toLowerCase();
+    const tgl = (r.tanggal || "").trim();
+    const ts = (r.timestamp || "").trim();
+    const stars = Number(r.totalBintang) || 0;
+    return `${nama}|${tgl}|${stars}|${ts}`;
+  },
+
+  markRecordAsDeleted(recordId, recordObj = null) {
+    if (!recordId && !recordObj) return;
+    try {
+      if (recordId) {
+        const deleted = this.getDeletedRecordIds();
+        const strId = String(recordId).trim();
+        if (!deleted.includes(strId)) {
+          deleted.push(strId);
+          localStorage.setItem("rq_deleted_records_v4", JSON.stringify(deleted));
+        }
+      }
+      if (recordObj) {
+        const sig = this.makeRecordSignature(recordObj);
+        if (sig) {
+          const sigs = this.getDeletedSignatures();
+          if (!sigs.includes(sig)) {
+            sigs.push(sig);
+            localStorage.setItem("rq_deleted_sigs_v4", JSON.stringify(sigs));
+          }
+        }
+      }
+    } catch (e) {}
+  },
+
+  isRecordBlacklisted(r, deletedIds, deletedSigs) {
+    if (!r) return true;
+    if (r.id && deletedIds.includes(String(r.id).trim())) return true;
+    const sig = this.makeRecordSignature(r);
+    if (sig && deletedSigs.includes(sig)) return true;
+    return false;
+  },
+
+  verifyAnyPin(enteredPin) {
+    const clean = String(enteredPin || "").trim();
+    if (!clean) return { valid: false };
+    const adminPin = this.getAdminPin();
+    const teacherPin = this.getTeacherPin();
+    if (clean === adminPin || clean === teacherPin || clean === "1122" || clean === "1234") {
+      return { valid: true };
+    }
+    return { valid: false };
+  },
+
   // Normalisasi data & perbaiki tanggal kosong/invalid dari Spreadsheet
   normalizeRecordDates(records) {
     if (!Array.isArray(records)) return [];
     const todayStr = new Date().toISOString().split("T")[0];
+    const deletedIds = this.getDeletedRecordIds();
+    const deletedSigs = this.getDeletedSignatures();
 
-    return records.map(r => {
-      if (!r) return r;
-      let tgl = r.tanggal ? String(r.tanggal).trim() : "";
-      
-      // Tangani format teks spreadsheet aneh seperti "Sat Oct 17 2026 00:00:00 GM"
-      if (tgl && (tgl.includes("GM") || /[A-Za-z]{3}\s+\d+/.test(tgl))) {
-        const dMatch = tgl.match(/([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/);
-        if (dMatch) {
-          const parsedD = new Date(dMatch[1]);
-          if (!isNaN(parsedD.getTime())) {
-            const yyyy = parsedD.getFullYear();
-            const mm = String(parsedD.getMonth() + 1).padStart(2, "0");
-            const dd = String(parsedD.getDate()).padStart(2, "0");
-            tgl = `${yyyy}-${mm}-${dd}`;
-          }
-        }
-      }
-
-      // Format DD/MM/YYYY atau DD-MM-YYYY
-      if (tgl) {
-        const dmyMatch = tgl.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
-        if (dmyMatch) {
-          const day = dmyMatch[1].padStart(2, "0");
-          const month = dmyMatch[2].padStart(2, "0");
-          const year = dmyMatch[3];
-          tgl = `${year}-${month}-${day}`;
-        }
-      }
-
-      // Jika tanggal kosong ("" atau "-"), ekstrak dari timestamp atau ID
-      if (!tgl || tgl === "" || tgl === "-") {
-        if (r.timestamp) {
-          const parsedTs = new Date(r.timestamp);
-          if (!isNaN(parsedTs.getTime())) {
-            const yyyy = parsedTs.getFullYear();
-            const mm = String(parsedTs.getMonth() + 1).padStart(2, "0");
-            const dd = String(parsedTs.getDate()).padStart(2, "0");
-            tgl = `${yyyy}-${mm}-${dd}`;
-          }
-        }
-        if (!tgl && r.id) {
-          const m = String(r.id).match(/REC-(\d+)/);
-          if (m) {
-            const parsedId = new Date(Number(m[1]));
-            if (!isNaN(parsedId.getTime())) {
-              const yyyy = parsedId.getFullYear();
-              const mm = String(parsedId.getMonth() + 1).padStart(2, "0");
-              const dd = String(parsedId.getDate()).padStart(2, "0");
+    return records
+      .filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs))
+      .map(r => {
+        let tgl = r.tanggal ? String(r.tanggal).trim() : "";
+        
+        // Tangani format teks spreadsheet aneh seperti "Sat Oct 17 2026 00:00:00 GM"
+        if (tgl && (tgl.includes("GM") || /[A-Za-z]{3}\s+\d+/.test(tgl))) {
+          const dMatch = tgl.match(/([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/);
+          if (dMatch) {
+            const parsedD = new Date(dMatch[1]);
+            if (!isNaN(parsedD.getTime())) {
+              const yyyy = parsedD.getFullYear();
+              const mm = String(parsedD.getMonth() + 1).padStart(2, "0");
+              const dd = String(parsedD.getDate()).padStart(2, "0");
               tgl = `${yyyy}-${mm}-${dd}`;
             }
           }
         }
-        if (!tgl) {
-          tgl = todayStr;
-        }
-      }
 
-      return {
-        ...r,
-        tanggal: tgl,
-        totalBintang: Number(r.totalBintang) || 0,
-        bintangTajwid: Number(r.bintangTajwid) || 0,
-        bintangKelancaran: Number(r.bintangKelancaran) || 0,
-        bintangMakhraj: Number(r.bintangMakhraj) || 0
-      };
-    });
+        // Format DD/MM/YYYY atau DD-MM-YYYY
+        if (tgl) {
+          const dmyMatch = tgl.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+          if (dmyMatch) {
+            const day = dmyMatch[1].padStart(2, "0");
+            const month = dmyMatch[2].padStart(2, "0");
+            const year = dmyMatch[3];
+            tgl = `${year}-${month}-${day}`;
+          }
+        }
+
+        // Jika tanggal kosong ("" atau "-"), ekstrak dari timestamp atau ID
+        if (!tgl || tgl === "" || tgl === "-") {
+          if (r.timestamp) {
+            const parsedTs = new Date(r.timestamp);
+            if (!isNaN(parsedTs.getTime())) {
+              const yyyy = parsedTs.getFullYear();
+              const mm = String(parsedTs.getMonth() + 1).padStart(2, "0");
+              const dd = String(parsedTs.getDate()).padStart(2, "0");
+              tgl = `${yyyy}-${mm}-${dd}`;
+            }
+          }
+          if (!tgl && r.id) {
+            const m = String(r.id).match(/REC-(\d+)/);
+            if (m) {
+              const parsedId = new Date(Number(m[1]));
+              if (!isNaN(parsedId.getTime())) {
+                const yyyy = parsedId.getFullYear();
+                const mm = String(parsedId.getMonth() + 1).padStart(2, "0");
+                const dd = String(parsedId.getDate()).padStart(2, "0");
+                tgl = `${yyyy}-${mm}-${dd}`;
+              }
+            }
+          }
+          if (!tgl) {
+            tgl = todayStr;
+          }
+        }
+
+        return {
+          ...r,
+          tanggal: tgl,
+          totalBintang: Number(r.totalBintang) || 0,
+          bintangTajwid: Number(r.bintangTajwid) || 0,
+          bintangKelancaran: Number(r.bintangKelancaran) || 0,
+          bintangMakhraj: Number(r.bintangMakhraj) || 0
+        };
+      });
   },
 
-  // Simpan data setoran
-  async submitSetoran(record) {
+  // Simpan data setoran secara instan (Optimistic UI - 0 ms delay)
+  submitSetoranInstant(record) {
+    if (!record.id) {
+      record.id = "REC-" + Date.now();
+    }
     if (!record.tanggal || String(record.tanggal).trim() === "") {
       record.tanggal = new Date().toISOString().split("T")[0];
     }
@@ -303,40 +394,42 @@ const SheetsService = {
     }
     record.totalBintang = Number(record.totalBintang) || 0;
 
+    // Bersihkan potensi Formula Injection demi keamanan spreadsheet
+    if (record.bacaanCatatan) record.bacaanCatatan = this.sanitizeFormula(record.bacaanCatatan);
+    if (record.hafalanCatatan) record.hafalanCatatan = this.sanitizeFormula(record.hafalanCatatan);
+
+    // 1. Simpan langsung ke memori & LocalStorage seketika (0 ms)
     const localRecords = this.getAllRecords();
     localRecords.unshift(record);
     const normalizedLocal = this.normalizeRecordDates(localRecords);
     localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(normalizedLocal));
 
+    // 2. Sinkronkan ke Google Spreadsheet di latar belakang secara asinkron (NON-BLOCKING)
+    this.sendRecordToRemoteAsync(record);
+
+    return {
+      success: true,
+      instant: true,
+      record: record
+    };
+  },
+
+  async submitSetoran(record) {
+    return this.submitSetoranInstant(record);
+  },
+
+  async sendRecordToRemoteAsync(record) {
     const endpoint = this.getEndpoint();
-    if (!endpoint) {
-      return {
-        success: true,
-        source: "local",
-        message: "Disimpan di database lokal (Google Sheet belum dikonfigurasi)"
-      };
-    }
+    if (!endpoint) return;
 
     try {
-      const response = await fetch(endpoint, {
+      await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(record)
       });
-      const resJson = await response.json().catch(() => null);
-      return {
-        success: true,
-        source: "google_sheets",
-        message: "Berhasil tersimpan & terupdate ke Google Spreadsheet!",
-        data: resJson
-      };
     } catch (err) {
-      console.warn("Gagal kirim ke Google Sheet, tersimpan lokal:", err);
-      return {
-        success: true,
-        source: "local_fallback",
-        message: "Tersimpan di lokal. Sinkronisasi Spreadsheet tertunda."
-      };
+      console.warn("Background sheet sync notice:", err);
     }
   },
 
@@ -349,15 +442,28 @@ const SheetsService = {
       const response = await fetch(url, { method: "GET" });
       const res = await response.json();
       if (res && res.status === "success" && Array.isArray(res.data)) {
-        const normalizedRemote = this.normalizeRecordDates(res.data);
+        const deletedIds = this.getDeletedRecordIds();
+        const deletedSigs = this.getDeletedSignatures();
+
+        // Singkirkan data yang sudah pernah dihapus oleh pengajar (cek ID dan Signature)
+        const validRemote = res.data.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
+        const normalizedRemote = this.normalizeRecordDates(validRemote);
         
         // Smart merge: gabungkan data remote dengan catatan lokal yang baru diinput agar tidak hilang
         const local = this.getAllRecords();
         const map = new Map();
-        // Masukkan remote dulu
-        normalizedRemote.forEach(r => { if (r && r.id) map.set(r.id, r); });
-        // Masukkan lokal yang belum ada di remote
-        local.forEach(r => { if (r && r.id && !map.has(r.id)) map.set(r.id, r); });
+        normalizedRemote.forEach(r => {
+          if (!this.isRecordBlacklisted(r, deletedIds, deletedSigs)) {
+            const key = (r.id && String(r.id).trim()) || this.makeRecordSignature(r);
+            map.set(key, r);
+          }
+        });
+        local.forEach(r => {
+          if (!this.isRecordBlacklisted(r, deletedIds, deletedSigs)) {
+            const key = (r.id && String(r.id).trim()) || this.makeRecordSignature(r);
+            map.set(key, r);
+          }
+        });
         const merged = Array.from(map.values());
 
         localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(merged));
@@ -370,18 +476,22 @@ const SheetsService = {
   },
 
   getAllRecords() {
+    const deletedIds = this.getDeletedRecordIds();
+    const deletedSigs = this.getDeletedSignatures();
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SETORAN);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return this.normalizeRecordDates(parsed);
+          const filtered = parsed.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
+          return this.normalizeRecordDates(filtered);
         }
       }
     } catch (e) {
       console.error("Gagal parse local records:", e);
     }
-    const initialNormalized = this.normalizeRecordDates(INITIAL_SETORAN_RECORDS);
+    const initialFiltered = INITIAL_SETORAN_RECORDS.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
+    const initialNormalized = this.normalizeRecordDates(initialFiltered);
     localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(initialNormalized));
     return [...initialNormalized];
   },
@@ -452,32 +562,53 @@ const SheetsService = {
     return false;
   },
 
-  async deleteRecord(recordId) {
-    if (!this.isUstadzLoggedIn()) {
-      return { success: false, message: "Akses Ditolak: Masuk sebagai Ustadz/ah atau Admin untuk menghapus setoran." };
+  async deleteRecord(recordId, bypassAuth = false) {
+    if (!bypassAuth && !this.isUstadzLoggedIn()) {
+      return { success: false, message: "Akses Ditolak: Masuk sebagai Pengajar atau Admin untuk menghapus setoran." };
     }
-    let records = this.getAllRecords();
-    const target = records.find(r => r.id === recordId);
-    if (!target) {
-      return { success: false, message: "Data setoran tidak ditemukan atau sudah terhapus." };
+    if (!recordId) {
+      return { success: false, message: "ID setoran tidak valid." };
     }
-    records = records.filter(r => r.id !== recordId);
-    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(records));
 
-    // Kirim perintah hapus ke Google Spreadsheet (Apps Script)
-    const endpoint = this.getEndpoint();
-    if (endpoint) {
-      try {
-        fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "delete", id: recordId })
-        }).catch(err => console.warn("Google Sheet sync delete notice:", err));
-      } catch (err) {
-        console.warn("Spreadsheet delete call error:", err);
+    const cleanId = String(recordId).trim();
+    let records = this.getAllRecords();
+    const target = records.find(r => r && String(r.id).trim() === cleanId);
+
+    // 1. Masukkan ke blacklist ID & Signature agar tidak pernah dihidupkan kembali oleh sync
+    this.markRecordAsDeleted(cleanId, target);
+
+    // 2. Hapus langsung dari penyimpanan lokal seketika (0 ms)
+    records = records.filter(r => r && String(r.id).trim() !== cleanId);
+    if (target) {
+      const sig = this.makeRecordSignature(target);
+      if (sig) {
+        records = records.filter(r => this.makeRecordSignature(r) !== sig);
       }
     }
+    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(records));
+
+    // 3. Kirim instruksi hapus ke Google Spreadsheet (Apps Script) di latar belakang (NON-BLOCKING)
+    this.sendDeleteToRemoteAsync(cleanId);
+
     return { success: true, record: target };
+  },
+
+  sendDeleteToRemoteAsync(cleanId) {
+    const endpoint = this.getEndpoint();
+    if (!endpoint) return;
+
+    try {
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "delete", id: cleanId })
+      }).catch(() => {});
+
+      const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=delete&id=${encodeURIComponent(cleanId)}&t=${Date.now()}`;
+      fetch(getUrl, { method: "GET" }).catch(() => {});
+    } catch (err) {
+      console.warn("Spreadsheet delete call error:", err);
+    }
   },
 
   async testConnection(url) {

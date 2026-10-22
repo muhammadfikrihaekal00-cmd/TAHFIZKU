@@ -174,35 +174,44 @@ function doPost(e) {
       tgl = Utilities.formatDate(timestamp, "GMT+7", "yyyy-MM-dd");
     }
 
+    function sanitizeCell(val) {
+      if (val === null || val === undefined) return "-";
+      var str = String(val).trim();
+      if (/^[=+\-@\t\r]/.test(str)) {
+        return "'" + str;
+      }
+      return str;
+    }
+
     const row = [
       payload.id || ("REC-" + Date.now()),
       Utilities.formatDate(timestamp, "GMT+7", "yyyy-MM-dd HH:mm:ss"),
       tgl,
-      payload.santriId || "-",
-      payload.namaSantri || "-",
-      payload.halaqah || "-",
-      payload.kategori || "-",
-      payload.ustadz || "-",
+      sanitizeCell(payload.santriId),
+      sanitizeCell(payload.namaSantri),
+      sanitizeCell(payload.halaqah),
+      sanitizeCell(payload.kategori),
+      sanitizeCell(payload.ustadz),
       // Tilawah
-      payload.bacaanTipe || "Tamhid",
-      payload.tamhidJilid || "-",
-      payload.tamhidHalaman || "-",
-      payload.tartilJuz || "-",
-      payload.tartilHalaman || "-",
-      payload.bacaanStatus || "Lanjut",
-      payload.bacaanCatatan || "-",
+      sanitizeCell(payload.bacaanTipe || "Tamhid"),
+      sanitizeCell(payload.tamhidJilid),
+      sanitizeCell(payload.tamhidHalaman),
+      sanitizeCell(payload.tartilJuz),
+      sanitizeCell(payload.tartilHalaman),
+      sanitizeCell(payload.bacaanStatus || "Lanjut"),
+      sanitizeCell(payload.bacaanCatatan),
       // Hafalan
-      payload.hafalanJenis || "Ziyadah",
-      payload.surahAwal || "-",
+      sanitizeCell(payload.hafalanJenis || "Ziyadah"),
+      sanitizeCell(payload.surahAwal),
       Number(payload.ayatAwal || 1),
-      payload.surahAkhir || "-",
+      sanitizeCell(payload.surahAkhir),
       Number(payload.ayatAkhir || 1),
       Number(payload.bintangTajwid || 0),
       Number(payload.bintangKelancaran || 0),
       Number(payload.bintangMakhraj || 0),
       Number(payload.totalBintang || 0),
-      payload.hafalanStatus || "Lulus",
-      payload.hafalanCatatan || "-"
+      sanitizeCell(payload.hafalanStatus || "Lulus"),
+      sanitizeCell(payload.hafalanCatatan)
     ];
 
     sheet.appendRow(row);
