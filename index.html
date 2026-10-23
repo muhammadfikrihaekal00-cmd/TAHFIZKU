@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=4.7">
+  <link rel="stylesheet" href="css/style.css?v=4.8">
 </head>
 <body>
 
@@ -476,7 +476,20 @@
                 <input type="checkbox" id="checkEnableZiyadah" checked onchange="App.toggleZiyadahActive()">
                 <span class="hafalan-subcard-title">⭐ Ziyadah (Hafalan Baru)</span>
               </label>
-              <span class="meta-badge" id="badgeZiyadahStatus" style="background: #dcfce7; color: #15803d; font-size: 0.7rem;">Aktif</span>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <button type="button" id="btnZiyadahActiveYes" onclick="App.setZiyadahActive(true)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: 1px solid #a7f3d0; background: #059669; color: #fff; cursor: pointer;">
+                  ⭐ Ada Ziyadah
+                </button>
+                <button type="button" id="btnZiyadahActiveNo" onclick="App.setZiyadahActive(false)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; cursor: pointer;">
+                  ❌ Tanpa Ziyadah
+                </button>
+                <span class="meta-badge" id="badgeZiyadahStatus" style="background: #dcfce7; color: #15803d; font-size: 0.7rem; border: 1px solid #bbf7d0;">Aktif</span>
+              </div>
+            </div>
+
+            <!-- Notice jika Ziyadah dikosongkan -->
+            <div id="ziyadahEmptyNotice" style="display: none; margin-bottom: 10px; padding: 7px 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.76rem; color: #64748b;">
+              ℹ️ <strong>Ziyadah Dikosongkan</strong>: Surah Ziyadah tidak akan diinput ke database.
             </div>
 
             <div id="containerZiyadahInputs">
@@ -530,7 +543,20 @@
                 <input type="checkbox" id="checkEnableMurojaah" checked onchange="App.toggleMurojaahActive()">
                 <span class="hafalan-subcard-title">🔄 Muroja'ah (Ulang Hafalan)</span>
               </label>
-              <span class="meta-badge" id="badgeMurojaahStatus" style="background: #e0f2fe; color: #0369a1; font-size: 0.7rem;">Aktif</span>
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <button type="button" id="btnMurojaahActiveYes" onclick="App.setMurojaahActive(true)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: 1px solid #bae6fd; background: #0284c7; color: #fff; cursor: pointer;">
+                  ✅ Ada Muroja'ah
+                </button>
+                <button type="button" id="btnMurojaahActiveNo" onclick="App.setMurojaahActive(false)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; cursor: pointer;">
+                  ❌ Tanpa Muroja'ah
+                </button>
+                <span class="meta-badge" id="badgeMurojaahStatus" style="background: #e0f2fe; color: #0369a1; font-size: 0.7rem; border: 1px solid #bae6fd;">Aktif</span>
+              </div>
+            </div>
+
+            <!-- Notice jika Muroja'ah dikosongkan (Santri hanya Ziyadah) -->
+            <div id="murojaahEmptyNotice" style="display: none; margin-bottom: 10px; padding: 7px 10px; background: #fef3c7; border: 1px dashed #f59e0b; border-radius: 8px; font-size: 0.76rem; color: #92400e;">
+              💡 <strong>Santri Hanya Setoran Ziyadah (Tanpa Muroja'ah)</strong>: Surah Muroja'ah dikosongkan dan tidak akan tersimpan ke riwayat.
             </div>
 
             <div id="containerMurojaahInputs">
@@ -1227,9 +1253,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v4.7) -->
-  <script src="js/data.js?v=4.7"></script>
-  <script src="js/sheets.js?v=4.7"></script>
-  <script src="js/app.js?v=4.7"></script>
+  <!-- Scripts (Cache Buster v4.8) -->
+  <script src="js/data.js?v=4.8"></script>
+  <script src="js/sheets.js?v=4.8"></script>
+  <script src="js/app.js?v=4.8"></script>
 </body>
 </html>

@@ -400,38 +400,213 @@ const App = {
 
   toggleZiyadahActive() {
     const check = document.getElementById("checkEnableZiyadah");
+    const isActive = check ? check.checked : true;
+    this.setZiyadahActive(isActive, true);
+  },
+
+  setZiyadahActive(isActive, showToastMessage = true) {
+    const check = document.getElementById("checkEnableZiyadah");
+    const card = document.getElementById("cardZiyadahSection");
     const container = document.getElementById("containerZiyadahInputs");
     const badge = document.getElementById("badgeZiyadahStatus");
-    const isActive = check ? check.checked : true;
-    if (container) {
-      container.style.opacity = isActive ? "1" : "0.35";
-      container.style.pointerEvents = isActive ? "auto" : "none";
-    }
-    if (badge) {
-      badge.textContent = isActive ? "Aktif" : "Nonaktif";
-      badge.style.background = isActive ? "#dcfce7" : "#f1f5f9";
-      badge.style.color = isActive ? "#15803d" : "#64748b";
+    const notice = document.getElementById("ziyadahEmptyNotice");
+    const btnYes = document.getElementById("btnZiyadahActiveYes");
+    const btnNo = document.getElementById("btnZiyadahActiveNo");
+    const selAwal = document.getElementById("selectZiyadahSurahAwal");
+    const selAkhir = document.getElementById("selectZiyadahSurahAkhir");
+    const selAyatAwal = document.getElementById("selectZiyadahAyatAwal");
+    const selAyatAkhir = document.getElementById("selectZiyadahAyatAkhir");
+    const inAyatAwal = document.getElementById("inputZiyadahAyatAwal");
+    const inAyatAkhir = document.getElementById("inputZiyadahAyatAkhir");
+
+    if (check) check.checked = isActive;
+
+    if (isActive) {
+      if (card) card.classList.remove("disabled");
+      if (container) {
+        container.style.opacity = "1";
+        container.style.pointerEvents = "auto";
+      }
+      if (badge) {
+        badge.textContent = "Aktif";
+        badge.style.background = "#dcfce7";
+        badge.style.color = "#15803d";
+        badge.style.border = "1px solid #bbf7d0";
+      }
+      if (btnYes) {
+        btnYes.style.background = "#059669";
+        btnYes.style.color = "#ffffff";
+        btnYes.style.border = "1px solid #059669";
+        btnYes.style.fontWeight = "700";
+      }
+      if (btnNo) {
+        btnNo.style.background = "#f1f5f9";
+        btnNo.style.color = "#475569";
+        btnNo.style.border = "1px solid #cbd5e1";
+        btnNo.style.fontWeight = "600";
+      }
+      if (notice) notice.style.display = "none";
+
+      if (selAwal && !selAwal.value) {
+        selAwal.value = "An-Naba'";
+        if (selAkhir) selAkhir.value = "An-Naba'";
+        const found = QURAN_SURAHS.find(s => s.name === "An-Naba'");
+        if (found) {
+          this.populateAyatDropdown(selAyatAwal, found.verses, 1);
+          this.populateAyatDropdown(selAyatAkhir, found.verses, Math.min(10, found.verses));
+          if (inAyatAwal) inAyatAwal.value = 1;
+          if (inAyatAkhir) inAyatAkhir.value = Math.min(10, found.verses);
+        }
+      }
+      if (showToastMessage) {
+        this.showToast("⭐ Ziyadah (Hafalan Baru) diaktifkan", "info");
+      }
+    } else {
+      if (card) card.classList.add("disabled");
+      if (container) {
+        container.style.opacity = "0.45";
+        container.style.pointerEvents = "auto";
+      }
+      if (badge) {
+        badge.textContent = "Kosong";
+        badge.style.background = "#f1f5f9";
+        badge.style.color = "#64748b";
+        badge.style.border = "1px solid #cbd5e1";
+      }
+      if (btnYes) {
+        btnYes.style.background = "#f1f5f9";
+        btnYes.style.color = "#475569";
+        btnYes.style.border = "1px solid #cbd5e1";
+        btnYes.style.fontWeight = "600";
+      }
+      if (btnNo) {
+        btnNo.style.background = "#fee2e2";
+        btnNo.style.color = "#dc2626";
+        btnNo.style.border = "1px solid #fca5a5";
+        btnNo.style.fontWeight = "700";
+      }
+      if (notice) notice.style.display = "block";
+
+      if (selAwal) selAwal.value = "";
+      if (selAkhir) selAkhir.value = "";
+      if (selAyatAwal) selAyatAwal.innerHTML = `<option value="0">-</option>`;
+      if (selAyatAkhir) selAyatAkhir.innerHTML = `<option value="0">-</option>`;
+      if (inAyatAwal) inAyatAwal.value = 0;
+      if (inAyatAkhir) inAyatAkhir.value = 0;
+
+      if (showToastMessage) {
+        this.showToast("ℹ️ Ziyadah dikosongkan (Tanpa input surah baru)", "info");
+      }
     }
   },
 
   toggleMurojaahActive() {
     const check = document.getElementById("checkEnableMurojaah");
+    const isActive = check ? check.checked : true;
+    this.setMurojaahActive(isActive, true);
+  },
+
+  setMurojaahActive(isActive, showToastMessage = true) {
+    const check = document.getElementById("checkEnableMurojaah");
+    const card = document.getElementById("cardMurojaahSection");
     const container = document.getElementById("containerMurojaahInputs");
     const badge = document.getElementById("badgeMurojaahStatus");
-    const isActive = check ? check.checked : true;
-    if (container) {
-      container.style.opacity = isActive ? "1" : "0.35";
-      container.style.pointerEvents = isActive ? "auto" : "none";
-    }
-    if (badge) {
-      badge.textContent = isActive ? "Aktif" : "Nonaktif";
-      badge.style.background = isActive ? "#e0f2fe" : "#f1f5f9";
-      badge.style.color = isActive ? "#0369a1" : "#64748b";
+    const notice = document.getElementById("murojaahEmptyNotice");
+    const btnYes = document.getElementById("btnMurojaahActiveYes");
+    const btnNo = document.getElementById("btnMurojaahActiveNo");
+    const selAwal = document.getElementById("selectMurojaahSurahAwal");
+    const selAkhir = document.getElementById("selectMurojaahSurahAkhir");
+    const selAyatAwal = document.getElementById("selectMurojaahAyatAwal");
+    const selAyatAkhir = document.getElementById("selectMurojaahAyatAkhir");
+    const inAyatAwal = document.getElementById("inputMurojaahAyatAwal");
+    const inAyatAkhir = document.getElementById("inputMurojaahAyatAkhir");
+
+    if (check) check.checked = isActive;
+
+    if (isActive) {
+      if (card) card.classList.remove("disabled");
+      if (container) {
+        container.style.opacity = "1";
+        container.style.pointerEvents = "auto";
+      }
+      if (badge) {
+        badge.textContent = "Aktif";
+        badge.style.background = "#e0f2fe";
+        badge.style.color = "#0369a1";
+        badge.style.border = "1px solid #bae6fd";
+      }
+      if (btnYes) {
+        btnYes.style.background = "#0284c7";
+        btnYes.style.color = "#ffffff";
+        btnYes.style.border = "1px solid #0284c7";
+        btnYes.style.fontWeight = "700";
+      }
+      if (btnNo) {
+        btnNo.style.background = "#f1f5f9";
+        btnNo.style.color = "#475569";
+        btnNo.style.border = "1px solid #cbd5e1";
+        btnNo.style.fontWeight = "600";
+      }
+      if (notice) notice.style.display = "none";
+
+      if (selAwal && !selAwal.value) {
+        selAwal.value = "An-Nazi'at";
+        if (selAkhir) selAkhir.value = "An-Nazi'at";
+        const found = QURAN_SURAHS.find(s => s.name === "An-Nazi'at");
+        if (found) {
+          this.populateAyatDropdown(selAyatAwal, found.verses, 1);
+          this.populateAyatDropdown(selAyatAkhir, found.verses, Math.min(20, found.verses));
+          if (inAyatAwal) inAyatAwal.value = 1;
+          if (inAyatAkhir) inAyatAkhir.value = Math.min(20, found.verses);
+        }
+      }
+      if (showToastMessage) {
+        this.showToast("🔄 Muroja'ah diaktifkan", "info");
+      }
+    } else {
+      if (card) card.classList.add("disabled");
+      if (container) {
+        container.style.opacity = "0.45";
+        container.style.pointerEvents = "auto";
+      }
+      if (badge) {
+        badge.textContent = "Tanpa Muroja'ah";
+        badge.style.background = "#f1f5f9";
+        badge.style.color = "#64748b";
+        badge.style.border = "1px solid #cbd5e1";
+      }
+      if (btnYes) {
+        btnYes.style.background = "#f1f5f9";
+        btnYes.style.color = "#475569";
+        btnYes.style.border = "1px solid #cbd5e1";
+        btnYes.style.fontWeight = "600";
+      }
+      if (btnNo) {
+        btnNo.style.background = "#fee2e2";
+        btnNo.style.color = "#dc2626";
+        btnNo.style.border = "1px solid #fca5a5";
+        btnNo.style.fontWeight = "700";
+      }
+      if (notice) notice.style.display = "block";
+
+      if (selAwal) selAwal.value = "";
+      if (selAkhir) selAkhir.value = "";
+      if (selAyatAwal) selAyatAwal.innerHTML = `<option value="0">-</option>`;
+      if (selAyatAkhir) selAyatAkhir.innerHTML = `<option value="0">-</option>`;
+      if (inAyatAwal) inAyatAwal.value = 0;
+      if (inAyatAkhir) inAyatAkhir.value = 0;
+
+      if (showToastMessage) {
+        this.showToast("💡 Muroja'ah dikosongkan. Santri hanya setoran Ziyadah (Hafalan baru).", "info");
+      }
     }
   },
 
   setZiyadahAyatSpan(spanCount) {
     const selAwal = document.getElementById("selectZiyadahSurahAwal");
+    if (!selAwal || !selAwal.value) {
+      this.setZiyadahActive(true, false);
+    }
     const selAkhir = document.getElementById("selectZiyadahSurahAkhir");
     const selAyatAkhir = document.getElementById("selectZiyadahAyatAkhir");
     const inAyatAwal = document.getElementById("inputZiyadahAyatAwal");
@@ -456,6 +631,9 @@ const App = {
 
   setZiyadahFullSurah() {
     const selAwal = document.getElementById("selectZiyadahSurahAwal");
+    if (!selAwal || !selAwal.value) {
+      this.setZiyadahActive(true, false);
+    }
     const selAkhir = document.getElementById("selectZiyadahSurahAkhir");
     const selAyatAwal = document.getElementById("selectZiyadahAyatAwal");
     const selAyatAkhir = document.getElementById("selectZiyadahAyatAkhir");
@@ -479,6 +657,9 @@ const App = {
 
   setMurojaahAyatSpan(spanCount) {
     const selAwal = document.getElementById("selectMurojaahSurahAwal");
+    if (!selAwal || !selAwal.value) {
+      this.setMurojaahActive(true, false);
+    }
     const selAkhir = document.getElementById("selectMurojaahSurahAkhir");
     const selAyatAkhir = document.getElementById("selectMurojaahAyatAkhir");
     const inAyatAwal = document.getElementById("inputMurojaahAyatAwal");
@@ -503,6 +684,9 @@ const App = {
 
   setMurojaahFullSurah() {
     const selAwal = document.getElementById("selectMurojaahSurahAwal");
+    if (!selAwal || !selAwal.value) {
+      this.setMurojaahActive(true, false);
+    }
     const selAkhir = document.getElementById("selectMurojaahSurahAkhir");
     const selAyatAwal = document.getElementById("selectMurojaahAyatAwal");
     const selAyatAkhir = document.getElementById("selectMurojaahAyatAkhir");
@@ -670,21 +854,24 @@ const App = {
     const inMurojaahAyatAwal = document.getElementById("inputMurojaahAyatAwal");
     const inMurojaahAyatAkhir = document.getElementById("inputMurojaahAyatAkhir");
 
-    // Populate all Surah select dropdowns
-    const populateSurahSelect = (selectEl, defaultVal) => {
+    // Populate all Surah select dropdowns (Mendukung opsi kosong untuk muroja'ah/ziyadah fleksibel)
+    const populateSurahSelect = (selectEl, defaultVal, allowEmpty = false, emptyLabel = "-- Kosongkan --") => {
       if (!selectEl) return;
       selectEl.innerHTML = "";
+      if (allowEmpty) {
+        selectEl.add(new Option(emptyLabel, ""));
+      }
       QURAN_SURAHS.forEach(s => {
         const text = `${s.no}. ${s.name} (${s.verses} ayat)`;
         selectEl.add(new Option(text, s.name));
       });
-      selectEl.value = defaultVal;
+      selectEl.value = defaultVal !== undefined ? defaultVal : "";
     };
 
-    populateSurahSelect(selZiyadahAwal, "An-Naba'");
-    populateSurahSelect(selZiyadahAkhir, "An-Naba'");
-    populateSurahSelect(selMurojaahAwal, "An-Nazi'at");
-    populateSurahSelect(selMurojaahAkhir, "An-Nazi'at");
+    populateSurahSelect(selZiyadahAwal, "An-Naba'", true, "-- Tidak Ada Ziyadah Baru --");
+    populateSurahSelect(selZiyadahAkhir, "An-Naba'", true, "-- Tidak Ada Ziyadah Baru --");
+    populateSurahSelect(selMurojaahAwal, "An-Nazi'at", true, "-- Tidak Muroja'ah (Kosongkan) --");
+    populateSurahSelect(selMurojaahAkhir, "An-Nazi'at", true, "-- Tidak Muroja'ah (Kosongkan) --");
 
     // Inisialisasi Ayat Ziyadah
     const defaultZiyadah = QURAN_SURAHS.find(s => s.name === "An-Naba'") || QURAN_SURAHS[0];
@@ -707,7 +894,13 @@ const App = {
     // Event listeners Ziyadah
     if (selZiyadahAwal) {
       selZiyadahAwal.addEventListener("change", (e) => {
-        const found = QURAN_SURAHS.find(s => s.name === e.target.value);
+        const chosenVal = e.target.value;
+        if (!chosenVal) {
+          this.setZiyadahActive(false, true);
+          return;
+        }
+        this.setZiyadahActive(true, false);
+        const found = QURAN_SURAHS.find(s => s.name === chosenVal);
         if (found) {
           if (selZiyadahAkhir) selZiyadahAkhir.value = found.name;
           if (inZiyadahAyatAwal) inZiyadahAyatAwal.value = 1;
@@ -720,7 +913,13 @@ const App = {
 
     if (selZiyadahAkhir) {
       selZiyadahAkhir.addEventListener("change", (e) => {
-        const found = QURAN_SURAHS.find(s => s.name === e.target.value);
+        const chosenVal = e.target.value;
+        if (!chosenVal) {
+          if (inZiyadahAyatAkhir) inZiyadahAyatAkhir.value = 0;
+          if (selZiyadahAyatAkhir) selZiyadahAyatAkhir.innerHTML = `<option value="0">-</option>`;
+          return;
+        }
+        const found = QURAN_SURAHS.find(s => s.name === chosenVal);
         if (found) {
           if (inZiyadahAyatAkhir) inZiyadahAyatAkhir.value = Math.min(10, found.verses);
           this.populateAyatDropdown(selZiyadahAyatAkhir, found.verses, Math.min(10, found.verses));
@@ -742,7 +941,16 @@ const App = {
     // Event listeners Muroja'ah
     if (selMurojaahAwal) {
       selMurojaahAwal.addEventListener("change", (e) => {
-        const found = QURAN_SURAHS.find(s => s.name === e.target.value);
+        const chosenVal = e.target.value;
+        if (!chosenVal) {
+          // Ustadz memilih opsi kosong: Matikan Muroja'ah seketika
+          this.setMurojaahActive(false, true);
+          return;
+        }
+
+        // Ustadz memilih surah nyata: Aktifkan Muroja'ah
+        this.setMurojaahActive(true, false);
+        const found = QURAN_SURAHS.find(s => s.name === chosenVal);
         if (found) {
           if (selMurojaahAkhir) selMurojaahAkhir.value = found.name;
           if (inMurojaahAyatAwal) inMurojaahAyatAwal.value = 1;
@@ -755,7 +963,13 @@ const App = {
 
     if (selMurojaahAkhir) {
       selMurojaahAkhir.addEventListener("change", (e) => {
-        const found = QURAN_SURAHS.find(s => s.name === e.target.value);
+        const chosenVal = e.target.value;
+        if (!chosenVal) {
+          if (inMurojaahAyatAkhir) inMurojaahAyatAkhir.value = 0;
+          if (selMurojaahAyatAkhir) selMurojaahAyatAkhir.innerHTML = `<option value="0">-</option>`;
+          return;
+        }
+        const found = QURAN_SURAHS.find(s => s.name === chosenVal);
         if (found) {
           if (inMurojaahAyatAkhir) inMurojaahAyatAkhir.value = Math.min(20, found.verses);
           this.populateAyatDropdown(selMurojaahAyatAkhir, found.verses, Math.min(20, found.verses));
@@ -1078,22 +1292,28 @@ const App = {
       const kategoriSantri = currentSantri ? currentSantri.kategori : "Menengah";
       const bacaanTipe = document.getElementById("inputBacaanTipe").value;
 
-      const isZiyadahActive = document.getElementById("checkEnableZiyadah")?.checked ?? true;
-      const isMurojaahActive = document.getElementById("checkEnableMurojaah")?.checked ?? true;
+      const checkZiyadah = document.getElementById("checkEnableZiyadah")?.checked ?? true;
+      const checkMurojaah = document.getElementById("checkEnableMurojaah")?.checked ?? true;
+      const rawZiyadahSurah = (document.getElementById("selectZiyadahSurahAwal")?.value || "").trim();
+      const rawMurojaahSurah = (document.getElementById("selectMurojaahSurahAwal")?.value || "").trim();
 
-      const ziyadahSurah = isZiyadahActive ? (document.getElementById("selectZiyadahSurahAwal")?.value || "") : "";
-      const ziyadahAyatAwal = isZiyadahActive ? (parseInt(document.getElementById("inputZiyadahAyatAwal")?.value, 10) || 1) : 1;
+      // Ziyadah & Muroja'ah aktif HANYA JIKA dicentang DAN surahnya tidak kosong
+      const isZiyadahActive = checkZiyadah && rawZiyadahSurah !== "";
+      const isMurojaahActive = checkMurojaah && rawMurojaahSurah !== "";
+
+      const ziyadahSurah = isZiyadahActive ? rawZiyadahSurah : "";
+      const ziyadahAyatAwal = isZiyadahActive ? (parseInt(document.getElementById("inputZiyadahAyatAwal")?.value, 10) || 1) : 0;
       const ziyadahSurahAkhir = isZiyadahActive ? (document.getElementById("selectZiyadahSurahAkhir")?.value || ziyadahSurah) : "";
-      const ziyadahAyatAkhir = isZiyadahActive ? (parseInt(document.getElementById("inputZiyadahAyatAkhir")?.value, 10) || 1) : 1;
+      const ziyadahAyatAkhir = isZiyadahActive ? (parseInt(document.getElementById("inputZiyadahAyatAkhir")?.value, 10) || 1) : 0;
 
-      const murojaahSurah = isMurojaahActive ? (document.getElementById("selectMurojaahSurahAwal")?.value || "") : "";
-      const murojaahAyatAwal = isMurojaahActive ? (parseInt(document.getElementById("inputMurojaahAyatAwal")?.value, 10) || 1) : 1;
+      const murojaahSurah = isMurojaahActive ? rawMurojaahSurah : "";
+      const murojaahAyatAwal = isMurojaahActive ? (parseInt(document.getElementById("inputMurojaahAyatAwal")?.value, 10) || 1) : 0;
       const murojaahSurahAkhir = isMurojaahActive ? (document.getElementById("selectMurojaahSurahAkhir")?.value || murojaahSurah) : "";
-      const murojaahAyatAkhir = isMurojaahActive ? (parseInt(document.getElementById("inputMurojaahAyatAkhir")?.value, 10) || 1) : 1;
+      const murojaahAyatAkhir = isMurojaahActive ? (parseInt(document.getElementById("inputMurojaahAyatAkhir")?.value, 10) || 1) : 0;
 
       let hafalanJenis = "Ziyadah & Muroja'ah";
-      if (isZiyadahActive && !isMurojaahActive) hafalanJenis = "Ziyadah";
-      else if (!isZiyadahActive && isMurojaahActive) hafalanJenis = "Muroja'ah";
+      if (isZiyadahActive && !isMurojaahActive) hafalanJenis = "Ziyadah Saja";
+      else if (!isZiyadahActive && isMurojaahActive) hafalanJenis = "Muroja'ah Saja";
       else if (!isZiyadahActive && !isMurojaahActive) hafalanJenis = "Tilawah Saja";
 
       const rawTanggal = document.getElementById("inputTanggal")?.value;
@@ -1134,10 +1354,10 @@ const App = {
         murojaahAyatAkhir: murojaahAyatAkhir,
 
         // Fallback untuk tabel/spreadsheet & backward compatibility
-        surahAwal: isZiyadahActive ? ziyadahSurah : (murojaahSurah || "-"),
-        ayatAwal: isZiyadahActive ? ziyadahAyatAwal : (murojaahAyatAwal || 1),
-        surahAkhir: isZiyadahActive ? ziyadahSurahAkhir : (murojaahSurahAkhir || "-"),
-        ayatAkhir: isZiyadahActive ? ziyadahAyatAkhir : (murojaahAyatAkhir || 1),
+        surahAwal: isZiyadahActive ? ziyadahSurah : (isMurojaahActive ? murojaahSurah : "-"),
+        ayatAwal: isZiyadahActive ? ziyadahAyatAwal : (isMurojaahActive ? murojaahAyatAwal : 0),
+        surahAkhir: isZiyadahActive ? ziyadahSurahAkhir : (isMurojaahActive ? murojaahSurahAkhir : "-"),
+        ayatAkhir: isZiyadahActive ? ziyadahAyatAkhir : (isMurojaahActive ? murojaahAyatAkhir : 0),
 
         bintangTajwid: parseInt(document.getElementById("inputStarTajwid").value, 10),
         bintangKelancaran: parseInt(document.getElementById("inputStarKelancaran").value, 10),
@@ -1943,17 +2163,29 @@ const App = {
               <div style="font-weight:800; font-size:0.86rem; color:#78350f;">
                 ⭐ Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (Ayat ${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
               </div>
+              <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-top:3px;">
+                (Hanya Setoran Ziyadah • Tanpa Muroja'ah)
+              </div>
             `;
           } else if (r.murojaahSurah) {
             hafalanDetailsHtml = `
-              <div style="font-weight:800; font-size:0.86rem; color:#78350f;">
+              <div style="font-weight:800; font-size:0.86rem; color:#92400e;">
                 🔄 Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (Ayat ${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
+              </div>
+              <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-top:3px;">
+                (Hanya Setoran Muroja'ah • Tanpa Ziyadah Baru)
+              </div>
+            `;
+          } else if (r.surahAwal && r.surahAwal !== "-") {
+            hafalanDetailsHtml = `
+              <div style="font-weight:800; font-size:0.88rem; color:#78350f;">
+                Surah ${escapeHtml(r.surahAwal)} (Ayat ${r.ayatAwal || 1} - ${r.ayatAkhir || 1})
               </div>
             `;
           } else {
             hafalanDetailsHtml = `
-              <div style="font-weight:800; font-size:0.88rem; color:#78350f;">
-                Surah ${escapeHtml(r.surahAwal || "-")} (Ayat ${r.ayatAwal || 1} - ${r.ayatAkhir || 1})
+              <div style="font-size:0.8rem; color:#64748b; font-style:italic;">
+                (Fokus Bimbingan Tilawah/Tartil)
               </div>
             `;
           }
@@ -3069,10 +3301,10 @@ function createJsonResponse(data) {
       if (r.ziyadahSurah && r.murojaahSurah) {
         hafalanText = `⭐ Ziyadah: ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal || 1}-${r.ziyadahAyatAkhir || 1}) • 🔄 Muroja'ah: ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal || 1}-${r.murojaahAyatAkhir || 1})`;
       } else if (r.ziyadahSurah) {
-        hafalanText = `⭐ Ziyadah: ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal || 1}-${r.ziyadahAyatAkhir || 1})`;
+        hafalanText = `⭐ Ziyadah: ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal || 1}-${r.ziyadahAyatAkhir || 1}) <span style="color:#64748b; font-size:0.7rem;">(Tanpa Muroja'ah)</span>`;
       } else if (r.murojaahSurah) {
-        hafalanText = `🔄 Muroja'ah: ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal || 1}-${r.murojaahAyatAkhir || 1})`;
-      } else if (r.surahAwal) {
+        hafalanText = `🔄 Muroja'ah: ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal || 1}-${r.murojaahAyatAkhir || 1}) <span style="color:#64748b; font-size:0.7rem;">(Hanya Muroja'ah)</span>`;
+      } else if (r.surahAwal && r.surahAwal !== "-") {
         hafalanText = `${escapeHtml(r.surahAwal)} (${r.ayatAwal || 1}-${r.ayatAkhir || 1})`;
       } else {
         hafalanText = "Tilawah saja";
