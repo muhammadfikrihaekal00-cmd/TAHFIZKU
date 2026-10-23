@@ -1018,7 +1018,7 @@ const App = {
       const currentVal = selectSantri.value;
       selectSantri.innerHTML = `<option value="">-- Pilih Santri --</option>`;
       filtered.forEach((s, idx) => {
-        selectSantri.add(new Option(`No. ${idx + 1} - ${s.avatar} ${s.nama}`, s.id));
+        selectSantri.add(new Option(`No. ${idx + 1} - ${s.nama}`, s.id));
       });
       if (currentVal) selectSantri.value = currentVal;
     }
@@ -1027,7 +1027,7 @@ const App = {
       const currentParent = selectParentSantri.value;
       selectParentSantri.innerHTML = `<option value="">-- Pilih Nama Ananda --</option>`;
       allSantri.forEach((s, idx) => {
-        selectParentSantri.add(new Option(`No. ${idx + 1} - ${s.avatar} ${s.nama} (${s.halaqah})`, s.id));
+        selectParentSantri.add(new Option(`No. ${idx + 1} - ${s.nama} (${s.halaqah})`, s.id));
       });
       if (currentParent) selectParentSantri.value = currentParent;
     }
@@ -1956,19 +1956,18 @@ const App = {
       const currentVal = selectParentSantri.value;
       selectParentSantri.innerHTML = `<option value="">-- Pilih Nama Ananda (${filtered.length} Santri) --</option>`;
       filtered.forEach((s, idx) => {
-        selectParentSantri.add(new Option(`No. ${idx + 1} - ${s.avatar} ${s.nama} (${s.halaqah})`, s.id));
+        selectParentSantri.add(new Option(`No. ${idx + 1} - ${s.nama} (${s.halaqah})`, s.id));
       });
       if (currentVal && filtered.some(s => s.id === currentVal)) {
         selectParentSantri.value = currentVal;
       }
     }
 
-    // Update Quick Santri Chips
+    // Update Quick Santri Chips (Tanpa icon wajah agar bersih dan tidak ramai)
     if (chipsContainer) {
       chipsContainer.innerHTML = filtered.map(s => `
-        <button type="button" class="quick-santri-chip" onclick="App.openParentDetailDirectly('${s.id}')" title="Buka pantauan ${s.nama}">
-          <span>${s.avatar}</span>
-          <span>${s.nama}</span>
+        <button type="button" class="quick-santri-chip" onclick="App.openParentDetailDirectly('${s.id}')" title="Buka pantauan ${escapeHtml(s.nama)}">
+          <span>${escapeHtml(s.nama)}</span>
         </button>
       `).join("");
     }
@@ -2195,7 +2194,7 @@ const App = {
               <div class="timeline-header">
                 <span class="timeline-date">📅 ${escapeHtml(dateStr)}</span>
                 <div style="display:flex; align-items:center;">
-                  <span class="timeline-ustadz">👳‍♂️ ${escapeHtml(r.ustadz || "Pengampu RQ")}</span>
+                  <span class="timeline-ustadz">${escapeHtml(r.ustadz || "Pengampu RQ")}</span>
                   ${delBtn}
                 </div>
               </div>
@@ -2209,20 +2208,15 @@ const App = {
                     ${hafalanBadge}
                   </div>
                   ${hafalanDetailsHtml}
-                  <div class="timeline-stars-row">
-                    <span>Tajwid: ★${r.bintangTajwid}</span> • 
-                    <span>Lancar: ★${r.bintangKelancaran}</span> • 
-                    <span>Makhraj: ★${r.bintangMakhraj}</span>
-                  </div>
-                  <div style="font-weight:900; font-size:0.86rem; color:#b45309; margin-top:4px;">
-                    ⭐ +${r.totalBintang} Bintang Diperoleh
+                  <div class="timeline-result-badge">
+                    <span>⭐ +${r.totalBintang || 0} Bintang</span>
                   </div>
                 </div>
               </div>
 
               ${r.hafalanCatatan && r.hafalanCatatan !== "-" ? `
                 <div class="timeline-notes">
-                  <strong>Pesan Evaluasi Ustadz:</strong> "${r.hafalanCatatan}"
+                  <strong>Catatan Evaluasi:</strong> "${escapeHtml(r.hafalanCatatan)}"
                 </div>
               ` : ""}
             </div>
