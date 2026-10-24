@@ -3290,6 +3290,106 @@ body.is-ustadz .tab-btn.ustadz-only {
 }
 
 /* ==========================================================================
+   RIWAYAT & KONTROL POSISI TERAKHIR SANTRI PADA FORM INPUT (KHUSUS GURU)
+   ========================================================================== */
+.form-student-history-section {
+  max-width: 680px;
+  margin: 30px auto 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.last-pos-card {
+  background: #ffffff;
+  border: 1.5px solid #a7f3d0;
+  border-radius: 20px;
+  padding: 22px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 20px rgba(4, 120, 87, 0.05);
+}
+
+.last-pos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.last-pos-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #064e3b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.last-pos-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 1px solid #d1fae5;
+}
+
+.last-pos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .last-pos-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.last-pos-box {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.last-pos-box-title {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.last-pos-box-val {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.last-pos-box-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.last-pos-box-notes {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 0.78rem;
+  color: #334155;
+  font-style: italic;
+}
+
+/* ==========================================================================
    HAK AKSES ADMIN UTAMA (USTADZ M. FIKRI HAEKAL)
    ========================================================================== */
 .btn-auth-role.admin-badge {

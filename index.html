@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Stylesheet (v5.0 Minimalis & Elegan) -->
-  <link rel="stylesheet" href="css/style.css?v=5.0">
+  <!-- Stylesheet (v5.1 Minimalis & Elegan) -->
+  <link rel="stylesheet" href="css/style.css?v=5.1">
 </head>
 <body>
 
@@ -722,6 +722,42 @@
         </div>
 
       </form>
+
+      <!-- ===================================================================
+           RIWAYAT & KONTROL POSISI TERAKHIR SANTRI TERPILIH (KHUSUS GURU)
+           Memudahkan guru mengontrol hafalan & tilawah terakhir sebelum input baru
+           =================================================================== -->
+      <div class="form-student-history-section" id="formStudentHistorySection" style="display: none;">
+        
+        <!-- CARD KONTROL POSISI TERAKHIR ANANDA -->
+        <div class="last-pos-card" id="formLatestPositionCard">
+          <div class="last-pos-header">
+            <div class="last-pos-title">
+              <span>📍</span>
+              <span id="formLatestSantriName">Posisi Setoran Terakhir</span>
+            </div>
+            <span class="last-pos-badge" id="formLatestDateBadge">-</span>
+          </div>
+
+          <!-- Grid Posisi Terakhir Tilawah & Hafalan -->
+          <div class="last-pos-grid" id="formLatestPositionsGrid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Section Heading Riwayat Evaluasi Sebelumnya -->
+        <div class="section-heading-minimal" style="margin-top: 10px; margin-bottom: 18px;">
+          <span class="bar-accent"></span>
+          <span>Riwayat Evaluasi Sebelumnya</span>
+        </div>
+
+        <!-- Timeline Cards Container -->
+        <div id="formStudentTimelineContainer">
+          <!-- Rendered by JS -->
+        </div>
+
+      </div>
+
     </section>
 
 
@@ -1243,9 +1279,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v5.0 Minimalis & Elegan) -->
-  <script src="js/data.js?v=5.0"></script>
-  <script src="js/sheets.js?v=5.0"></script>
-  <script src="js/app.js?v=5.0"></script>
+  <!-- Scripts (Cache Buster v5.1 Minimalis & Elegan) -->
+  <script src="js/data.js?v=5.1"></script>
+  <script src="js/sheets.js?v=5.1"></script>
+  <script src="js/app.js?v=5.1"></script>
 </body>
 </html>

@@ -1096,6 +1096,8 @@ const App = {
           if (found.statusBelajar === "Tartil Qur'an") setMode("Tartil");
           else setMode("Tamhid");
         }
+        // Tampilkan seketika riwayat setoran & posisi terakhir santri di bawah form input
+        this.renderFormStudentHistory(santriId);
       });
     }
   },
@@ -1383,6 +1385,7 @@ const App = {
         document.getElementById("inputBacaanCatatan").value = "";
         document.getElementById("inputHafalanCatatan").value = "";
         document.getElementById("selectSantri").value = "";
+        this.renderFormStudentHistory("");
 
         this.ratings = { tajwid: 5, kelancaran: 5, makhraj: 5 };
         this.setupStarRatings();
@@ -2223,6 +2226,272 @@ const App = {
     if (detailBox) detailBox.style.display = "block";
   },
 
+  // Render Riwayat & Kontrol Posisi Terakhir Santri pada Tab Input Form (Khusus Guru/Ustadz)
+  renderFormStudentHistory(santriId) {
+    const historySection = document.getElementById("formStudentHistorySection");
+    if (!historySection) return;
+
+    if (!santriId) {
+      historySection.style.display = "none";
+      return;
+    }
+
+    const allSantri = SheetsService.getAllSantri();
+    const santri = allSantri.find(s => s.id === santriId);
+    if (!santri) {
+      historySection.style.display = "none";
+      return;
+    }
+
+    const allRecords = SheetsService.getAllRecords();
+    const records = allRecords.filter(r => {
+      if (!r) return false;
+      if (r.santriId && santri.id && r.santriId === santri.id) return true;
+      if (r.namaSantri && santri.nama && r.namaSantri.trim().toLowerCase() === santri.nama.trim().toLowerCase()) return true;
+      return false;
+    });
+
+    historySection.style.display = "block";
+
+    const nameLabel = document.getElementById("formLatestSantriName");
+    const dateBadge = document.getElementById("formLatestDateBadge");
+    const gridContainer = document.getElementById("formLatestPositionsGrid");
+    const timelineContainer = document.getElementById("formStudentTimelineContainer");
+
+    if (nameLabel) nameLabel.textContent = `Posisi Terakhir: ${santri.nama}`;
+
+    if (records.length === 0) {
+      if (dateBadge) dateBadge.textContent = "Santri Baru";
+      if (gridContainer) {
+        gridContainer.innerHTML = `
+          <div style="background:#ffffff; padding:16px; border-radius:12px; border:1px dashed #cbd5e1; text-align:center; color:#64748b; font-size:0.86rem;">
+            Ananda <strong>${escapeHtml(santri.nama)}</strong> belum memiliki riwayat setoran sebelumnya. Silakan masukkan data setoran perdana di formulir atas.
+          </div>
+        `;
+      }
+      if (timelineContainer) {
+        timelineContainer.innerHTML = `
+          <div style="background:#ffffff; padding:24px; text-align:center; border-radius:16px; color:#64748b; border:1.5px solid #f1f5f9; font-size:0.88rem;">
+            Belum ada catatan setoran sebelumnya untuk ananda ini.
+          </div>
+        `;
+      }
+      return;
+    }
+
+    const latest = records[0];
+    const parsedDate = this.parseDateSafe(latest.tanggal);
+    const dateStr = parsedDate 
+      ? parsedDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })
+      : latest.tanggal;
+
+    if (dateBadge) dateBadge.textContent = dateStr;
+
+    // Render Ringkasan Posisi Terakhir (Tilawah & Hafalan)
+    if (gridContainer) {
+      let tilawahInfo = "";
+      if (latest.bacaanTipe === "Tartil") {
+        const isLanjut = latest.bacaanStatus === "Lanjut";
+        tilawahInfo = `
+          <div class="last-pos-box">
+            <div class="last-pos-box-title">
+              <span>Bimbingan Tilawah</span>
+              <span class="meta-badge" style="background:${isLanjut ? '#ecfdf5' : '#fef3c7'}; color:${isLanjut ? '#047857' : '#92400e'}; border:1px solid ${isLanjut ? '#d1fae5' : '#fde68a'}; font-weight:800;">
+                ${isLanjut ? 'Lanjut Halaman' : 'Ulang Halaman'}
+              </span>
+            </div>
+            <div class="last-pos-box-val" style="color:#065f46;">
+              Tartil Al-Qur'an Juz ${escapeHtml(latest.tartilJuz || "30")}
+            </div>
+            <div class="last-pos-box-sub">
+              Posisi Terakhir: ${escapeHtml(latest.tartilHalaman || "-")}
+            </div>
+            ${latest.bacaanCatatan && latest.bacaanCatatan !== "-" ? `
+              <div class="last-pos-box-notes">Catatan: "${escapeHtml(latest.bacaanCatatan)}"</div>
+            ` : ""}
+          </div>
+        `;
+      } else {
+        const isLanjut = latest.bacaanStatus === "Lanjut";
+        tilawahInfo = `
+          <div class="last-pos-box">
+            <div class="last-pos-box-title">
+              <span>Bimbingan Tilawah</span>
+              <span class="meta-badge" style="background:${isLanjut ? '#ecfdf5' : '#fef3c7'}; color:${isLanjut ? '#047857' : '#92400e'}; border:1px solid ${isLanjut ? '#d1fae5' : '#fde68a'}; font-weight:800;">
+                ${isLanjut ? 'Lanjut Halaman' : 'Ulang Halaman'}
+              </span>
+            </div>
+            <div class="last-pos-box-val" style="color:#065f46;">
+              ${escapeHtml(latest.tamhidJilid || "Kitab Tamhid")}
+            </div>
+            <div class="last-pos-box-sub">
+              Posisi Terakhir: ${escapeHtml(latest.tamhidHalaman || "-")}
+            </div>
+            ${latest.bacaanCatatan && latest.bacaanCatatan !== "-" ? `
+              <div class="last-pos-box-notes">Catatan: "${escapeHtml(latest.bacaanCatatan)}"</div>
+            ` : ""}
+          </div>
+        `;
+      }
+
+      const isLulus = latest.hafalanStatus === "Lulus";
+      let hafalanText = "";
+      if (latest.ziyadahSurah && latest.murojaahSurah) {
+        hafalanText = `
+          <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">Ziyadah: Surah ${escapeHtml(latest.ziyadahSurah)} (${latest.ziyadahAyatAwal} - ${latest.ziyadahAyatAkhir})</div>
+          <div style="font-size:0.82rem; color:#64748b; margin-top:2px;">Muroja'ah: Surah ${escapeHtml(latest.murojaahSurah)} (${latest.murojaahAyatAwal} - ${latest.murojaahAyatAkhir})</div>
+        `;
+      } else if (latest.ziyadahSurah) {
+        hafalanText = `<div style="font-weight:800; font-size:0.9rem; color:#0f172a;">Ziyadah: Surah ${escapeHtml(latest.ziyadahSurah)} (${latest.ziyadahAyatAwal} - ${latest.ziyadahAyatAkhir})</div>`;
+      } else if (latest.murojaahSurah) {
+        hafalanText = `<div style="font-weight:800; font-size:0.9rem; color:#0f172a;">Muroja'ah: Surah ${escapeHtml(latest.murojaahSurah)} (${latest.murojaahAyatAwal} - ${latest.murojaahAyatAkhir})</div>`;
+      } else if (latest.surahAwal && latest.surahAwal !== "-") {
+        hafalanText = `<div style="font-weight:800; font-size:0.9rem; color:#0f172a;">Surah ${escapeHtml(latest.surahAwal)} (${latest.ayatAwal || 1} - ${latest.ayatAkhir || 1})</div>`;
+      } else {
+        hafalanText = `<div style="font-size:0.82rem; color:#64748b; font-style:italic;">Fokus Bimbingan Tilawah</div>`;
+      }
+
+      const hafalanInfo = `
+        <div class="last-pos-box">
+          <div class="last-pos-box-title">
+            <span>Batas Hafalan Terakhir</span>
+            <span class="meta-badge" style="background:${isLulus ? '#ecfdf5' : '#fee2e2'}; color:${isLulus ? '#047857' : '#b91c1c'}; border:1px solid ${isLulus ? '#d1fae5' : '#fecaca'}; font-weight:800;">
+              ${isLulus ? 'Lulus' : 'Ulang'}
+            </span>
+          </div>
+          ${hafalanText}
+          ${latest.hafalanCatatan && latest.hafalanCatatan !== "-" ? `
+            <div class="last-pos-box-notes">Catatan: "${escapeHtml(latest.hafalanCatatan)}"</div>
+          ` : ""}
+        </div>
+      `;
+
+      gridContainer.innerHTML = tilawahInfo + hafalanInfo;
+    }
+
+    // Render Timeline Records Lengkap / Sebelumnya
+    if (timelineContainer) {
+      timelineContainer.innerHTML = records.map(r => {
+        const pDate = this.parseDateSafe(r.tanggal);
+        const dStr = pDate 
+          ? pDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })
+          : r.tanggal;
+
+        let tilawahBoxHtml = "";
+        if (r.bacaanTipe === "Tartil") {
+          const tartilBadge = r.bacaanStatus === "Lanjut" 
+            ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lanjut</span>`
+            : `<span class="meta-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">Ulang</span>`;
+
+          tilawahBoxHtml = `
+            <div class="timeline-subbox timeline-subbox-tartil">
+              <div class="timeline-box-title" style="color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+                <span>Tartil Qur'an</span>
+                ${tartilBadge}
+              </div>
+              <div style="font-weight:800; font-size:0.92rem; color:#065f46;">
+                Juz ${escapeHtml(r.tartilJuz)}
+              </div>
+              <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Posisi: ${escapeHtml(r.tartilHalaman || "-")}</div>
+              ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.78rem; color:#475569; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
+            </div>
+          `;
+        } else {
+          const tamhidBadge = r.bacaanStatus === "Lanjut" 
+            ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lanjut</span>`
+            : `<span class="meta-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">Ulang</span>`;
+
+          tilawahBoxHtml = `
+            <div class="timeline-subbox timeline-subbox-tamhid">
+              <div class="timeline-box-title" style="color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+                <span>Kitab Tamhid</span>
+                ${tamhidBadge}
+              </div>
+              <div style="font-weight:800; font-size:0.92rem; color:#065f46;">${escapeHtml(r.tamhidJilid || "Tamhid")}</div>
+              <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Posisi: ${escapeHtml(r.tamhidHalaman || "-")}</div>
+              ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.78rem; color:#475569; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
+            </div>
+          `;
+        }
+
+        const hafalanBadge = r.hafalanStatus === "Lulus"
+          ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lulus</span>`
+          : `<span class="meta-badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700;">Ulang</span>`;
+
+        const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:3px 8px; font-size:0.72rem; margin-left:8px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">Hapus</button>`;
+
+        let hafalanDetailsHtml = "";
+        if (r.ziyadahSurah && r.murojaahSurah) {
+          hafalanDetailsHtml = `
+            <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+              Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
+            </div>
+            <div style="font-weight:700; font-size:0.84rem; color:#475569; margin-top:3px;">
+              Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
+            </div>
+          `;
+        } else if (r.ziyadahSurah) {
+          hafalanDetailsHtml = `
+            <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+              Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
+            </div>
+          `;
+        } else if (r.murojaahSurah) {
+          hafalanDetailsHtml = `
+            <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+              Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
+            </div>
+          `;
+        } else if (r.surahAwal && r.surahAwal !== "-") {
+          hafalanDetailsHtml = `
+            <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+              Surah ${escapeHtml(r.surahAwal)} (${r.ayatAwal || 1} - ${r.ayatAkhir || 1})
+            </div>
+          `;
+        } else {
+          hafalanDetailsHtml = `
+            <div style="font-size:0.82rem; color:#64748b; font-style:italic;">
+              Fokus Bimbingan Tilawah
+            </div>
+          `;
+        }
+
+        return `
+          <div class="timeline-card">
+            <div class="timeline-header">
+              <span class="timeline-date">${escapeHtml(dStr)}</span>
+              <div style="display:flex; align-items:center;">
+                <span class="timeline-ustadz">${escapeHtml(r.ustadz || "Pengampu")}</span>
+                ${delBtn}
+              </div>
+            </div>
+
+            <div class="timeline-body-grid">
+              ${tilawahBoxHtml}
+
+              <div class="timeline-subbox timeline-subbox-quran">
+                <div class="timeline-box-title" style="color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+                  <span>${r.hafalanJenis || "Hafalan"} Al-Qur'an</span>
+                  ${hafalanBadge}
+                </div>
+                ${hafalanDetailsHtml}
+                <div class="timeline-result-badge">
+                  <span>+${r.totalBintang || 0} Bintang</span>
+                </div>
+              </div>
+            </div>
+
+            ${r.hafalanCatatan && r.hafalanCatatan !== "-" ? `
+              <div class="timeline-notes">
+                <strong>Pesan Evaluasi Ustadz:</strong> "${escapeHtml(r.hafalanCatatan)}"
+              </div>
+            ` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+  },
+
   refreshParentPortalIfActive(santriId) {
     const selectParent = document.getElementById("selectParentSantri");
     if (selectParent && selectParent.value === santriId) {
@@ -2796,7 +3065,11 @@ function createJsonResponse(data) {
         if (this.currentParentStudentId) {
           this.renderParentStudentDetail(this.currentParentStudentId);
         }
-        this.showToast("Catatan evaluasi setoran berhasil dihapus permanen. 🗑️", "success");
+        const currentInputSantriId = document.getElementById("selectSantri")?.value;
+        if (currentInputSantriId) {
+          this.renderFormStudentHistory(currentInputSantriId);
+        }
+        this.showToast("Catatan evaluasi setoran berhasil dihapus permanen.", "success");
       } else {
         this.showToast(res.message || "Gagal menghapus catatan setoran.", "error");
       }
