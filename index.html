@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=4.9">
+  <!-- Stylesheet (v5.0 Minimalis & Elegan) -->
+  <link rel="stylesheet" href="css/style.css?v=5.0">
 </head>
 <body>
 
@@ -289,9 +289,10 @@
           </button>
         </div>
 
-        <!-- Riwayat Setoran Timeline -->
+        <!-- Riwayat Setoran Timeline (Minimalis & Rapi) -->
         <div class="timeline-title">
-          <span>📜 Riwayat Evaluasi Harian Ananda</span>
+          <span class="bar-accent"></span>
+          <span>Riwayat Evaluasi Ananda</span>
         </div>
 
         <div id="parentTimelineContainer">
@@ -327,13 +328,13 @@
           <div class="clean-grid clean-grid-2">
             <!-- Tanggal Setoran -->
             <div class="clean-field">
-              <label class="clean-label" for="inputTanggal">Tanggal Setoran</label>
+              <label class="clean-label" for="inputTanggal">TANGGAL</label>
               <input type="date" class="clean-input" id="inputTanggal" required>
             </div>
 
             <!-- Pilih Kelas (4 Pilihan Resmi) -->
             <div class="clean-field">
-              <label class="clean-label" for="selectHalaqah">Kelas Bimbingan</label>
+              <label class="clean-label" for="selectHalaqah">KELAS BIMBINGAN</label>
               <select class="clean-select" id="selectHalaqah" required>
                 <!-- Populated by JS -->
               </select>
@@ -341,16 +342,16 @@
 
             <!-- Ustadz Pengampu (Otomatis sesuai kelas) -->
             <div class="clean-field">
-              <label class="clean-label" for="inputUstadz">Ustadz / Ustadzah Pengampu</label>
+              <label class="clean-label" for="inputUstadz">PENGAJAR</label>
               <input type="text" class="clean-input clean-input-readonly" id="inputUstadz" value="Ustadz M. Fikri Haekal, C.LQ" required readonly>
             </div>
 
             <!-- Pilih Santri + Tombol Tambah Cepat -->
             <div class="clean-field">
               <div class="label-with-action">
-                <label class="clean-label" for="selectSantri">Nama Santri</label>
+                <label class="clean-label" for="selectSantri">NAMA SANTRI</label>
                 <button type="button" id="btnQuickAddSantri" class="btn-text-action admin-only-feature" style="display: none;" title="Tambah Santri Baru (Khusus Ustadz M. Fikri Haekal)">
-                  <span>➕ Tambah Santri</span>
+                  <span>+ Tambah Santri</span>
                 </button>
               </div>
               <select class="clean-select" id="selectSantri" required>
@@ -371,10 +372,10 @@
           <!-- Switcher: Kitab Tamhid (Dasar) vs Tartil Qur'an (Lanjutan) -->
           <div class="stage-switch-clean">
             <button type="button" class="stage-btn-clean active" id="btnSwitchTamhid" data-mode="Tamhid">
-              <span>📚 Kitab Tamhid</span>
+              <span>Kitab Tamhid</span>
             </button>
             <button type="button" class="stage-btn-clean" id="btnSwitchTartil" data-mode="Tartil">
-              <span>📜 Tartil Qur'an</span>
+              <span>Tartil Qur'an</span>
             </button>
           </div>
           <input type="hidden" id="inputBacaanTipe" value="Tamhid">
@@ -383,14 +384,14 @@
           <div id="subFormTamhid">
             <div class="clean-grid clean-grid-2">
               <div class="clean-field">
-                <label class="clean-label" for="selectTamhidJilid">Jilid Kitab</label>
+                <label class="clean-label" for="selectTamhidJilid">JILID KITAB</label>
                 <select class="clean-select" id="selectTamhidJilid">
                   <!-- Populated by JS -->
                 </select>
               </div>
 
               <div class="clean-field">
-                <label class="clean-label" for="inputTamhidHalaman">Halaman / Bab</label>
+                <label class="clean-label" for="inputTamhidHalaman">HALAMAN / BAB</label>
                 <div class="stepper-clean">
                   <button type="button" class="stepper-btn-clean" onclick="App.adjustNumericInput('inputTamhidHalaman', -1)" title="Kurang 1 Halaman">−</button>
                   <input type="text" class="stepper-input-clean" id="inputTamhidHalaman" value="Halaman 1">
@@ -401,16 +402,16 @@
 
             <!-- Status Kelulusan Tamhid -->
             <div class="clean-field" style="margin-top: 14px;">
-              <label class="clean-label">Status Tamhid Hari Ini</label>
+              <label class="clean-label">STATUS TILAWAH</label>
               <div class="pill-group-clean">
                 <button type="button" class="pill-btn-clean active-green" id="btnTamhidLanjut" data-val="Lanjut">
-                  <span>✅ Lanjut</span>
+                  <span>Lanjut</span>
                 </button>
                 <button type="button" class="pill-btn-clean" id="btnTamhidUlang" data-val="Ulang">
-                  <span>🔄 Ulang</span>
+                  <span>Ulang</span>
                 </button>
                 <button type="button" class="pill-btn-clean" id="btnTamhidLulusNaik" data-val="Lulus Tamhid" title="Lulus Tamhid dan otomatis naik ke Tartil Qur'an!">
-                  <span>🎓 Lulus &rarr; Tartil</span>
+                  <span>Lulus &rarr; Tartil</span>
                 </button>
               </div>
               <input type="hidden" id="inputTamhidStatus" value="Lanjut">
@@ -421,14 +422,14 @@
           <div id="subFormTartil" style="display: none;">
             <div class="clean-grid clean-grid-2">
               <div class="clean-field">
-                <label class="clean-label" for="selectTartilJuz">Pilihan Juz</label>
+                <label class="clean-label" for="selectTartilJuz">PILIHAN JUZ</label>
                 <select class="clean-select" id="selectTartilJuz">
                   <!-- Juz 1 s/d 30 -->
                 </select>
               </div>
 
               <div class="clean-field">
-                <label class="clean-label" for="inputTartilHalaman">Halaman Mushaf (1–604)</label>
+                <label class="clean-label" for="inputTartilHalaman">HALAMAN MUSHAF</label>
                 <div class="stepper-clean">
                   <button type="button" class="stepper-btn-clean" onclick="App.adjustNumericInput('inputTartilHalaman', -1)" title="Kurang 1 Halaman">−</button>
                   <input type="text" class="stepper-input-clean" id="inputTartilHalaman" value="Halaman 582">
@@ -439,13 +440,13 @@
 
             <!-- Status Tartil -->
             <div class="clean-field" style="margin-top: 14px;">
-              <label class="clean-label">Status Tartil Hari Ini</label>
+              <label class="clean-label">STATUS TILAWAH</label>
               <div class="pill-group-clean">
                 <button type="button" class="pill-btn-clean active-green" id="btnTartilLanjut" data-val="Lanjut">
-                  <span>✅ Lanjut</span>
+                  <span>Lanjut</span>
                 </button>
                 <button type="button" class="pill-btn-clean" id="btnTartilUlang" data-val="Ulang">
-                  <span>🔄 Ulang</span>
+                  <span>Ulang</span>
                 </button>
               </div>
               <input type="hidden" id="inputTartilStatus" value="Lanjut">
@@ -453,17 +454,17 @@
           </div>
 
           <!-- Catatan Bimbingan Singkat (Tamhid / Tartil) -->
-          <div class="clean-field" style="margin-top: 12px;">
-            <label class="clean-label" for="inputBacaanCatatan">Catatan Fashahah / Tajwid (Opsional)</label>
-            <input type="text" class="clean-input" id="inputBacaanCatatan" placeholder="Catatan fashahah, panjang mad, makhraj...">
+          <div class="clean-field" style="margin-top: 14px;">
+            <label class="clean-label" for="inputBacaanCatatan">CATATAN (OPSIONAL)</label>
+            <input type="text" class="clean-input" id="inputBacaanCatatan" placeholder="Pesan evaluasi fashahah, panjang mad, makhraj...">
           </div>
         </div>
 
-        <!-- CARD 3: BATAS HAFALAN (PISAHKAN ZIYADAH & MUROJA'AH DENGAN PILIHAN SURAH MASING-MASING) -->
+        <!-- CARD 3: BATAS HAFALAN (SEPERTI GAMBAR 2 & 4) -->
         <div class="card-clean">
           <div class="section-heading-minimal">
             <span class="bar-accent"></span>
-            <span>Batas Hafalan (Ziyadah & Muroja'ah)</span>
+            <span>Batas Hafalan</span>
           </div>
 
           <!-- SUB-SEKSI 1: ZIYADAH (HAFALAN BARU) -->
@@ -471,35 +472,34 @@
             <div class="hafalan-subcard-header">
               <label class="hafalan-toggle-label">
                 <input type="checkbox" id="checkEnableZiyadah" checked onchange="App.toggleZiyadahActive()">
-                <span class="hafalan-subcard-title">⭐ Ziyadah (Hafalan Baru)</span>
+                <span class="hafalan-subcard-title">Ziyadah (Hafalan Baru)</span>
               </label>
               <div style="display: flex; align-items: center; gap: 5px;">
-                <button type="button" id="btnZiyadahActiveYes" onclick="App.setZiyadahActive(true)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: 1px solid #a7f3d0; background: #059669; color: #fff; cursor: pointer;">
-                  ⭐ Ada Ziyadah
+                <button type="button" id="btnZiyadahActiveYes" onclick="App.setZiyadahActive(true)" class="btn-subcard-toggle" style="padding: 3px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: 1px solid #a7f3d0; background: #047857; color: #fff; cursor: pointer;">
+                  Ada
                 </button>
-                <button type="button" id="btnZiyadahActiveNo" onclick="App.setZiyadahActive(false)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; cursor: pointer;">
-                  ❌ Tanpa Ziyadah
+                <button type="button" id="btnZiyadahActiveNo" onclick="App.setZiyadahActive(false)" class="btn-subcard-toggle" style="padding: 3px 10px; font-size: 0.72rem; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; cursor: pointer;">
+                  Tanpa
                 </button>
-                <span class="meta-badge" id="badgeZiyadahStatus" style="background: #dcfce7; color: #15803d; font-size: 0.7rem; border: 1px solid #bbf7d0;">Aktif</span>
+                <span class="meta-badge" id="badgeZiyadahStatus" style="background: #ecfdf5; color: #047857; font-size: 0.7rem; border: 1px solid #d1fae5;">Aktif</span>
               </div>
             </div>
 
-            <!-- Notice jika Ziyadah dikosongkan -->
             <div id="ziyadahEmptyNotice" style="display: none; margin-bottom: 10px; padding: 7px 10px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.76rem; color: #64748b;">
-              ℹ️ <strong>Ziyadah Dikosongkan</strong>: Surah Ziyadah tidak akan diinput ke database.
+              Ziyadah dikosongkan untuk setoran ini.
             </div>
 
             <div id="containerZiyadahInputs">
               <div class="batas-hafalan-grid">
                 <!-- Kolom Kiri: Surah & Ayat Awal Ziyadah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">Surah Awal Ziyadah</label>
+                  <label class="field-micro-label">SURAH AWAL</label>
                   <select class="clean-select select-surah-clean" id="selectZiyadahSurahAwal">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
                     <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAwal">
-                      <option value="1">- Ayat -</option>
+                      <option value="1">Ayat 1</option>
                     </select>
                     <input type="hidden" id="inputZiyadahAyatAwal" value="1">
                   </div>
@@ -507,13 +507,13 @@
 
                 <!-- Kolom Kanan: Surah & Ayat Akhir Ziyadah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">Surah Akhir Ziyadah</label>
+                  <label class="field-micro-label">SURAH AKHIR</label>
                   <select class="clean-select select-surah-clean" id="selectZiyadahSurahAkhir">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
                     <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAkhir">
-                      <option value="10">- Ayat -</option>
+                      <option value="10">Ayat 10</option>
                     </select>
                     <input type="hidden" id="inputZiyadahAyatAkhir" value="10">
                   </div>
@@ -521,13 +521,13 @@
               </div>
 
               <!-- Quick Presets Ziyadah -->
-              <div class="quick-chips-bar" style="margin-top: 8px;">
-                <span class="quick-chips-title">⚡ Pintasan Ziyadah:</span>
+              <div class="quick-chips-bar" style="margin-top: 6px;">
+                <span class="quick-chips-title">Pintasan:</span>
                 <div class="quick-chips-group">
                   <button type="button" class="chip-btn-clean" onclick="App.setZiyadahAyatSpan(5)">+5 Ayat</button>
                   <button type="button" class="chip-btn-clean" onclick="App.setZiyadahAyatSpan(10)">+10 Ayat</button>
                   <button type="button" class="chip-btn-clean" onclick="App.setZiyadahAyatSpan(20)">+20 Ayat</button>
-                  <button type="button" class="chip-btn-clean chip-btn-gold" onclick="App.setZiyadahFullSurah()">📖 1 Surah Penuh</button>
+                  <button type="button" class="chip-btn-clean chip-btn-gold" onclick="App.setZiyadahFullSurah()">1 Surah Penuh</button>
                 </div>
               </div>
             </div>
@@ -538,35 +538,34 @@
             <div class="hafalan-subcard-header">
               <label class="hafalan-toggle-label">
                 <input type="checkbox" id="checkEnableMurojaah" checked onchange="App.toggleMurojaahActive()">
-                <span class="hafalan-subcard-title">🔄 Muroja'ah (Ulang Hafalan)</span>
+                <span class="hafalan-subcard-title">Muroja'ah (Ulang Hafalan)</span>
               </label>
               <div style="display: flex; align-items: center; gap: 5px;">
-                <button type="button" id="btnMurojaahActiveYes" onclick="App.setMurojaahActive(true)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: 1px solid #bae6fd; background: #0284c7; color: #fff; cursor: pointer;">
-                  ✅ Ada Muroja'ah
+                <button type="button" id="btnMurojaahActiveYes" onclick="App.setMurojaahActive(true)" class="btn-subcard-toggle" style="padding: 3px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: 1px solid #bae6fd; background: #0284c7; color: #fff; cursor: pointer;">
+                  Ada
                 </button>
-                <button type="button" id="btnMurojaahActiveNo" onclick="App.setMurojaahActive(false)" class="btn-subcard-toggle" style="padding: 3px 8px; font-size: 0.72rem; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; cursor: pointer;">
-                  ❌ Tanpa Muroja'ah
+                <button type="button" id="btnMurojaahActiveNo" onclick="App.setMurojaahActive(false)" class="btn-subcard-toggle" style="padding: 3px 10px; font-size: 0.72rem; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569; cursor: pointer;">
+                  Tanpa
                 </button>
                 <span class="meta-badge" id="badgeMurojaahStatus" style="background: #e0f2fe; color: #0369a1; font-size: 0.7rem; border: 1px solid #bae6fd;">Aktif</span>
               </div>
             </div>
 
-            <!-- Notice jika Muroja'ah dikosongkan (Santri hanya Ziyadah) -->
             <div id="murojaahEmptyNotice" style="display: none; margin-bottom: 10px; padding: 7px 10px; background: #fef3c7; border: 1px dashed #f59e0b; border-radius: 8px; font-size: 0.76rem; color: #92400e;">
-              💡 <strong>Santri Hanya Setoran Ziyadah (Tanpa Muroja'ah)</strong>: Surah Muroja'ah dikosongkan dan tidak akan tersimpan ke riwayat.
+              Muroja'ah dikosongkan (hanya setoran Ziyadah).
             </div>
 
             <div id="containerMurojaahInputs">
               <div class="batas-hafalan-grid">
                 <!-- Kolom Kiri: Surah & Ayat Awal Muroja'ah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">Surah Awal Muroja'ah</label>
+                  <label class="field-micro-label">SURAH AWAL</label>
                   <select class="clean-select select-surah-clean" id="selectMurojaahSurahAwal">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
                     <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAwal">
-                      <option value="1">- Ayat -</option>
+                      <option value="1">Ayat 1</option>
                     </select>
                     <input type="hidden" id="inputMurojaahAyatAwal" value="1">
                   </div>
@@ -574,13 +573,13 @@
 
                 <!-- Kolom Kanan: Surah & Ayat Akhir Muroja'ah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">Surah Akhir Muroja'ah</label>
+                  <label class="field-micro-label">SURAH AKHIR</label>
                   <select class="clean-select select-surah-clean" id="selectMurojaahSurahAkhir">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
                     <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAkhir">
-                      <option value="20">- Ayat -</option>
+                      <option value="20">Ayat 20</option>
                     </select>
                     <input type="hidden" id="inputMurojaahAyatAkhir" value="20">
                   </div>
@@ -588,13 +587,13 @@
               </div>
 
               <!-- Quick Presets Muroja'ah -->
-              <div class="quick-chips-bar" style="margin-top: 8px;">
-                <span class="quick-chips-title">⚡ Pintasan Muroja'ah:</span>
+              <div class="quick-chips-bar" style="margin-top: 6px;">
+                <span class="quick-chips-title">Pintasan:</span>
                 <div class="quick-chips-group">
                   <button type="button" class="chip-btn-clean" onclick="App.setMurojaahAyatSpan(5)">+5 Ayat</button>
                   <button type="button" class="chip-btn-clean" onclick="App.setMurojaahAyatSpan(10)">+10 Ayat</button>
                   <button type="button" class="chip-btn-clean" onclick="App.setMurojaahAyatSpan(20)">+20 Ayat</button>
-                  <button type="button" class="chip-btn-clean chip-btn-gold" onclick="App.setMurojaahFullSurah()">📖 1 Surah Penuh</button>
+                  <button type="button" class="chip-btn-clean chip-btn-gold" onclick="App.setMurojaahFullSurah()">1 Surah Penuh</button>
                 </div>
               </div>
             </div>
@@ -608,7 +607,7 @@
           <input type="hidden" id="inputAyatAkhir" value="10">
         </div>
 
-        <!-- CARD 4: PENILAIAN MUTU (SEPERTI GAMBAR 1 DENGAN TOMBOL BATAL) -->
+        <!-- CARD 4: PENILAIAN MUTU (PERSIS GAMBAR 2 & 4 DENGAN TOMBOL BATAL) -->
         <div class="card-clean">
           <div class="section-heading-minimal">
             <span class="bar-accent"></span>
@@ -621,7 +620,7 @@
               <div class="mutu-left">
                 <span class="mutu-name">Tajwid</span>
                 <button type="button" class="btn-cancel-rating" data-rating="tajwid" title="Batal penilaian Tajwid">
-                  <span>❌ Batal</span>
+                  <span>✕ Batal</span>
                 </button>
               </div>
               <div class="star-inputs-clean" data-rating="tajwid">
@@ -638,7 +637,7 @@
               <div class="mutu-left">
                 <span class="mutu-name">Kelancaran</span>
                 <button type="button" class="btn-cancel-rating" data-rating="kelancaran" title="Batal penilaian Kelancaran">
-                  <span>❌ Batal</span>
+                  <span>✕ Batal</span>
                 </button>
               </div>
               <div class="star-inputs-clean" data-rating="kelancaran">
@@ -655,7 +654,7 @@
               <div class="mutu-left">
                 <span class="mutu-name">Makhraj</span>
                 <button type="button" class="btn-cancel-rating" data-rating="makhraj" title="Batal penilaian Makhraj">
-                  <span>❌ Batal</span>
+                  <span>✕ Batal</span>
                 </button>
               </div>
               <div class="star-inputs-clean" data-rating="makhraj">
@@ -675,7 +674,7 @@
               </div>
               <div class="mutu-summary-right">
                 <span>Total:</span>
-                <span class="mutu-star-total"><strong id="labelTotalBintang">15</strong> ⭐</span>
+                <span class="mutu-star-total"><strong id="labelTotalBintang">15</strong> Bintang</span>
               </div>
             </div>
 
@@ -686,7 +685,7 @@
           </div>
         </div>
 
-        <!-- CARD 5: TINDAKAN (LULUS / ULANG SEPERTI GAMBAR 1) -->
+        <!-- CARD 5: TINDAKAN (LULUS / ULANG PERSIS GAMBAR 2 & 4) -->
         <div class="card-clean">
           <div class="section-heading-minimal">
             <span class="bar-accent"></span>
@@ -695,10 +694,10 @@
 
           <div class="tindakan-action-group">
             <button type="button" class="btn-action-tindakan active-lulus" id="btnHafalanLulus" data-val="Lulus">
-              <span>✅ LULUS</span>
+              <span>LULUS</span>
             </button>
             <button type="button" class="btn-action-tindakan" id="btnHafalanUlang" data-val="Ulang">
-              <span>🔄 ULANG</span>
+              <span>ULANG</span>
             </button>
           </div>
           <input type="hidden" id="inputHafalanStatus" value="Lulus">
@@ -710,15 +709,15 @@
           </div>
         </div>
 
-        <!-- TOMBOL SIMPAN UTAMA -->
+        <!-- TOMBOL SIMPAN UTAMA (PERSIS GAMBAR 3) -->
         <button type="submit" class="btn-submit-emerald" id="btnSubmitSetoran">
-          <span>💾 SIMPAN SETORAN SANTRI</span>
+          <span>SIMPAN SETORAN</span>
         </button>
 
-        <!-- KELOLA SETORAN TERAKHIR / BATALKAN INPUT KELIRU (Permintaan User: Input keliru tidak bisa dihapus) -->
+        <!-- KELOLA SETORAN TERAKHIR / BATALKAN INPUT KELIRU -->
         <div style="text-align: center; margin-top: 14px; margin-bottom: 24px;">
-          <button type="button" class="btn-text-action" id="btnOpenRecentSetoranModal" style="color: #475569; font-size: 0.85rem; font-weight: 700; background: #f8fafc; padding: 10px 18px; border-radius: 99px; border: 1.5px solid #cbd5e1; display: inline-flex; align-items: center; gap: 6px;">
-            <span>📋 Riwayat Setoran Terakhir (Hapus Kesalahan Input)</span>
+          <button type="button" class="btn-text-action" id="btnOpenRecentSetoranModal" style="color: #64748b; font-size: 0.85rem; font-weight: 700; background: #f8fafc; padding: 10px 18px; border-radius: 99px; border: 1.5px solid #e2e8f0; display: inline-flex; align-items: center; gap: 6px;">
+            <span>Riwayat Setoran Terakhir (Batalkan Input)</span>
           </button>
         </div>
 
@@ -1213,7 +1212,7 @@
       <div class="mobile-nav-circle">
         <span class="mobile-nav-icon">👥</span>
       </div>
-      <span class="mobile-nav-label">Pantau</span>
+      <span class="mobile-nav-label">Pantauan</span>
     </button>
     
     <button type="button" class="mobile-nav-item" data-tab="tab-input" title="Input Setoran Ustadz">
@@ -1244,9 +1243,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v4.9) -->
-  <script src="js/data.js?v=4.9"></script>
-  <script src="js/sheets.js?v=4.9"></script>
-  <script src="js/app.js?v=4.9"></script>
+  <!-- Scripts (Cache Buster v5.0 Minimalis & Elegan) -->
+  <script src="js/data.js?v=5.0"></script>
+  <script src="js/sheets.js?v=5.0"></script>
+  <script src="js/app.js?v=5.0"></script>
 </body>
 </html>

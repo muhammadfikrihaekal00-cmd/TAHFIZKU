@@ -2105,86 +2105,80 @@ const App = {
           let tilawahBoxHtml = "";
           if (r.bacaanTipe === "Tartil") {
             const tartilBadge = r.bacaanStatus === "Lanjut" 
-              ? `<span class="meta-badge" style="background:#fff1f2; color:#be123c; border:1px solid #fecdd3;">✅ Lanjut Halaman</span>`
-              : `<span class="meta-badge" style="background:#fef3c7; color:#92400e;">🔄 Ulang Halaman</span>`;
+              ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lanjut</span>`
+              : `<span class="meta-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">Ulang</span>`;
 
             tilawahBoxHtml = `
               <div class="timeline-subbox timeline-subbox-tartil">
-                <div class="timeline-box-title" style="color:#be123c; display:flex; justify-content:space-between;">
-                  <span>📜 Tartil Al-Qur'an</span>
+                <div class="timeline-box-title" style="color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+                  <span>Tartil Qur'an</span>
                   ${tartilBadge}
                 </div>
-                <div style="font-weight:800; font-size:0.88rem; color:#9f1239;">
+                <div style="font-weight:800; font-size:0.92rem; color:#065f46;">
                   Juz ${escapeHtml(r.tartilJuz)}
                 </div>
-                <div style="font-size:0.78rem; color:#be123c; margin-top:2px;">Posisi: ${escapeHtml(r.tartilHalaman || "-")}</div>
-                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.75rem; color:#881337; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
+                <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Posisi: ${escapeHtml(r.tartilHalaman || "-")}</div>
+                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.78rem; color:#475569; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
               </div>
             `;
           } else {
             const tamhidBadge = r.bacaanStatus === "Lanjut" 
-              ? `<span class="meta-badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;">✅ Lanjut</span>`
-              : `<span class="meta-badge" style="background:#fef3c7; color:#92400e;">🔄 Ulang</span>`;
+              ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lanjut</span>`
+              : `<span class="meta-badge" style="background:#fef3c7; color:#92400e; font-weight:700;">Ulang</span>`;
 
             tilawahBoxHtml = `
               <div class="timeline-subbox timeline-subbox-tamhid">
-                <div class="timeline-box-title" style="color:#0369a1; display:flex; justify-content:space-between;">
-                  <span>📚 Kitab Tamhid</span>
+                <div class="timeline-box-title" style="color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+                  <span>Kitab Tamhid</span>
                   ${tamhidBadge}
                 </div>
-                <div style="font-weight:800; font-size:0.88rem; color:#0c4a6e;">${escapeHtml(r.tamhidJilid || "Tamhid")}</div>
-                <div style="font-size:0.78rem; color:#0284c7; margin-top:2px;">Posisi: ${escapeHtml(r.tamhidHalaman || "-")}</div>
-                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.75rem; color:#0369a1; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
+                <div style="font-weight:800; font-size:0.92rem; color:#065f46;">${escapeHtml(r.tamhidJilid || "Tamhid")}</div>
+                <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">Posisi: ${escapeHtml(r.tamhidHalaman || "-")}</div>
+                ${r.bacaanCatatan && r.bacaanCatatan !== "-" ? `<div style="font-size:0.78rem; color:#475569; margin-top:4px; font-style:italic;">Catatan: "${escapeHtml(r.bacaanCatatan)}"</div>` : ""}
               </div>
             `;
           }
 
           const hafalanBadge = r.hafalanStatus === "Lulus"
-            ? `<span class="meta-badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">✅ Lulus</span>`
-            : `<span class="meta-badge" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca;">🔄 Perbaiki</span>`;
+            ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lulus</span>`
+            : `<span class="meta-badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700;">Ulang</span>`;
 
-          // Tombol hapus setoran keliru: Bisa diakses langsung dengan konfirmasi PIN & hilangkan instan dari layar
-          const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:4px 10px; font-size:0.75rem; margin-left:8px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">🗑️ Hapus</button>`;
+          // Tombol hapus setoran keliru teks minimalis
+          const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:3px 8px; font-size:0.72rem; margin-left:8px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">Hapus</button>`;
 
           // Rincian Hafalan Ziyadah & Muroja'ah Terpisah
           let hafalanDetailsHtml = "";
           if (r.ziyadahSurah && r.murojaahSurah) {
             hafalanDetailsHtml = `
-              <div style="font-weight:800; font-size:0.86rem; color:#78350f;">
-                ⭐ Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (Ayat ${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
+              <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+                Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
               </div>
-              <div style="font-weight:700; font-size:0.82rem; color:#92400e; margin-top:3px;">
-                🔄 Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (Ayat ${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
+              <div style="font-weight:700; font-size:0.84rem; color:#475569; margin-top:3px;">
+                Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
               </div>
             `;
           } else if (r.ziyadahSurah) {
             hafalanDetailsHtml = `
-              <div style="font-weight:800; font-size:0.86rem; color:#78350f;">
-                ⭐ Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (Ayat ${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
-              </div>
-              <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-top:3px;">
-                (Hanya Setoran Ziyadah • Tanpa Muroja'ah)
+              <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+                Ziyadah: Surah ${escapeHtml(r.ziyadahSurah)} (${r.ziyadahAyatAwal} - ${r.ziyadahAyatAkhir})
               </div>
             `;
           } else if (r.murojaahSurah) {
             hafalanDetailsHtml = `
-              <div style="font-weight:800; font-size:0.86rem; color:#92400e;">
-                🔄 Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (Ayat ${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
-              </div>
-              <div style="font-size:0.75rem; color:#64748b; font-weight:600; margin-top:3px;">
-                (Hanya Setoran Muroja'ah • Tanpa Ziyadah Baru)
+              <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+                Muroja'ah: Surah ${escapeHtml(r.murojaahSurah)} (${r.murojaahAyatAwal} - ${r.murojaahAyatAkhir})
               </div>
             `;
           } else if (r.surahAwal && r.surahAwal !== "-") {
             hafalanDetailsHtml = `
-              <div style="font-weight:800; font-size:0.88rem; color:#78350f;">
-                Surah ${escapeHtml(r.surahAwal)} (Ayat ${r.ayatAwal || 1} - ${r.ayatAkhir || 1})
+              <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">
+                Surah ${escapeHtml(r.surahAwal)} (${r.ayatAwal || 1} - ${r.ayatAkhir || 1})
               </div>
             `;
           } else {
             hafalanDetailsHtml = `
-              <div style="font-size:0.8rem; color:#64748b; font-style:italic;">
-                (Fokus Bimbingan Tilawah/Tartil)
+              <div style="font-size:0.82rem; color:#64748b; font-style:italic;">
+                Fokus Bimbingan Tilawah
               </div>
             `;
           }
@@ -2192,9 +2186,9 @@ const App = {
           return `
             <div class="timeline-card">
               <div class="timeline-header">
-                <span class="timeline-date">📅 ${escapeHtml(dateStr)}</span>
+                <span class="timeline-date">${escapeHtml(dateStr)}</span>
                 <div style="display:flex; align-items:center;">
-                  <span class="timeline-ustadz">${escapeHtml(r.ustadz || "Pengampu RQ")}</span>
+                  <span class="timeline-ustadz">${escapeHtml(r.ustadz || "Pengampu")}</span>
                   ${delBtn}
                 </div>
               </div>
@@ -2203,20 +2197,20 @@ const App = {
                 ${tilawahBoxHtml}
 
                 <div class="timeline-subbox timeline-subbox-quran">
-                  <div class="timeline-box-title" style="color:#92400e; display:flex; justify-content:space-between;">
-                    <span>✨ ${r.hafalanJenis || "Hafalan"} Al-Qur'an</span>
+                  <div class="timeline-box-title" style="color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+                    <span>${r.hafalanJenis || "Hafalan"} Al-Qur'an</span>
                     ${hafalanBadge}
                   </div>
                   ${hafalanDetailsHtml}
                   <div class="timeline-result-badge">
-                    <span>⭐ +${r.totalBintang || 0} Bintang</span>
+                    <span>+${r.totalBintang || 0} Bintang</span>
                   </div>
                 </div>
               </div>
 
               ${r.hafalanCatatan && r.hafalanCatatan !== "-" ? `
                 <div class="timeline-notes">
-                  <strong>Catatan Evaluasi:</strong> "${escapeHtml(r.hafalanCatatan)}"
+                  <strong>Pesan Evaluasi Ustadz:</strong> "${escapeHtml(r.hafalanCatatan)}"
                 </div>
               ` : ""}
             </div>
