@@ -1290,7 +1290,8 @@ body.is-ustadz .tab-btn.ustadz-only {
 }
 
 /* Modals */
-.modal-overlay {
+.modal-overlay,
+.modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -1305,11 +1306,13 @@ body.is-ustadz .tab-btn.ustadz-only {
   padding: 16px;
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.modal.active {
   display: flex;
 }
 
-.modal-dialog {
+.modal-dialog,
+.modal-content {
   background: #ffffff;
   width: 100%;
   max-width: 580px;
@@ -1344,7 +1347,8 @@ body.is-ustadz .tab-btn.ustadz-only {
   gap: 8px;
 }
 
-.modal-close {
+.modal-close,
+.btn-close-modal {
   background: none;
   border: none;
   font-size: 1.4rem;

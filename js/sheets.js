@@ -7,6 +7,7 @@ const STORAGE_KEY_SETTINGS = "rq_ummul_qasim_settings_v4";
 const STORAGE_KEY_SANTRI = "rq_ummul_qasim_santri_v4";
 const STORAGE_KEY_AUTH = "rq_ummul_qasim_auth_session_v4";
 const STORAGE_KEY_CURRENT_USTADZ = "rq_ummul_qasim_current_ustadz_v4";
+const STORAGE_KEY_PENDING = "rq_ummul_qasim_pending_sync_v4";
 
 const SheetsService = {
   // Autentikasi Pengajar & Pembagian Hak Akses (Khusus Ustadz M. Fikri Haekal sebagai Admin Utama)
@@ -294,6 +295,68 @@ const SheetsService = {
     return false;
   },
 
+  // Antrian Sinkronisasi Pending (Offline / Optimistic changes yang menunggu konfirmasi spreadsheet)
+  getPendingQueue() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_PENDING);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return arr;
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  addToPendingQueue(action, item) {
+    try {
+      const queue = this.getPendingQueue();
+      const cleanId = String((item && item.id) ? item.id : item).trim();
+      // Cegah duplikasi aksi yang sama pada ID yang sama
+      const filtered = queue.filter(q => !(q.id === cleanId && q.action === action));
+      filtered.push({
+        action: action,
+        id: cleanId,
+        record: typeof item === "object" ? item : null,
+        timestamp: Date.now()
+      });
+      localStorage.setItem(STORAGE_KEY_PENDING, JSON.stringify(filtered));
+    } catch (e) {}
+  },
+
+  removeFromPendingQueue(id, action = null) {
+    try {
+      const cleanId = String(id).trim();
+      let queue = this.getPendingQueue();
+      if (action) {
+        queue = queue.filter(q => !(q.id === cleanId && q.action === action));
+      } else {
+        queue = queue.filter(q => q.id !== cleanId);
+      }
+      localStorage.setItem(STORAGE_KEY_PENDING, JSON.stringify(queue));
+    } catch (e) {}
+  },
+
+  async processPendingQueue() {
+    const endpoint = this.getEndpoint();
+    if (!endpoint) return;
+    const queue = this.getPendingQueue();
+    if (queue.length === 0) return;
+
+    for (const item of [...queue]) {
+      try {
+        if (item.action === "save" && item.record) {
+          await this.sendRecordToRemoteAsync(item.record);
+        } else if (item.action === "edit" && item.record) {
+          await this.sendEditToRemoteAsync(item.record);
+        } else if (item.action === "delete") {
+          await this.sendDeleteToRemoteAsync(item.id);
+        }
+      } catch (err) {
+        console.warn("Notice: memproses antrian pending:", item, err);
+      }
+    }
+  },
+
   verifyAnyPin(enteredPin) {
     const clean = String(enteredPin || "").trim();
     if (!clean) return { valid: false };
@@ -398,13 +461,16 @@ const SheetsService = {
     if (record.bacaanCatatan) record.bacaanCatatan = this.sanitizeFormula(record.bacaanCatatan);
     if (record.hafalanCatatan) record.hafalanCatatan = this.sanitizeFormula(record.hafalanCatatan);
 
-    // 1. Simpan langsung ke memori & LocalStorage seketika (0 ms)
+    // 1. Simpan langsung ke memori & LocalStorage seketika (0 ms UX)
     const localRecords = this.getAllRecords();
     localRecords.unshift(record);
     const normalizedLocal = this.normalizeRecordDates(localRecords);
     localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(normalizedLocal));
 
-    // 2. Sinkronkan ke Google Spreadsheet di latar belakang secara asinkron (NON-BLOCKING)
+    // 2. Masukkan ke antrian pending sync
+    this.addToPendingQueue("save", record);
+
+    // 3. Sinkronkan ke Google Spreadsheet di latar belakang secara asinkron
     this.sendRecordToRemoteAsync(record);
 
     return {
@@ -420,16 +486,94 @@ const SheetsService = {
 
   async sendRecordToRemoteAsync(record) {
     const endpoint = this.getEndpoint();
-    if (!endpoint) return;
+    if (!endpoint) return { success: false, message: "Endpoint kosong" };
+
+    const payload = { action: "save", ...record };
+
+    try {
+      // Prioritas 1: Gunakan POST
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      this.removeFromPendingQueue(record.id, "save");
+      return { success: true };
+    } catch (err) {
+      // Prioritas 2: Fallback ke GET jika terjadi kendala CORS/redirect pada jaringan seluler/HP
+      try {
+        const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=save&data=${encodeURIComponent(JSON.stringify(payload))}&t=${Date.now()}`;
+        await fetch(getUrl, { method: "GET" });
+        this.removeFromPendingQueue(record.id, "save");
+        return { success: true };
+      } catch (e2) {
+        console.warn("Spreadsheet save retry notice:", err, e2);
+        return { success: false, error: err };
+      }
+    }
+  },
+
+  async editRecord(updatedRecord, bypassAuth = false) {
+    if (!bypassAuth && !this.isUstadzLoggedIn()) {
+      return { success: false, message: "Akses Ditolak: Masuk sebagai Pengajar atau Admin untuk mengedit setoran." };
+    }
+    if (!updatedRecord || !updatedRecord.id) {
+      return { success: false, message: "Data setoran tidak valid untuk diperbarui." };
+    }
+
+    const cleanId = String(updatedRecord.id).trim();
+    if (updatedRecord.bacaanCatatan) updatedRecord.bacaanCatatan = this.sanitizeFormula(updatedRecord.bacaanCatatan);
+    if (updatedRecord.hafalanCatatan) updatedRecord.hafalanCatatan = this.sanitizeFormula(updatedRecord.hafalanCatatan);
+    updatedRecord.totalBintang = Number(updatedRecord.totalBintang) || 0;
+
+    // 1. Simpan perubahan ke LocalStorage seketika (0 ms UX)
+    let records = this.getAllRecords();
+    const idx = records.findIndex(r => r && String(r.id).trim() === cleanId);
+    if (idx !== -1) {
+      records[idx] = { ...records[idx], ...updatedRecord };
+    } else {
+      records.unshift(updatedRecord);
+    }
+    const normalized = this.normalizeRecordDates(records);
+    localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(normalized));
+
+    // 2. Masukkan ke antrian pending sync edit
+    this.addToPendingQueue("edit", updatedRecord);
+
+    // 3. Kirim pembaruan ke Google Spreadsheet
+    const remoteRes = await this.sendEditToRemoteAsync(updatedRecord);
+
+    return {
+      success: true,
+      record: updatedRecord,
+      remoteStatus: remoteRes
+    };
+  },
+
+  async sendEditToRemoteAsync(record) {
+    const endpoint = this.getEndpoint();
+    if (!endpoint) return { success: false, message: "Endpoint kosong" };
+
+    const payload = { action: "edit", ...record };
 
     try {
       await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(record)
+        body: JSON.stringify(payload)
       });
+      this.removeFromPendingQueue(record.id, "edit");
+      return { success: true };
     } catch (err) {
-      console.warn("Background sheet sync notice:", err);
+      try {
+        const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=edit&data=${encodeURIComponent(JSON.stringify(payload))}&t=${Date.now()}`;
+        await fetch(getUrl, { method: "GET" });
+        this.removeFromPendingQueue(record.id, "edit");
+        return { success: true };
+      } catch (e2) {
+        console.warn("Spreadsheet edit retry notice:", err, e2);
+        return { success: false, error: err };
+      }
     }
   },
 
@@ -445,29 +589,41 @@ const SheetsService = {
         const deletedIds = this.getDeletedRecordIds();
         const deletedSigs = this.getDeletedSignatures();
 
-        // Singkirkan data yang sudah pernah dihapus oleh pengajar (cek ID dan Signature)
-        const validRemote = res.data.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
-        const normalizedRemote = this.normalizeRecordDates(validRemote);
-        
-        // Smart merge: gabungkan data remote dengan catatan lokal yang baru diinput agar tidak hilang
-        const local = this.getAllRecords();
-        const map = new Map();
-        normalizedRemote.forEach(r => {
-          if (!this.isRecordBlacklisted(r, deletedIds, deletedSigs)) {
-            const key = (r.id && String(r.id).trim()) || this.makeRecordSignature(r);
-            map.set(key, r);
-          }
-        });
-        local.forEach(r => {
-          if (!this.isRecordBlacklisted(r, deletedIds, deletedSigs)) {
-            const key = (r.id && String(r.id).trim()) || this.makeRecordSignature(r);
-            map.set(key, r);
-          }
-        });
-        const merged = Array.from(map.values());
+        // 1. Bersihkan blacklist lokal
+        let validRemote = res.data.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
+        let normalizedRemote = this.normalizeRecordDates(validRemote);
 
-        localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(merged));
-        return merged;
+        // 2. Terapkan antrian pending lokal (offline/in-flight changes pada perangkat ini)
+        const pending = this.getPendingQueue();
+        if (pending.length > 0) {
+          const pendingDeletes = pending.filter(p => p.action === "delete").map(p => p.id);
+          normalizedRemote = normalizedRemote.filter(r => !pendingDeletes.includes(String(r.id).trim()));
+
+          const pendingEdits = pending.filter(p => p.action === "edit" && p.record);
+          pendingEdits.forEach(p => {
+            const idx = normalizedRemote.findIndex(r => String(r.id).trim() === p.id);
+            if (idx !== -1) {
+              normalizedRemote[idx] = { ...normalizedRemote[idx], ...p.record };
+            }
+          });
+
+          const remoteIdSet = new Set(normalizedRemote.map(r => String(r.id).trim()));
+          const pendingSaves = pending.filter(p => p.action === "save" && p.record);
+          pendingSaves.forEach(p => {
+            if (!remoteIdSet.has(p.id)) {
+              normalizedRemote.unshift(p.record);
+              remoteIdSet.add(p.id);
+            }
+          });
+        }
+
+        // 3. Simpan data otoritatif ini ke LocalStorage (Google Sheets sebagai Single Source of Truth)
+        localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(normalizedRemote));
+
+        // 4. Proses antrian pending yang belum terkirim di latar belakang
+        this.processPendingQueue().catch(() => {});
+
+        return normalizedRemote;
       }
     } catch (err) {
       console.error("Gagal fetch Google Sheets:", err);
@@ -482,7 +638,7 @@ const SheetsService = {
       const raw = localStorage.getItem(STORAGE_KEY_SETORAN);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           const filtered = parsed.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
           return this.normalizeRecordDates(filtered);
         }
@@ -490,6 +646,13 @@ const SheetsService = {
     } catch (e) {
       console.error("Gagal parse local records:", e);
     }
+
+    // Jika spreadsheet endpoint sudah terpasang, jangan tumpahkan data contoh demo dummy
+    const endpoint = this.getEndpoint();
+    if (endpoint) {
+      return [];
+    }
+
     const initialFiltered = INITIAL_SETORAN_RECORDS.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
     const initialNormalized = this.normalizeRecordDates(initialFiltered);
     localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(initialNormalized));
@@ -577,7 +740,7 @@ const SheetsService = {
     // 1. Masukkan ke blacklist ID & Signature agar tidak pernah dihidupkan kembali oleh sync
     this.markRecordAsDeleted(cleanId, target);
 
-    // 2. Hapus langsung dari penyimpanan lokal seketika (0 ms)
+    // 2. Hapus langsung dari penyimpanan lokal seketika (0 ms UX)
     records = records.filter(r => r && String(r.id).trim() !== cleanId);
     if (target) {
       const sig = this.makeRecordSignature(target);
@@ -587,27 +750,55 @@ const SheetsService = {
     }
     localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(records));
 
-    // 3. Kirim instruksi hapus ke Google Spreadsheet (Apps Script) di latar belakang (NON-BLOCKING)
-    this.sendDeleteToRemoteAsync(cleanId);
+    // 3. Masukkan ke antrian pending delete
+    this.addToPendingQueue("delete", cleanId);
 
-    return { success: true, record: target };
+    // 4. Kirim instruksi hapus ke Google Spreadsheet (Apps Script) dan tunggu respons
+    const remoteRes = await this.sendDeleteToRemoteAsync(cleanId, target);
+
+    return {
+      success: true,
+      record: target,
+      remoteStatus: remoteRes
+    };
   },
 
-  sendDeleteToRemoteAsync(cleanId) {
+  async sendDeleteToRemoteAsync(cleanId, recordObj = null) {
     const endpoint = this.getEndpoint();
-    if (!endpoint) return;
+    if (!endpoint) return { success: false, message: "Endpoint kosong" };
 
+    const payload = {
+      action: "delete",
+      id: cleanId,
+      namaSantri: recordObj ? recordObj.namaSantri : "",
+      tanggal: recordObj ? recordObj.tanggal : ""
+    };
+
+    let postSuccess = false;
     try {
-      fetch(endpoint, {
+      await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "delete", id: cleanId })
-      }).catch(() => {});
+        body: JSON.stringify(payload)
+      });
+      postSuccess = true;
+    } catch (err) {}
 
-      const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=delete&id=${encodeURIComponent(cleanId)}&t=${Date.now()}`;
-      fetch(getUrl, { method: "GET" }).catch(() => {});
+    // Selalu trigger GET fallback untuk menjamin Google Apps Script mengeksekusi penghapusan
+    try {
+      const namaParam = recordObj && recordObj.namaSantri ? `&namaSantri=${encodeURIComponent(recordObj.namaSantri)}` : "";
+      const tglParam = recordObj && recordObj.tanggal ? `&tanggal=${encodeURIComponent(recordObj.tanggal)}` : "";
+      const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=delete&id=${encodeURIComponent(cleanId)}${namaParam}${tglParam}&t=${Date.now()}`;
+      await fetch(getUrl, { method: "GET" });
+      this.removeFromPendingQueue(cleanId, "delete");
+      return { success: true };
     } catch (err) {
-      console.warn("Spreadsheet delete call error:", err);
+      if (postSuccess) {
+        this.removeFromPendingQueue(cleanId, "delete");
+        return { success: true };
+      }
+      console.warn("Spreadsheet delete notice:", err);
+      return { success: false, error: err };
     }
   },
 

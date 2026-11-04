@@ -68,6 +68,7 @@ const App = {
     this.setupHistoryNavigation();
     this.setupReportExportModule();
     this.setupRecentSetoranModal();
+    this.setupEditSetoranModal();
     this.updateSheetsStatusIndicator();
 
     this.tryBackgroundRemoteSync();
@@ -2146,8 +2147,9 @@ const App = {
             ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lulus</span>`
             : `<span class="meta-badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700;">Ulang</span>`;
 
-          // Tombol hapus setoran keliru teks minimalis
-          const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:3px 8px; font-size:0.72rem; margin-left:8px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">Hapus</button>`;
+          // Tombol edit & hapus setoran keliru teks minimalis
+          const editBtn = `<button type="button" class="btn-manage-edit" onclick="App.openEditSetoranModal('${escapeHtml(r.id)}')" style="padding:3px 8px; font-size:0.72rem; margin-left:8px; border-radius:6px; cursor:pointer; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd;" title="Edit catatan evaluasi ini jika ada keliru input">✏️ Edit</button>`;
+          const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:3px 8px; font-size:0.72rem; margin-left:6px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">Hapus</button>`;
 
           // Rincian Hafalan Ziyadah & Muroja'ah Terpisah
           let hafalanDetailsHtml = "";
@@ -2192,6 +2194,7 @@ const App = {
                 <span class="timeline-date">${escapeHtml(dateStr)}</span>
                 <div style="display:flex; align-items:center;">
                   <span class="timeline-ustadz">${escapeHtml(r.ustadz || "Pengampu")}</span>
+                  ${editBtn}
                   ${delBtn}
                 </div>
               </div>
@@ -2418,7 +2421,8 @@ const App = {
           ? `<span class="meta-badge" style="background:#ecfdf5; color:#047857; border:1px solid #d1fae5; font-weight:700;">Lulus</span>`
           : `<span class="meta-badge" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; font-weight:700;">Ulang</span>`;
 
-        const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:3px 8px; font-size:0.72rem; margin-left:8px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">Hapus</button>`;
+        const editBtn = `<button type="button" class="btn-manage-edit" onclick="App.openEditSetoranModal('${escapeHtml(r.id)}')" style="padding:3px 8px; font-size:0.72rem; margin-left:8px; border-radius:6px; cursor:pointer; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd;" title="Edit catatan evaluasi ini jika ada keliru input">✏️ Edit</button>`;
+        const delBtn = `<button type="button" class="btn-manage-del" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" style="padding:3px 8px; font-size:0.72rem; margin-left:6px; border-radius:6px; cursor:pointer;" title="Hapus catatan evaluasi ini jika terjadi keliru input">Hapus</button>`;
 
         let hafalanDetailsHtml = "";
         if (r.ziyadahSurah && r.murojaahSurah) {
@@ -2462,6 +2466,7 @@ const App = {
               <span class="timeline-date">${escapeHtml(dStr)}</span>
               <div style="display:flex; align-items:center;">
                 <span class="timeline-ustadz">${escapeHtml(r.ustadz || "Pengampu")}</span>
+                ${editBtn}
                 ${delBtn}
               </div>
             </div>
@@ -2559,26 +2564,48 @@ const App = {
     const btnSaveNewPin = document.getElementById("btnSaveNewPin");
 
     if (codeBlock) {
-      codeBlock.textContent = `// SCRIPT GOOGLE APPS SCRIPT UNTUK RQ UMMUL QASIM
+      codeBlock.textContent = `// =======================================================================
+// GOOGLE APPS SCRIPT - RQ UMMUL QASIM (TAMHID, TARTIL & HAFALAN) - FINAL v5.2
+// =======================================================================
 const SHEET_NAME_SETORAN = "Data_Setoran";
+
+const MASTER_HEADERS = [
+  "ID Setoran", "Waktu Pencatatan", "Tanggal Setoran", "ID Santri", "Nama Santri",
+  "Kelas / Halaqah", "Kategori", "Ustadz Pengampu", "Jenis Tilawah",
+  "Tamhid Jilid", "Tamhid Halaman", "Tartil Juz", "Tartil Halaman",
+  "Status Tilawah", "Catatan Tilawah", "Jenis Hafalan", "Surah Awal", "Ayat Awal",
+  "Surah Akhir", "Ayat Akhir", "Bintang Tajwid", "Bintang Kelancaran",
+  "Bintang Makhraj", "Total Bintang", "Status Hafalan", "Catatan Evaluasi",
+  "Ziyadah Surah", "Ziyadah Ayat Awal", "Ziyadah Ayat Akhir",
+  "Murojaah Surah", "Murojaah Ayat Awal", "Murojaah Ayat Akhir"
+];
 
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = getOrCreateSheet(ss, SHEET_NAME_SETORAN);
-    const data = sheet.getDataRange().getValues();
-    if (data.length <= 1) return createJsonResponse({ status: "success", data: [] });
-    
-    const headers = data[0];
-    const rows = [];
-    for (let i = 1; i < data.length; i++) {
-      const rowObj = {};
-      for (let j = 0; j < headers.length; j++) {
-        rowObj[headers[j]] = data[i][j];
-      }
-      rows.push(rowObj);
+    const action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "read";
+
+    if (action === "test") {
+      return createJsonResponse({ status: "success", message: "Koneksi Google Spreadsheet Berhasil!" });
     }
-    return createJsonResponse({ status: "success", total: rows.length, data: rows });
+    if (action === "delete") {
+      return handleDelete(sheet, e.parameter.id, e.parameter.namaSantri, e.parameter.tanggal);
+    }
+    if (action === "edit" || action === "update") {
+      let payload = {};
+      try { payload = e.parameter.data ? JSON.parse(e.parameter.data) : e.parameter; } catch(err) { payload = e.parameter; }
+      return handleEdit(sheet, payload);
+    }
+    if (action === "save") {
+      let payload = {};
+      try { payload = e.parameter.data ? JSON.parse(e.parameter.data) : e.parameter; } catch(err) { payload = e.parameter; }
+      return handleSave(sheet, payload);
+    }
+    if (action === "read") {
+      return handleRead(sheet);
+    }
+    return createJsonResponse({ status: "success", message: "RQ Ummul Qasim API v5.2 Siap Digunakan." });
   } catch (err) {
     return createJsonResponse({ status: "error", message: err.toString() });
   }
@@ -2588,58 +2615,254 @@ function doPost(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = getOrCreateSheet(ss, SHEET_NAME_SETORAN);
-    const payload = e.postData && e.postData.contents ? JSON.parse(e.postData.contents) : e.parameter;
-    const timestamp = new Date();
-    
-    const row = [
-      payload.id || Utilities.getUuid(),
-      timestamp,
-      payload.tanggal || Utilities.formatDate(timestamp, "GMT+7", "yyyy-MM-dd"),
-      payload.namaSantri || "-",
-      payload.halaqah || "-",
-      payload.kategori || "-",
-      payload.ustadz || "-",
-      payload.bacaanTipe || "Tamhid",
-      payload.tamhidJilid || "-",
-      payload.tamhidHalaman || "-",
-      payload.tartilJuz || "-",
-      payload.tartilHalaman || "-",
-      payload.bacaanStatus || "Lanjut",
-      payload.bacaanCatatan || "-",
-      payload.hafalanJenis || "Ziyadah",
-      payload.surahAwal || "-",
-      payload.ayatAwal || 1,
-      payload.surahAkhir || "-",
-      payload.ayatAkhir || 1,
-      Number(payload.bintangTajwid || 0),
-      Number(payload.bintangKelancaran || 0),
-      Number(payload.bintangMakhraj || 0),
-      Number(payload.totalBintang || 0),
-      payload.hafalanStatus || "Lulus",
-      payload.hafalanCatatan || "-"
-    ];
-    sheet.appendRow(row);
-    return createJsonResponse({ status: "success", message: "Tersimpan", data: payload });
+    let payload = {};
+    if (e && e.postData && e.postData.contents) {
+      try { payload = JSON.parse(e.postData.contents); } catch(err) { payload = e.parameter || {}; }
+    } else if (e && e.parameter) {
+      payload = e.parameter;
+    }
+    const action = payload.action || "save";
+    if (action === "delete") return handleDelete(sheet, payload.id, payload.namaSantri, payload.tanggal);
+    if (action === "edit" || action === "update") return handleEdit(sheet, payload);
+    return handleSave(sheet, payload);
   } catch (err) {
     return createJsonResponse({ status: "error", message: err.toString() });
   }
+}
+
+function handleRead(sheet) {
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return createJsonResponse({ status: "success", total: 0, data: [] });
+
+  const headerRow = data[0].map(function(h) { return String(h || "").trim().toLowerCase(); });
+  function col(names, fallbackIdx) {
+    for (var i = 0; i < names.length; i++) {
+      var idx = headerRow.indexOf(names[i].toLowerCase());
+      if (idx !== -1) return idx;
+    }
+    return fallbackIdx;
+  }
+
+  const idIdx = col(["ID Setoran", "ID", "id_setoran"], 0);
+  const tsIdx = col(["Waktu Pencatatan", "Timestamp", "Waktu"], 1);
+  const tglIdx = col(["Tanggal Setoran", "Tanggal", "Tgl"], 2);
+  const santriIdIdx = col(["ID Santri", "Santri ID", "SantriId"], 3);
+  const namaIdx = col(["Nama Santri", "Nama", "Santri"], 4);
+  const halaqahIdx = col(["Kelas / Halaqah", "Kelas", "Halaqah"], 5);
+  const katIdx = col(["Kategori"], 6);
+  const ustadzIdx = col(["Ustadz Pengampu", "Ustadz", "Pengampu"], 7);
+  const bacaanTipeIdx = col(["Jenis Tilawah", "Tipe Tilawah", "Bacaan Tipe"], 8);
+  const tamhidJilidIdx = col(["Tamhid Jilid"], 9);
+  const tamhidHlmIdx = col(["Tamhid Halaman"], 10);
+  const tartilJuzIdx = col(["Tartil Juz"], 11);
+  const tartilHlmIdx = col(["Tartil Halaman"], 12);
+  const bacaanStatusIdx = col(["Status Tilawah"], 13);
+  const bacaanCatatanIdx = col(["Catatan Tilawah"], 14);
+  const hafalanJenisIdx = col(["Jenis Hafalan"], 15);
+  const surahAwalIdx = col(["Surah Awal"], 16);
+  const ayatAwalIdx = col(["Ayat Awal"], 17);
+  const surahAkhirIdx = col(["Surah Akhir"], 18);
+  const ayatAkhirIdx = col(["Ayat Akhir"], 19);
+  const starTajwidIdx = col(["Bintang Tajwid"], 20);
+  const starKelancaranIdx = col(["Bintang Kelancaran"], 21);
+  const starMakhrajIdx = col(["Bintang Makhraj"], 22);
+  const starTotalIdx = col(["Total Bintang"], 23);
+  const hafalanStatusIdx = col(["Status Hafalan"], 24);
+  const hafalanCatatanIdx = col(["Catatan Evaluasi", "Catatan Hafalan"], 25);
+  const ziyadahSurahIdx = col(["Ziyadah Surah"], 26);
+  const ziyadahAyatAwalIdx = col(["Ziyadah Ayat Awal"], 27);
+  const ziyadahAyatAkhirIdx = col(["Ziyadah Ayat Akhir"], 28);
+  const murojaahSurahIdx = col(["Murojaah Surah"], 29);
+  const murojaahAyatAwalIdx = col(["Murojaah Ayat Awal"], 30);
+  const murojaahAyatAkhirIdx = col(["Murojaah Ayat Akhir"], 31);
+
+  const rows = [];
+  for (let i = 1; i < data.length; i++) {
+    const d = data[i];
+    if (!d[idIdx] && !d[namaIdx] && !d[santriIdIdx]) continue;
+
+    let tglStr = d[tglIdx];
+    if (tglStr instanceof Date) {
+      tglStr = Utilities.formatDate(tglStr, "GMT+7", "yyyy-MM-dd");
+    } else if (tglStr) {
+      tglStr = String(tglStr).split("T")[0].trim();
+      const dmyMatch = tglStr.match(/^(\\d{1,2})[-/.](\\d{1,2})[-/.](\\d{4})$/);
+      if (dmyMatch) {
+        tglStr = dmyMatch[3] + "-" + dmyMatch[2].padStart(2, "0") + "-" + dmyMatch[1].padStart(2, "0");
+      }
+    }
+
+    const recId = String(d[idIdx] || "").replace(/^'+/, "").trim() || ("REC-" + i);
+    const surAwal = String(d[surahAwalIdx] || "-");
+    const ayAwal = Number(d[ayatAwalIdx] || 1);
+    const surAkhir = String(d[surahAkhirIdx] || surAwal);
+    const ayAkhir = Number(d[ayatAkhirIdx] || 1);
+
+    const ziySurah = (ziyadahSurahIdx < d.length && d[ziyadahSurahIdx] && d[ziyadahSurahIdx] !== "-")
+      ? String(d[ziyadahSurahIdx])
+      : (surAwal !== "-" ? surAwal : "");
+    const ziyAyAwal = (ziyadahAyatAwalIdx < d.length && d[ziyadahAyatAwalIdx]) ? Number(d[ziyadahAyatAwalIdx]) : ayAwal;
+    const ziyAyAkhir = (ziyadahAyatAkhirIdx < d.length && d[ziyadahAyatAkhirIdx]) ? Number(d[ziyadahAyatAkhirIdx]) : ayAkhir;
+
+    const murSurah = (murojaahSurahIdx < d.length && d[murojaahSurahIdx] && d[murojaahSurahIdx] !== "-") ? String(d[murojaahSurahIdx]) : "";
+    const murAyAwal = (murojaahAyatAwalIdx < d.length && d[murojaahAyatAwalIdx]) ? Number(d[murojaahAyatAwalIdx]) : 0;
+    const murAyAkhir = (murojaahAyatAkhirIdx < d.length && d[murojaahAyatAkhirIdx]) ? Number(d[murojaahAyatAkhirIdx]) : 0;
+
+    rows.push({
+      id: recId,
+      timestamp: d[tsIdx] || "",
+      tanggal: tglStr || "",
+      santriId: String(d[santriIdIdx] || ""),
+      namaSantri: String(d[namaIdx] || ""),
+      halaqah: String(d[halaqahIdx] || ""),
+      kategori: String(d[katIdx] || ""),
+      ustadz: String(d[ustadzIdx] || ""),
+      bacaanTipe: String(d[bacaanTipeIdx] || "Tamhid"),
+      tamhidJilid: String(d[tamhidJilidIdx] || "-"),
+      tamhidHalaman: String(d[tamhidHlmIdx] || "-"),
+      tartilJuz: String(d[tartilJuzIdx] || "-"),
+      tartilHalaman: String(d[tartilHlmIdx] || "-"),
+      bacaanStatus: String(d[bacaanStatusIdx] || "Lanjut"),
+      bacaanCatatan: String(d[bacaanCatatanIdx] || "-"),
+      hafalanJenis: String(d[hafalanJenisIdx] || "Ziyadah"),
+      surahAwal: surAwal,
+      ayatAwal: ayAwal,
+      surahAkhir: surAkhir,
+      ayatAkhir: ayAkhir,
+      bintangTajwid: Number(d[starTajwidIdx] || 0),
+      bintangKelancaran: Number(d[starKelancaranIdx] || 0),
+      bintangMakhraj: Number(d[starMakhrajIdx] || 0),
+      totalBintang: Number(d[starTotalIdx] || 0),
+      hafalanStatus: String(d[hafalanStatusIdx] || "Lulus"),
+      hafalanCatatan: String(d[hafalanCatatanIdx] || "-"),
+      ziyadahSurah: ziySurah,
+      ziyadahAyatAwal: ziyAyAwal,
+      ziyadahSurahAkhir: ziySurah,
+      ziyadahAyatAkhir: ziyAyAkhir,
+      murojaahSurah: murSurah,
+      murojaahAyatAwal: murAyAwal,
+      murojaahSurahAkhir: murSurah,
+      murojaahAyatAkhir: murAyAkhir
+    });
+  }
+  rows.reverse();
+  return createJsonResponse({ status: "success", total: rows.length, data: rows });
+}
+
+function handleSave(sheet, payload) {
+  const rowArray = buildRowArray(payload, null, new Date());
+  sheet.appendRow(rowArray);
+  return createJsonResponse({ status: "success", message: "Data setoran berhasil dicatat!", data: payload });
+}
+
+function handleEdit(sheet, payload) {
+  const rowIdx = findRowIndex(sheet, payload.id, payload.namaSantri, payload.tanggal, payload.timestamp);
+  if (rowIdx === -1) return handleSave(sheet, payload);
+  const existingValues = sheet.getRange(rowIdx, 1, 1, Math.max(sheet.getLastColumn(), MASTER_HEADERS.length)).getValues()[0];
+  const rowArray = buildRowArray(payload, existingValues, new Date());
+  sheet.getRange(rowIdx, 1, 1, rowArray.length).setValues([rowArray]);
+  return createJsonResponse({ status: "success", message: "Data setoran berhasil diperbarui!", data: payload });
+}
+
+function handleDelete(sheet, deleteId, namaSantri, tanggal) {
+  const rowIdx = findRowIndex(sheet, deleteId, namaSantri, tanggal, null);
+  if (rowIdx !== -1) {
+    sheet.deleteRow(rowIdx);
+    return createJsonResponse({ status: "success", message: "Setoran berhasil dihapus permanen!" });
+  }
+  return createJsonResponse({ status: "not_found", message: "ID setoran tidak ditemukan." });
+}
+
+function findRowIndex(sheet, id, namaSantri, tanggal, timestamp) {
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return -1;
+  const headerRow = data[0].map(function(h) { return String(h || "").trim().toLowerCase(); });
+  function col(names, fallback) {
+    for (var i = 0; i < names.length; i++) {
+      var idx = headerRow.indexOf(names[i].toLowerCase());
+      if (idx !== -1) return idx;
+    }
+    return fallback;
+  }
+  const idCol = col(["id setoran", "id", "id_setoran"], 0);
+  const namaCol = col(["nama santri", "nama", "santri"], 4);
+  const tglCol = col(["tanggal setoran", "tanggal", "tgl"], 2);
+  const cleanId = id ? String(id).replace(/^'+/, "").trim() : "";
+
+  if (cleanId) {
+    for (var i = 1; i < data.length; i++) {
+      var val = String(data[i][idCol] || "").replace(/^'+/, "").trim();
+      if (val && (val === cleanId || val.toLowerCase() === cleanId.toLowerCase())) return i + 1;
+    }
+    for (var i = 1; i < data.length; i++) {
+      for (var j = 0; j < data[i].length; j++) {
+        var cVal = String(data[i][j] || "").replace(/^'+/, "").trim();
+        if (cVal && cVal === cleanId) return i + 1;
+      }
+    }
+  }
+  if (namaSantri && tanggal) {
+    var targetNama = String(namaSantri).trim().toLowerCase();
+    var targetTgl = String(tanggal).split("T")[0].trim();
+    for (var i = 1; i < data.length; i++) {
+      var rowNama = String(data[i][namaCol] || "").trim().toLowerCase();
+      var rowTgl = (data[i][tglCol] instanceof Date) ? Utilities.formatDate(data[i][tglCol], "GMT+7", "yyyy-MM-dd") : String(data[i][tglCol] || "").split("T")[0].trim();
+      if (rowNama === targetNama && rowTgl === targetTgl) return i + 1;
+    }
+  }
+  return -1;
+}
+
+function buildRowArray(payload, existingRow, defaultDate) {
+  const timestamp = defaultDate || new Date();
+  let tgl = payload.tanggal ? String(payload.tanggal).trim() : "";
+  if (!tgl || tgl === "-") tgl = Utilities.formatDate(timestamp, "GMT+7", "yyyy-MM-dd");
+
+  function sanitize(val) {
+    if (val === null || val === undefined) return "-";
+    var str = String(val).trim();
+    if (/^[=+\\-@\\t\\r]/.test(str)) return "'" + str;
+    return str;
+  }
+
+  const idVal = payload.id || (existingRow && existingRow[0] ? existingRow[0] : ("REC-" + Date.now()));
+  const tsVal = existingRow && existingRow[1] ? existingRow[1] : Utilities.formatDate(timestamp, "GMT+7", "yyyy-MM-dd HH:mm:ss");
+  const surAwal = sanitize(payload.ziyadahSurah || payload.surahAwal);
+  const ayAwal = Number(payload.ziyadahAyatAwal || payload.ayatAwal || 1);
+  const surAkhir = sanitize(payload.ziyadahSurahAkhir || payload.surahAkhir || surAwal);
+  const ayAkhir = Number(payload.ziyadahAyatAkhir || payload.ayatAkhir || 1);
+
+  return [
+    idVal, tsVal, tgl,
+    sanitize(payload.santriId), sanitize(payload.namaSantri),
+    sanitize(payload.halaqah), sanitize(payload.kategori), sanitize(payload.ustadz),
+    sanitize(payload.bacaanTipe || "Tamhid"),
+    sanitize(payload.tamhidJilid), sanitize(payload.tamhidHalaman),
+    sanitize(payload.tartilJuz), sanitize(payload.tartilHalaman),
+    sanitize(payload.bacaanStatus || "Lanjut"), sanitize(payload.bacaanCatatan),
+    sanitize(payload.hafalanJenis || "Ziyadah"),
+    surAwal, ayAwal, surAkhir, ayAkhir,
+    Number(payload.bintangTajwid || 0), Number(payload.bintangKelancaran || 0),
+    Number(payload.bintangMakhraj || 0), Number(payload.totalBintang || 0),
+    sanitize(payload.hafalanStatus || "Lulus"), sanitize(payload.hafalanCatatan),
+    sanitize(payload.ziyadahSurah), Number(payload.ziyadahAyatAwal || 0), Number(payload.ziyadahAyatAkhir || 0),
+    sanitize(payload.murojaahSurah), Number(payload.murojaahAyatAwal || 0), Number(payload.murojaahAyatAkhir || 0)
+  ];
 }
 
 function getOrCreateSheet(ss, name) {
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    const headers = [
-      "ID", "Timestamp", "Tanggal", "Nama Santri", "Kelas", "Kategori", "Ustadz",
-      "Tipe Tilawah", "Tamhid Jilid", "Tamhid Halaman", "Tartil Juz", "Tartil Halaman",
-      "Status Tilawah", "Catatan Tilawah",
-      "Jenis Hafalan", "Surah Awal", "Ayat Awal", "Surah Akhir", "Ayat Akhir",
-      "Bintang Tajwid", "Bintang Kelancaran", "Bintang Makhraj", "Total Bintang",
-      "Status Hafalan", "Catatan Hafalan"
-    ];
-    sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#0284c7").setFontColor("#ffffff");
+    sheet.appendRow(MASTER_HEADERS);
+    sheet.getRange(1, 1, 1, MASTER_HEADERS.length).setFontWeight("bold").setBackground("#0284c7").setFontColor("#ffffff");
     sheet.setFrozenRows(1);
+  } else {
+    const currentCols = sheet.getLastColumn();
+    if (currentCols < MASTER_HEADERS.length) {
+      const missingHeaders = MASTER_HEADERS.slice(currentCols);
+      sheet.getRange(1, currentCols + 1, 1, missingHeaders.length).setValues([missingHeaders]).setFontWeight("bold").setBackground("#0284c7").setFontColor("#ffffff");
+    }
   }
   return sheet;
 }
@@ -2764,9 +2987,17 @@ function createJsonResponse(data) {
 
     try {
       const remote = await SheetsService.fetchRemoteRecords();
-      if (remote && remote.length > 0) {
+      if (remote) {
         this.renderLeaderboard();
         this.renderParentPortal();
+        this.renderRecentSetoranList();
+        const currentInputSantriId = document.getElementById("selectSantri")?.value;
+        if (currentInputSantriId) {
+          this.renderFormStudentHistory(currentInputSantriId);
+        }
+        if (this.currentParentStudentId) {
+          this.renderParentStudentDetail(this.currentParentStudentId);
+        }
       }
       this.updateSheetsStatusIndicator();
     } catch (e) {
@@ -3594,12 +3825,364 @@ function createJsonResponse(data) {
               ${hafalanText}
             </div>
           </div>
-          <button type="button" class="btn-delete-row" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" title="Hapus catatan setoran yang keliru ini" style="background: #fee2e2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
-            <span>🗑️ Hapus</span>
-          </button>
+          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <button type="button" class="btn-edit-row" onclick="App.openEditSetoranModal('${escapeHtml(r.id)}')" title="Edit rincian evaluasi setoran ini jika ada kesalahan input" style="background: #e0f2fe; color: #0284c7; border: 1.5px solid #bae6fd; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              <span>✏️ Edit</span>
+            </button>
+            <button type="button" class="btn-delete-row" onclick="App.deleteSetoranRecord('${escapeHtml(r.id)}', this)" title="Hapus catatan setoran yang keliru ini" style="background: #fee2e2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              <span>🗑️ Hapus</span>
+            </button>
+          </div>
         </div>
       `;
     }).join("");
+  },
+
+  // ===================================================================
+  // 17B. MODAL & LOGIKA EDIT EVALUASI SETORAN
+  // ===================================================================
+  setupEditSetoranModal() {
+    const modal = document.getElementById("modalEditSetoran");
+    const closeBtn = document.getElementById("btnCloseEditSetoranModal");
+    const cancelBtn = document.getElementById("btnCancelEditSetoran");
+    const form = document.getElementById("formEditSetoran");
+    const tipeSelect = document.getElementById("editBacaanTipe");
+    const boxTamhid = document.getElementById("editBoxTamhid");
+    const boxTartil = document.getElementById("editBoxTartil");
+    const checkZiyadah = document.getElementById("editCheckZiyadah");
+    const checkMurojaah = document.getElementById("editCheckMurojaah");
+    const ziyadahSection = document.getElementById("editZiyadahSection");
+    const murojaahSection = document.getElementById("editMurojaahSection");
+
+    const starTajwid = document.getElementById("editStarTajwid");
+    const starKelancaran = document.getElementById("editStarKelancaran");
+    const starMakhraj = document.getElementById("editStarMakhraj");
+    const totalDisplay = document.getElementById("editTotalBintangDisplay");
+
+    const updateTotalStars = () => {
+      const t = parseInt(starTajwid?.value || 5, 10);
+      const k = parseInt(starKelancaran?.value || 5, 10);
+      const m = parseInt(starMakhraj?.value || 5, 10);
+      const total = t + k + m;
+      if (totalDisplay) totalDisplay.textContent = `⭐ ${total}`;
+    };
+
+    [starTajwid, starKelancaran, starMakhraj].forEach(sel => {
+      if (sel) sel.addEventListener("change", updateTotalStars);
+    });
+
+    if (tipeSelect) {
+      tipeSelect.addEventListener("change", () => {
+        if (tipeSelect.value === "Tartil") {
+          if (boxTamhid) boxTamhid.style.display = "none";
+          if (boxTartil) boxTartil.style.display = "grid";
+        } else {
+          if (boxTamhid) boxTamhid.style.display = "grid";
+          if (boxTartil) boxTartil.style.display = "none";
+        }
+      });
+    }
+
+    if (checkZiyadah && ziyadahSection) {
+      checkZiyadah.addEventListener("change", () => {
+        ziyadahSection.style.display = checkZiyadah.checked ? "block" : "none";
+      });
+    }
+
+    if (checkMurojaah && murojaahSection) {
+      checkMurojaah.addEventListener("change", () => {
+        murojaahSection.style.display = checkMurojaah.checked ? "block" : "none";
+      });
+    }
+
+    const closeModal = () => {
+      if (modal) modal.classList.remove("active");
+    };
+
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const recordId = document.getElementById("editSetoranId")?.value;
+        if (!recordId) return;
+
+        const allRecords = SheetsService.getAllRecords();
+        const original = allRecords.find(r => r && String(r.id).trim() === String(recordId).trim());
+
+        const santriId = document.getElementById("editSantriSelect")?.value;
+        const allSantri = SheetsService.getAllSantri();
+        const santri = allSantri.find(s => s.id === santriId);
+        const namaSantri = santri ? santri.nama : (original?.namaSantri || "Santri RQ");
+        const kategori = santri ? santri.kategori : (original?.kategori || "Menengah");
+
+        const isZiyadahActive = checkZiyadah?.checked ?? true;
+        const isMurojaahActive = checkMurojaah?.checked ?? true;
+
+        const ziyadahSurah = isZiyadahActive ? (document.getElementById("editZiyadahSurah")?.value || "") : "";
+        const ziyadahAyatAwal = isZiyadahActive ? (parseInt(document.getElementById("editZiyadahAyatAwal")?.value, 10) || 1) : 0;
+        const ziyadahAyatAkhir = isZiyadahActive ? (parseInt(document.getElementById("editZiyadahAyatAkhir")?.value, 10) || 1) : 0;
+
+        const murojaahSurah = isMurojaahActive ? (document.getElementById("editMurojaahSurah")?.value || "") : "";
+        const murojaahAyatAwal = isMurojaahActive ? (parseInt(document.getElementById("editMurojaahAyatAwal")?.value, 10) || 1) : 0;
+        const murojaahAyatAkhir = isMurojaahActive ? (parseInt(document.getElementById("editMurojaahAyatAkhir")?.value, 10) || 1) : 0;
+
+        let hafalanJenis = "Ziyadah & Muroja'ah";
+        if (isZiyadahActive && !isMurojaahActive) hafalanJenis = "Ziyadah Saja";
+        else if (!isZiyadahActive && isMurojaahActive) hafalanJenis = "Muroja'ah Saja";
+        else if (!isZiyadahActive && !isMurojaahActive) hafalanJenis = "Tilawah Saja";
+
+        const bacaanTipe = tipeSelect?.value || "Tamhid";
+        const starT = parseInt(starTajwid?.value || 5, 10);
+        const starK = parseInt(starKelancaran?.value || 5, 10);
+        const starM = parseInt(starMakhraj?.value || 5, 10);
+        const totalStars = starT + starK + starM;
+
+        const updatedRecord = {
+          id: recordId,
+          timestamp: original?.timestamp || new Date().toISOString(),
+          tanggal: document.getElementById("editTanggal")?.value || new Date().toISOString().split("T")[0],
+          santriId: santriId,
+          namaSantri: namaSantri,
+          halaqah: document.getElementById("editHalaqahSelect")?.value || original?.halaqah || "",
+          kategori: kategori,
+          ustadz: document.getElementById("editUstadzSelect")?.value || SheetsService.getCurrentUstadz(),
+
+          bacaanTipe: bacaanTipe,
+          tamhidJilid: bacaanTipe === "Tamhid" ? (document.getElementById("editTamhidJilid")?.value || "-") : "-",
+          tamhidHalaman: bacaanTipe === "Tamhid" ? (document.getElementById("editTamhidHalaman")?.value.trim() || "-") : "-",
+          tartilJuz: bacaanTipe === "Tartil" ? (document.getElementById("editTartilJuz")?.value || "-") : "-",
+          tartilHalaman: bacaanTipe === "Tartil" ? (document.getElementById("editTartilHalaman")?.value.trim() || "-") : "-",
+          bacaanStatus: bacaanTipe === "Tamhid" ? (document.getElementById("editTamhidStatus")?.value || "Lanjut") : (document.getElementById("editTartilStatus")?.value || "Lanjut"),
+          bacaanCatatan: document.getElementById("editBacaanCatatan")?.value.trim() || "-",
+
+          hafalanJenis: hafalanJenis,
+          ziyadahActive: isZiyadahActive,
+          ziyadahSurah: ziyadahSurah,
+          ziyadahAyatAwal: ziyadahAyatAwal,
+          ziyadahSurahAkhir: ziyadahSurah,
+          ziyadahAyatAkhir: ziyadahAyatAkhir,
+
+          murojaahActive: isMurojaahActive,
+          murojaahSurah: murojaahSurah,
+          murojaahAyatAwal: murojaahAyatAwal,
+          murojaahSurahAkhir: murojaahSurah,
+          murojaahAyatAkhir: murojaahAyatAkhir,
+
+          surahAwal: isZiyadahActive ? ziyadahSurah : (isMurojaahActive ? murojaahSurah : "-"),
+          ayatAwal: isZiyadahActive ? ziyadahAyatAwal : (isMurojaahActive ? murojaahAyatAwal : 0),
+          surahAkhir: isZiyadahActive ? ziyadahSurah : (isMurojaahActive ? murojaahSurah : "-"),
+          ayatAkhir: isZiyadahActive ? ziyadahAyatAkhir : (isMurojaahActive ? murojaahAyatAkhir : 0),
+
+          bintangTajwid: starT,
+          bintangKelancaran: starK,
+          bintangMakhraj: starM,
+          totalBintang: totalStars,
+          hafalanStatus: document.getElementById("editHafalanStatus")?.value || "Lulus",
+          hafalanCatatan: document.getElementById("editHafalanCatatan")?.value.trim() || "-"
+        };
+
+        const submitBtn = document.getElementById("btnSaveEditSetoran");
+        const originalBtnHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>⏳ Menyimpan ke Spreadsheet...</span>`;
+
+        try {
+          const res = await SheetsService.editRecord(updatedRecord, true);
+          if (res.success) {
+            this.renderLeaderboard();
+            this.renderParentPortal();
+            this.renderRecentSetoranList();
+            if (this.currentParentStudentId) {
+              this.renderParentStudentDetail(this.currentParentStudentId);
+            }
+            const currentInputSantriId = document.getElementById("selectSantri")?.value;
+            if (currentInputSantriId) {
+              this.renderFormStudentHistory(currentInputSantriId);
+            }
+            this.showToast(`Alhamdulillah! Perubahan setoran ${escapeHtml(namaSantri)} berhasil disimpan ke Spreadsheet.`, "success");
+            closeModal();
+            this.tryBackgroundRemoteSync();
+          } else {
+            this.showToast(res.message || "Gagal memperbarui setoran.", "error");
+          }
+        } catch (err) {
+          console.error("Edit setoran error:", err);
+          this.showToast("Gagal memperbarui: " + err.message, "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      });
+    }
+  },
+
+  openEditSetoranModal(recordId) {
+    if (!SheetsService.isUstadzLoggedIn()) {
+      const pin = prompt("Konfirmasi Keamanan Pengajar / Admin:\nMasukkan PIN Anda untuk mengedit catatan setoran ini:");
+      if (!pin) return;
+      const verify = SheetsService.verifyAnyPin(pin);
+      if (!verify.valid) {
+        this.showToast("PIN salah! Akses edit dibatalkan demi keamanan.", "error");
+        return;
+      }
+      localStorage.setItem("rq_ummul_qasim_auth_session_v4", "true");
+    }
+
+    const allRecords = SheetsService.getAllRecords();
+    const cleanId = String(recordId).trim();
+    const r = allRecords.find(item => item && String(item.id).trim() === cleanId);
+    if (!r) {
+      this.showToast("Catatan setoran tidak ditemukan untuk diedit.", "error");
+      return;
+    }
+
+    const modal = document.getElementById("modalEditSetoran");
+    if (!modal) return;
+
+    // Prefill fields
+    document.getElementById("editSetoranId").value = r.id;
+    const titleEl = document.getElementById("editModalTitle");
+    if (titleEl) titleEl.textContent = `Edit Setoran: ${r.namaSantri || "Santri RQ"}`;
+
+    const editTanggal = document.getElementById("editTanggal");
+    if (editTanggal) {
+      editTanggal.value = r.tanggal ? r.tanggal.split("T")[0] : new Date().toISOString().split("T")[0];
+    }
+
+    // Populate & Select Santri
+    const editSantriSelect = document.getElementById("editSantriSelect");
+    if (editSantriSelect) {
+      const allSantri = SheetsService.getAllSantri();
+      editSantriSelect.innerHTML = allSantri.map(s => `
+        <option value="${s.id}" ${(s.id === r.santriId || s.nama === r.namaSantri) ? 'selected' : ''}>
+          ${escapeHtml(s.nama)} (${escapeHtml(s.kategori || "")})
+        </option>
+      `).join("");
+    }
+
+    // Populate & Select Halaqah
+    const editHalaqahSelect = document.getElementById("editHalaqahSelect");
+    if (editHalaqahSelect) {
+      editHalaqahSelect.innerHTML = MASTER_HALAQAH.map(h => `
+        <option value="${h}" ${h === r.halaqah ? 'selected' : ''}>${h}</option>
+      `).join("");
+    }
+
+    // Populate & Select Ustadz
+    const editUstadzSelect = document.getElementById("editUstadzSelect");
+    if (editUstadzSelect) {
+      editUstadzSelect.innerHTML = MASTER_USTADZ.map(u => `
+        <option value="${u}" ${u === r.ustadz ? 'selected' : ''}>${u}</option>
+      `).join("");
+    }
+
+    // Tilawah
+    const editBacaanTipe = document.getElementById("editBacaanTipe");
+    const editBoxTamhid = document.getElementById("editBoxTamhid");
+    const editBoxTartil = document.getElementById("editBoxTartil");
+    const isTartil = (r.bacaanTipe === "Tartil");
+
+    if (editBacaanTipe) editBacaanTipe.value = isTartil ? "Tartil" : "Tamhid";
+    if (editBoxTamhid) editBoxTamhid.style.display = isTartil ? "none" : "grid";
+    if (editBoxTartil) editBoxTartil.style.display = isTartil ? "grid" : "none";
+
+    const editTamhidJilid = document.getElementById("editTamhidJilid");
+    if (editTamhidJilid && r.tamhidJilid && r.tamhidJilid !== "-") editTamhidJilid.value = r.tamhidJilid;
+
+    const editTamhidHalaman = document.getElementById("editTamhidHalaman");
+    if (editTamhidHalaman) editTamhidHalaman.value = (r.tamhidHalaman && r.tamhidHalaman !== "-") ? r.tamhidHalaman : "";
+
+    const editTamhidStatus = document.getElementById("editTamhidStatus");
+    if (editTamhidStatus && r.bacaanStatus) editTamhidStatus.value = r.bacaanStatus;
+
+    // Tartil Juz (1-30)
+    const editTartilJuz = document.getElementById("editTartilJuz");
+    if (editTartilJuz) {
+      let optionsHtml = "";
+      for (let j = 1; j <= 30; j++) {
+        optionsHtml += `<option value="${j}" ${String(r.tartilJuz) === String(j) ? 'selected' : ''}>Juz ${j}</option>`;
+      }
+      editTartilJuz.innerHTML = optionsHtml;
+    }
+
+    const editTartilHalaman = document.getElementById("editTartilHalaman");
+    if (editTartilHalaman) editTartilHalaman.value = (r.tartilHalaman && r.tartilHalaman !== "-") ? r.tartilHalaman : "";
+
+    const editTartilStatus = document.getElementById("editTartilStatus");
+    if (editTartilStatus && r.bacaanStatus) editTartilStatus.value = r.bacaanStatus;
+
+    const editBacaanCatatan = document.getElementById("editBacaanCatatan");
+    if (editBacaanCatatan) editBacaanCatatan.value = (r.bacaanCatatan && r.bacaanCatatan !== "-") ? r.bacaanCatatan : "";
+
+    // Surah Options for Ziyadah & Murojaah
+    const surahOptions = QURAN_SURAHS.map(s => `<option value="${s.name}">${s.no}. ${s.name} (${s.verses} ayat)</option>`).join("");
+
+    const editZiyadahSurah = document.getElementById("editZiyadahSurah");
+    if (editZiyadahSurah) {
+      editZiyadahSurah.innerHTML = surahOptions;
+      if (r.ziyadahSurah) editZiyadahSurah.value = r.ziyadahSurah;
+      else if (r.surahAwal && r.surahAwal !== "-") editZiyadahSurah.value = r.surahAwal;
+    }
+
+    const editMurojaahSurah = document.getElementById("editMurojaahSurah");
+    if (editMurojaahSurah) {
+      editMurojaahSurah.innerHTML = surahOptions;
+      if (r.murojaahSurah) editMurojaahSurah.value = r.murojaahSurah;
+    }
+
+    const editCheckZiyadah = document.getElementById("editCheckZiyadah");
+    const editZiyadahSection = document.getElementById("editZiyadahSection");
+    const hasZiyadah = Boolean(r.ziyadahSurah || (r.surahAwal && r.surahAwal !== "-"));
+    if (editCheckZiyadah) editCheckZiyadah.checked = hasZiyadah;
+    if (editZiyadahSection) editZiyadahSection.style.display = hasZiyadah ? "block" : "none";
+
+    const editZiyadahAyatAwal = document.getElementById("editZiyadahAyatAwal");
+    if (editZiyadahAyatAwal) editZiyadahAyatAwal.value = r.ziyadahAyatAwal || r.ayatAwal || 1;
+
+    const editZiyadahAyatAkhir = document.getElementById("editZiyadahAyatAkhir");
+    if (editZiyadahAyatAkhir) editZiyadahAyatAkhir.value = r.ziyadahAyatAkhir || r.ayatAkhir || 1;
+
+    const editCheckMurojaah = document.getElementById("editCheckMurojaah");
+    const editMurojaahSection = document.getElementById("editMurojaahSection");
+    const hasMurojaah = Boolean(r.murojaahSurah);
+    if (editCheckMurojaah) editCheckMurojaah.checked = hasMurojaah;
+    if (editMurojaahSection) editMurojaahSection.style.display = hasMurojaah ? "block" : "none";
+
+    const editMurojaahAyatAwal = document.getElementById("editMurojaahAyatAwal");
+    if (editMurojaahAyatAwal) editMurojaahAyatAwal.value = r.murojaahAyatAwal || 1;
+
+    const editMurojaahAyatAkhir = document.getElementById("editMurojaahAyatAkhir");
+    if (editMurojaahAyatAkhir) editMurojaahAyatAkhir.value = r.murojaahAyatAkhir || 1;
+
+    // Stars
+    const editStarTajwid = document.getElementById("editStarTajwid");
+    if (editStarTajwid) editStarTajwid.value = r.bintangTajwid || 5;
+
+    const editStarKelancaran = document.getElementById("editStarKelancaran");
+    if (editStarKelancaran) editStarKelancaran.value = r.bintangKelancaran || 5;
+
+    const editStarMakhraj = document.getElementById("editStarMakhraj");
+    if (editStarMakhraj) editStarMakhraj.value = r.bintangMakhraj || 5;
+
+    const editTotalDisplay = document.getElementById("editTotalBintangDisplay");
+    if (editTotalDisplay) editTotalDisplay.textContent = `⭐ ${Number(r.totalBintang) || 15}`;
+
+    // Status & Catatan
+    const editHafalanStatus = document.getElementById("editHafalanStatus");
+    if (editHafalanStatus && r.hafalanStatus) editHafalanStatus.value = r.hafalanStatus;
+
+    const editHafalanCatatan = document.getElementById("editHafalanCatatan");
+    if (editHafalanCatatan) editHafalanCatatan.value = (r.hafalanCatatan && r.hafalanCatatan !== "-") ? r.hafalanCatatan : "";
+
+    modal.classList.add("active");
   },
 
   // ===================================================================

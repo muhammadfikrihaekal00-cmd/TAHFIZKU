@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Stylesheet (v5.1 Minimalis & Elegan) -->
-  <link rel="stylesheet" href="css/style.css?v=5.1">
+  <!-- Stylesheet (v5.2 Sinkronisasi Realtime, Edit & Hapus Cerdas) -->
+  <link rel="stylesheet" href="css/style.css?v=5.2">
 </head>
 <body>
 
@@ -1139,8 +1139,8 @@
   <!-- ===================================================================
        MODAL 5: UNDUH LAPORAN RESMI (TAMHID, TARTIL & HAFALAN MASING-MASING KELAS)
        =================================================================== -->
-  <div class="modal" id="modalExportReport">
-    <div class="modal-content" style="max-width: 520px; padding: 24px;">
+  <div class="modal modal-overlay" id="modalExportReport">
+    <div class="modal-content modal-dialog" style="max-width: 520px; padding: 24px;">
       <div class="modal-header" style="padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.4rem;">📄</span>
@@ -1209,25 +1209,246 @@
   </div>
 
   <!-- ===================================================================
-       MODAL 6: RIWAYAT SETORAN TERAKHIR (UNTUK HAPUS KESALAHAN INPUT)
+       MODAL 6: RIWAYAT SETORAN TERAKHIR (UNTUK EDIT & HAPUS KESALAHAN INPUT)
        =================================================================== -->
-  <div class="modal" id="modalRecentSetoran">
-    <div class="modal-content" style="max-width: 560px; padding: 24px;">
+  <div class="modal modal-overlay" id="modalRecentSetoran">
+    <div class="modal-content modal-dialog" style="max-width: 580px; padding: 24px;">
       <div class="modal-header" style="padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.4rem;">📋</span>
           <div>
             <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: #0f172a;">Riwayat Input Setoran Terakhir</h3>
+            <p style="font-size: 0.76rem; color: #64748b; margin: 2px 0 0 0;">Periksa, edit rincian, atau hapus catatan keliru</p>
           </div>
         </div>
         <button class="btn-close-modal" id="btnCloseRecentSetoranModal">&times;</button>
       </div>
 
       <div class="modal-body" style="padding: 0;">
-        <div id="recentSetoranListContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto;">
+        <div id="recentSetoranListContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 440px; overflow-y: auto;">
           <!-- Populated by JS -->
         </div>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================
+       MODAL 7: EDIT EVALUASI SETORAN (PERBAIKAN KELIRU INPUT)
+       =================================================================== -->
+  <div class="modal-overlay" id="modalEditSetoran">
+    <div class="modal-dialog" style="max-width: 600px; padding: 22px 24px;">
+      <div class="modal-header" style="padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1.5px solid #e2e8f0;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.3rem;">✏️</span>
+          <div>
+            <h3 class="modal-title" id="editModalTitle" style="margin: 0; font-size: 1.1rem; color: #0f172a;">Edit Evaluasi Setoran</h3>
+            <p id="editModalSubtitle" style="font-size: 0.76rem; color: #64748b; margin: 2px 0 0 0;">Perbaiki rincian setoran santri yang keliru secara realtime</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" id="btnCloseEditSetoranModal" title="Tutup">&times;</button>
+      </div>
+
+      <form id="formEditSetoran" style="display: flex; flex-direction: column; gap: 14px;">
+        <input type="hidden" id="editSetoranId">
+
+        <!-- Baris 1: Tanggal & Santri -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="editTanggal" style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block;">Tanggal Setoran</label>
+            <input type="date" id="editTanggal" class="form-input" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editSantriSelect" style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block;">Santri</label>
+            <select id="editSantriSelect" class="form-select" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Baris 2: Halaqah & Ustadz -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label" for="editHalaqahSelect" style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block;">Kelas / Halaqah</label>
+            <select id="editHalaqahSelect" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editUstadzSelect" style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block;">Ustadz / Ustadzah</label>
+            <select id="editUstadzSelect" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Section Tilawah -->
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: 800; font-size: 0.86rem; color: #0284c7;">📖 Tilawah (Kitab Tamhid / Tartil)</span>
+            <select id="editBacaanTipe" class="form-select" style="padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; font-weight: 700;">
+              <option value="Tamhid">Kitab Tamhid</option>
+              <option value="Tartil">Tartil Al-Qur'an</option>
+            </select>
+          </div>
+
+          <!-- Box Tamhid -->
+          <div id="editBoxTamhid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Jilid</label>
+              <select id="editTamhidJilid" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+                <option value="Jilid 1">Jilid 1</option>
+                <option value="Jilid 2">Jilid 2</option>
+                <option value="Jilid 3">Jilid 3</option>
+                <option value="Jilid 4">Jilid 4</option>
+                <option value="Jilid 5">Jilid 5</option>
+                <option value="Jilid 6">Jilid 6</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Halaman</label>
+              <input type="text" id="editTamhidHalaman" class="form-input" placeholder="Halaman / Bab" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+            </div>
+            <div>
+              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Status</label>
+              <select id="editTamhidStatus" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+                <option value="Lanjut">Lanjut</option>
+                <option value="Ulang">Ulang</option>
+                <option value="Lulus Naik Jilid">Lulus Naik Jilid</option>
+                <option value="Lulus Naik ke Tartil">Lulus Naik ke Tartil</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Box Tartil -->
+          <div id="editBoxTartil" style="display: none; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+            <div>
+              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Juz</label>
+              <select id="editTartilJuz" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+                <!-- Populated by JS 1-30 -->
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Halaman Mushaf</label>
+              <input type="text" id="editTartilHalaman" class="form-input" placeholder="Misal: Halaman 582" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+            </div>
+            <div>
+              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Status</label>
+              <select id="editTartilStatus" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+                <option value="Lanjut">Lanjut</option>
+                <option value="Ulang">Ulang</option>
+                <option value="Khatam">Khatam</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 8px;">
+            <input type="text" id="editBacaanCatatan" class="form-input" placeholder="Catatan bimbingan tilawah (opsional)" style="width: 100%; padding: 6px 8px; font-size: 0.8rem; border-radius: 6px;">
+          </div>
+        </div>
+
+        <!-- Section Hafalan Al-Qur'an -->
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: 800; font-size: 0.86rem; color: #047857;">⭐ Hafalan Al-Qur'an</span>
+            <div style="display: flex; gap: 12px; font-size: 0.78rem;">
+              <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 700;">
+                <input type="checkbox" id="editCheckZiyadah" checked> Ziyadah
+              </label>
+              <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 700;">
+                <input type="checkbox" id="editCheckMurojaah" checked> Muroja'ah
+              </label>
+            </div>
+          </div>
+
+          <!-- Ziyadah Fields -->
+          <div id="editZiyadahSection" style="margin-bottom: 10px;">
+            <div style="font-size: 0.74rem; font-weight: 700; color: #047857; margin-bottom: 4px;">Ziyadah (Hafalan Baru)</div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
+              <select id="editZiyadahSurah" class="form-select" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+                <!-- Surahs -->
+              </select>
+              <input type="number" id="editZiyadahAyatAwal" class="form-input" placeholder="Ayat Awal" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <input type="number" id="editZiyadahAyatAkhir" class="form-input" placeholder="Ayat Akhir" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+            </div>
+          </div>
+
+          <!-- Muroja'ah Fields -->
+          <div id="editMurojaahSection" style="margin-bottom: 10px;">
+            <div style="font-size: 0.74rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Muroja'ah (Pengulangan Hafalan)</div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
+              <select id="editMurojaahSurah" class="form-select" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+                <!-- Surahs -->
+              </select>
+              <input type="number" id="editMurojaahAyatAwal" class="form-input" placeholder="Ayat Awal" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <input type="number" id="editMurojaahAyatAkhir" class="form-input" placeholder="Ayat Akhir" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+            </div>
+          </div>
+
+          <!-- Rating Bintang Edit -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 8px;">
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Tajwid</label>
+              <select id="editStarTajwid" class="form-select" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
+                <option value="1">⭐ 1</option>
+                <option value="2">⭐ 2</option>
+                <option value="3">⭐ 3</option>
+                <option value="4">⭐ 4</option>
+                <option value="5" selected>⭐ 5</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Kelancaran</label>
+              <select id="editStarKelancaran" class="form-select" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
+                <option value="1">⭐ 1</option>
+                <option value="2">⭐ 2</option>
+                <option value="3">⭐ 3</option>
+                <option value="4">⭐ 4</option>
+                <option value="5" selected>⭐ 5</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Makhraj</label>
+              <select id="editStarMakhraj" class="form-select" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
+                <option value="1">⭐ 1</option>
+                <option value="2">⭐ 2</option>
+                <option value="3">⭐ 3</option>
+                <option value="4">⭐ 4</option>
+                <option value="5" selected>⭐ 5</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: #b45309; display: block; margin-bottom: 2px;">Total Bintang</label>
+              <div id="editTotalBintangDisplay" style="font-weight: 800; font-size: 1rem; color: #b45309; text-align: center; padding-top: 4px;">⭐ 15</div>
+            </div>
+          </div>
+
+          <!-- Status Hafalan & Catatan -->
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 8px;">
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Status Hafalan</label>
+              <select id="editHafalanStatus" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+                <option value="Lulus">Lulus</option>
+                <option value="Ulang">Ulang</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Catatan Hafalan</label>
+              <input type="text" id="editHafalanCatatan" class="form-input" placeholder="Evaluasi ustadz (opsional)" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Simpan / Batal -->
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px;">
+          <button type="button" class="btn btn-secondary" id="btnCancelEditSetoran" style="padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; cursor: pointer; border: 1.5px solid #cbd5e1; background: #f8fafc; color: #475569;">
+            Batal
+          </button>
+          <button type="submit" class="btn btn-primary" id="btnSaveEditSetoran" style="padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; cursor: pointer; background: #0284c7; color: #ffffff; border: none; display: inline-flex; align-items: center; gap: 6px;">
+            <span>💾 Simpan Perubahan</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -1279,9 +1500,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v5.1 Minimalis & Elegan) -->
-  <script src="js/data.js?v=5.1"></script>
-  <script src="js/sheets.js?v=5.1"></script>
-  <script src="js/app.js?v=5.1"></script>
+  <!-- Scripts (Cache Buster v5.2 Sinkronisasi Realtime, Edit & Hapus Cerdas) -->
+  <script src="js/data.js?v=5.2"></script>
+  <script src="js/sheets.js?v=5.2"></script>
+  <script src="js/app.js?v=5.2"></script>
 </body>
 </html>
