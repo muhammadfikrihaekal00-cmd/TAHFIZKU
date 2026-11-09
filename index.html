@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Stylesheet (v5.2 Sinkronisasi Realtime, Edit & Hapus Cerdas) -->
-  <link rel="stylesheet" href="css/style.css?v=5.2">
+  <!-- Stylesheet (v5.3 Filter 30 Hari Lintas Bulan, Bulan Kemarin & Sinkronisasi Cloud) -->
+  <link rel="stylesheet" href="css/style.css?v=5.3">
 </head>
 <body>
 
@@ -41,6 +41,11 @@
         <button class="btn-auth-role" id="btnAuthToggle" title="Beralih peran Ustadz / Wali Santri">
           <span id="authIcon">🔒</span>
           <span id="authLabel">Masuk Ustadz/ah</span>
+        </button>
+
+        <!-- Tombol Segarkan Cloud Realtime (Laptop <-> HP) -->
+        <button class="btn-icon" id="btnHeaderSyncData" title="Segarkan Data Realtime dari Google Spreadsheet (Cloud)" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; border: 1.5px solid #bae6fd;">
+          <span id="btnHeaderSyncIcon">🔄</span>
         </button>
 
         <!-- Download / Cetak Laporan (PDF & Excel) -->
@@ -123,17 +128,43 @@
          =================================================================== -->
     <section class="tab-panel active" id="tab-leaderboard">
       
-      <!-- CAPAIAN BINTANG: PEKANAN vs BULANAN (REWARD) vs SEMUA WAKTU (TAMPILAN SIMPEL) -->
-      <div class="period-filter-wrapper">
+      <!-- CAPAIAN BINTANG: PEKANAN, BULAN INI, BULAN KEMARIN, 30 HARI TERAKHIR (LINTAS BULAN), KUSTOM, SEMUA -->
+      <div class="period-filter-wrapper" id="periodFilterWrapper">
         <button type="button" class="period-btn active" data-period="pekanan" id="btnPeriodPekanan">
-          <span>📅 Pekanan</span>
+          <span>📅 Pekan Ini</span>
         </button>
         <button type="button" class="period-btn" data-period="bulanan" id="btnPeriodBulanan">
-          <span>🏆 Bulan Ini (Reward)</span>
+          <span>🏆 Bulan Ini</span>
+        </button>
+        <button type="button" class="period-btn" data-period="bulan_kemarin" id="btnPeriodBulanKemarin">
+          <span>⏪ Bulan Kemarin</span>
+        </button>
+        <button type="button" class="period-btn" data-period="30_hari" id="btnPeriod30Hari">
+          <span>🔄 30 Hari (Lintas Bulan)</span>
+        </button>
+        <button type="button" class="period-btn" data-period="custom" id="btnPeriodCustom">
+          <span>🗓️ Pilih Tanggal</span>
         </button>
         <button type="button" class="period-btn" data-period="semua" id="btnPeriodSemua">
           <span>🌟 Semua</span>
         </button>
+      </div>
+
+      <!-- PANEL PEMILIH TANGGAL KUSTOM (Jika memilih 'Pilih Tanggal') -->
+      <div class="custom-period-picker-card" id="customPeriodPickerCard" style="display: none;">
+        <div class="custom-period-grid">
+          <div class="picker-group">
+            <label for="inputCustomDateStart">📅 Tanggal Mulai:</label>
+            <input type="date" id="inputCustomDateStart" class="form-input">
+          </div>
+          <div class="picker-group">
+            <label for="inputCustomDateEnd">📅 Tanggal Selesai:</label>
+            <input type="date" id="inputCustomDateEnd" class="form-input">
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="btnApplyCustomPeriod" style="height: 38px; align-self: flex-end; padding: 0 16px;">
+            <span>Terapkan</span>
+          </button>
+        </div>
       </div>
 
       <!-- REWARD BANNER (HANYA JUARA 1 TIAP KATEGORI YANG DAPAT REWARD) -->
@@ -263,7 +294,7 @@
             </div>
           </div>
 
-          <!-- Stats Grid: Pekanan, Bulanan, Total & Jenjang -->
+          <!-- Stats Grid: Pekanan, Bulanan, 30 Hari Terakhir, Total & Jenjang -->
           <div class="student-stats-grid">
             <div class="stat-box">
               <div class="stat-label">Bintang Pekan Ini</div>
@@ -272,6 +303,10 @@
             <div class="stat-box">
               <div class="stat-label">Bintang Bulan Ini</div>
               <div class="stat-val" id="parentStatStarsMonth" style="color: #f43f7a;">0 ⭐</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">30 Hari Terakhir</div>
+              <div class="stat-val" id="parentStatStarsLast30" style="color: #059669;" title="Rolling 30 hari ke belakang (lintas 2 bulan)">0 ⭐</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">Total Bintang</div>
@@ -1500,9 +1535,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v5.2 Sinkronisasi Realtime, Edit & Hapus Cerdas) -->
-  <script src="js/data.js?v=5.2"></script>
-  <script src="js/sheets.js?v=5.2"></script>
-  <script src="js/app.js?v=5.2"></script>
+  <!-- Scripts (Cache Buster v5.3 Filter 30 Hari Lintas Bulan, Bulan Kemarin & Sinkronisasi Cloud) -->
+  <script src="js/data.js?v=5.3"></script>
+  <script src="js/sheets.js?v=5.3"></script>
+  <script src="js/app.js?v=5.3"></script>
 </body>
 </html>

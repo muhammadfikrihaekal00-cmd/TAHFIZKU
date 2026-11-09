@@ -491,9 +491,10 @@ const SheetsService = {
     const payload = { action: "save", ...record };
 
     try {
-      // Prioritas 1: Gunakan POST
+      // Prioritas 1: Gunakan POST dengan mode: "no-cors" agar browser tidak memblokir redirect 302 Apps Script
       await fetch(endpoint, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
       });
@@ -503,7 +504,7 @@ const SheetsService = {
       // Prioritas 2: Fallback ke GET jika terjadi kendala CORS/redirect pada jaringan seluler/HP
       try {
         const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=save&data=${encodeURIComponent(JSON.stringify(payload))}&t=${Date.now()}`;
-        await fetch(getUrl, { method: "GET" });
+        await fetch(getUrl, { method: "GET", mode: "no-cors" });
         this.removeFromPendingQueue(record.id, "save");
         return { success: true };
       } catch (e2) {
@@ -559,6 +560,7 @@ const SheetsService = {
     try {
       await fetch(endpoint, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
       });
@@ -567,7 +569,7 @@ const SheetsService = {
     } catch (err) {
       try {
         const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=edit&data=${encodeURIComponent(JSON.stringify(payload))}&t=${Date.now()}`;
-        await fetch(getUrl, { method: "GET" });
+        await fetch(getUrl, { method: "GET", mode: "no-cors" });
         this.removeFromPendingQueue(record.id, "edit");
         return { success: true };
       } catch (e2) {
@@ -778,6 +780,7 @@ const SheetsService = {
     try {
       await fetch(endpoint, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
       });
@@ -789,7 +792,7 @@ const SheetsService = {
       const namaParam = recordObj && recordObj.namaSantri ? `&namaSantri=${encodeURIComponent(recordObj.namaSantri)}` : "";
       const tglParam = recordObj && recordObj.tanggal ? `&tanggal=${encodeURIComponent(recordObj.tanggal)}` : "";
       const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=delete&id=${encodeURIComponent(cleanId)}${namaParam}${tglParam}&t=${Date.now()}`;
-      await fetch(getUrl, { method: "GET" });
+      await fetch(getUrl, { method: "GET", mode: "no-cors" });
       this.removeFromPendingQueue(cleanId, "delete");
       return { success: true };
     } catch (err) {

@@ -34,7 +34,9 @@ function escapeHtml(str) {
 
 const App = {
   currentCategoryFilter: "Menengah", // Default ke Menengah atau Dasar
-  currentPeriodFilter: "pekanan", // Default ke Capaian Bintang Pekanan (Simpel)
+  currentPeriodFilter: "pekanan", // "pekanan", "bulanan", "bulan_kemarin", "30_hari", "custom", "semua"
+  customPeriodStart: null,
+  customPeriodEnd: null,
   currentParentClassFilter: "ALL", // Filter pemisah pantauan kelas di Portal Pantauan Anak
   haditsFilterCategory: "Semua",
   doaFilterCategory: "Semua",
@@ -69,6 +71,7 @@ const App = {
     this.setupReportExportModule();
     this.setupRecentSetoranModal();
     this.setupEditSetoranModal();
+    this.setupCloudSyncButton();
     this.updateSheetsStatusIndicator();
 
     this.tryBackgroundRemoteSync();
@@ -1499,16 +1502,162 @@ const App = {
     return targetDate.getFullYear() === now.getFullYear() && targetDate.getMonth() === now.getMonth();
   },
 
-  // 7. Filter Periode: Pekanan vs Bulanan (Reward) vs Semua Waktu
+  isDateInPreviousMonth(dateStr, fallbackRecord = null) {
+    const targetDate = this.parseDateSafe(dateStr, fallbackRecord);
+    if (!targetDate) return false;
+    const now = new Date();
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return targetDate.getFullYear() === prevMonthDate.getFullYear() && targetDate.getMonth() === prevMonthDate.getMonth();
+  },
+
+  isDateInLast30Days(dateStr, fallbackRecord = null) {
+    const targetDate = this.parseDateSafe(dateStr, fallbackRecord);
+    if (!targetDate) return false;
+    const target = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).getTime();
+    
+    const now = new Date();
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+    const start30DaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30, 0, 0, 0, 0).getTime();
+
+    return target >= start30DaysAgo && target <= endOfToday;
+  },
+
+  isDateInCustomRange(dateStr, startStr, endStr, fallbackRecord = null) {
+    const targetDate = this.parseDateSafe(dateStr, fallbackRecord);
+    if (!targetDate) return false;
+    const target = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).getTime();
+
+    let start = 0;
+    if (startStr) {
+      const pStart = new Date(startStr);
+      if (!isNaN(pStart.getTime())) {
+        start = new Date(pStart.getFullYear(), pStart.getMonth(), pStart.getDate(), 0, 0, 0, 0).getTime();
+      }
+    }
+
+    let end = Number.MAX_SAFE_INTEGER;
+    if (endStr) {
+      const pEnd = new Date(endStr);
+      if (!isNaN(pEnd.getTime())) {
+        end = new Date(pEnd.getFullYear(), pEnd.getMonth(), pEnd.getDate(), 23, 59, 59, 999).getTime();
+      }
+    }
+
+    return target >= start && target <= end;
+  },
+
+  getLast30DaysRangeLabel() {
+    const now = new Date();
+    const start30 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+    const opt = { day: 'numeric', month: 'short', year: 'numeric' };
+    return `${start30.toLocaleDateString('id-ID', opt)} s/d ${now.toLocaleDateString('id-ID', opt)}`;
+  },
+
+  getPreviousMonthName() {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return prev.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  },
+
+  getCurrentMonthName() {
+    const now = new Date();
+    return now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  },
+
+  // 7. Filter Periode: Pekanan, Bulan Ini, Bulan Kemarin, 30 Hari Terakhir, Kustom, Semua Waktu
   setupPeriodFilter() {
     const periodBtns = document.querySelectorAll(".period-btn");
+    const customCard = document.getElementById("customPeriodPickerCard");
+    const inStart = document.getElementById("inputCustomDateStart");
+    const inEnd = document.getElementById("inputCustomDateEnd");
+    const btnApply = document.getElementById("btnApplyCustomPeriod");
+
+    // Inisialisasi tanggal default pemilih kustom (30 hari terakhir)
+    const todayStr = new Date().toISOString().split("T")[0];
+    const d30Ago = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000)).toISOString().split("T")[0];
+    if (inStart && !inStart.value) inStart.value = d30Ago;
+    if (inEnd && !inEnd.value) inEnd.value = todayStr;
+    this.customPeriodStart = d30Ago;
+    this.customPeriodEnd = todayStr;
+
     periodBtns.forEach(btn => {
       btn.addEventListener("click", () => {
         periodBtns.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         this.currentPeriodFilter = btn.dataset.period || "pekanan";
+
+        if (this.currentPeriodFilter === "custom") {
+          if (customCard) customCard.style.display = "block";
+        } else {
+          if (customCard) customCard.style.display = "none";
+        }
+
         this.renderLeaderboard();
       });
+    });
+
+    if (btnApply) {
+      btnApply.addEventListener("click", () => {
+        if (inStart && inStart.value) this.customPeriodStart = inStart.value;
+        if (inEnd && inEnd.value) this.customPeriodEnd = inEnd.value;
+        this.renderLeaderboard();
+        this.showToast("Rentang periode kustom berhasil diterapkan!", "success");
+      });
+    }
+  },
+
+  // Tombol Segarkan Cloud Realtime (Header & Leaderboard)
+  setupCloudSyncButton() {
+    const btnSyncHeader = document.getElementById("btnHeaderSyncData");
+    const iconSyncHeader = document.getElementById("btnHeaderSyncIcon");
+    const btnRefreshLead = document.getElementById("btnRefreshLeaderboard");
+
+    const doSync = async () => {
+      if (iconSyncHeader) iconSyncHeader.classList.add("sync-spinning");
+      if (btnRefreshLead) btnRefreshLead.querySelector("span")?.classList.add("sync-spinning");
+
+      this.showToast("🔄 Menyinkronkan data realtime dari Google Spreadsheet...", "info");
+      
+      try {
+        const remoteData = await SheetsService.fetchRemoteRecords();
+        if (remoteData && remoteData.length >= 0) {
+          this.renderLeaderboard();
+          this.renderParentPortal();
+          this.renderRecentSetoranList();
+          const currentInputSantriId = document.getElementById("selectSantri")?.value;
+          if (currentInputSantriId) {
+            this.renderFormStudentHistory(currentInputSantriId);
+          }
+          if (this.currentParentStudentId) {
+            this.renderParentStudentDetail(this.currentParentStudentId);
+          }
+          this.showToast(`✅ Data realtime berhasil disinkronkan! (${remoteData.length} catatan setoran)`, "success");
+        } else {
+          this.showToast("Terhubung ke Google Spreadsheet! Data lokal sudah mutakhir.", "success");
+        }
+      } catch (err) {
+        this.showToast("Gagal memperbarui data dari Cloud: " + err.message, "error");
+      } finally {
+        if (iconSyncHeader) iconSyncHeader.classList.remove("sync-spinning");
+        if (btnRefreshLead) btnRefreshLead.querySelector("span")?.classList.remove("sync-spinning");
+      }
+    };
+
+    if (btnSyncHeader) {
+      btnSyncHeader.addEventListener("click", doSync);
+    }
+    if (btnRefreshLead) {
+      btnRefreshLead.addEventListener("click", doSync);
+    }
+
+    // Deteksi otomatis saat pengguna HP membuka kembali browser dari latar belakang
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        this.tryBackgroundRemoteSync();
+      }
+    });
+    window.addEventListener("focus", () => {
+      this.tryBackgroundRemoteSync();
     });
   },
 
@@ -1538,18 +1687,6 @@ const App = {
     if (filterHalaqah) {
       filterHalaqah.addEventListener("change", () => this.renderLeaderboard());
     }
-
-    const btnRefresh = document.getElementById("btnRefreshLeaderboard");
-    if (btnRefresh) {
-      btnRefresh.addEventListener("click", async () => {
-        this.showToast("Memperbarui data realtime dari Google Spreadsheet...", "success");
-        const remoteData = await SheetsService.fetchRemoteRecords();
-        if (remoteData) {
-          this.showToast("Data terbaru berhasil disinkronkan!", "success");
-        }
-        this.renderLeaderboard();
-      });
-    }
   },
 
   renderLeaderboard() {
@@ -1565,7 +1702,11 @@ const App = {
     const bannerIcon = document.getElementById("rewardBannerIcon");
     const badgeCategoryLabel = document.getElementById("badgeCategoryLabel");
 
-    // Dynamic Banner Updates sesuai Periode
+    const curMonthName = this.getCurrentMonthName();
+    const prevMonthName = this.getPreviousMonthName();
+    const last30RangeStr = this.getLast30DaysRangeLabel();
+
+    // Dynamic Banner Updates sesuai Periode yang Dipilih
     if (bannerTitle && bannerDesc) {
       if (this.currentPeriodFilter === "pekanan") {
         if (bannerIcon) bannerIcon.textContent = "📅";
@@ -1585,18 +1726,38 @@ const App = {
       } else if (this.currentPeriodFilter === "bulanan") {
         if (bannerIcon) bannerIcon.textContent = "🏆";
         if (this.currentCategoryFilter === "Dasar") {
-          bannerTitle.textContent = "🏆 Reward Bulanan: Kategori Kelas Dasar (TK s/d 2 SD)";
-          bannerDesc.innerHTML = "Hanya <strong>Juara 1 Kategori Kelas Dasar</strong> (Gabungan Kelas Dasar Ikhwan & Akhowat serta Kelas Dasar Ikhwan) yang berhak mendapatkan <strong>Hadiah Apresiasi (Reward) Bulanan</strong>!";
-          if (badgeCategoryLabel) badgeCategoryLabel.textContent = "Peringkat Reward Santri Kelas Dasar:";
+          bannerTitle.textContent = `🏆 Reward Bulan Ini (${curMonthName}): Kategori Kelas Dasar`;
+          bannerDesc.innerHTML = `Hanya <strong>Juara 1 Kategori Kelas Dasar</strong> yang berhak mendapatkan <strong>Hadiah Apresiasi (Reward) Bulan ${curMonthName}</strong>!`;
+          if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Peringkat Reward Bulan Ini (${curMonthName}):`;
         } else if (this.currentCategoryFilter === "Menengah") {
-          bannerTitle.textContent = "🏆 Reward Bulanan: Kategori Kelas Menengah (3 s/d 6 SD)";
-          bannerDesc.innerHTML = "Hanya <strong>Juara 1 Kategori Kelas Menengah</strong> (Gabungan Menengah Ikhwan & Akhowat) yang berhak mendapatkan <strong>Hadiah Apresiasi (Reward) Bulanan</strong>!";
-          if (badgeCategoryLabel) badgeCategoryLabel.textContent = "Peringkat Reward Santri Kelas Menengah:";
+          bannerTitle.textContent = `🏆 Reward Bulan Ini (${curMonthName}): Kategori Kelas Menengah`;
+          bannerDesc.innerHTML = `Hanya <strong>Juara 1 Kategori Kelas Menengah</strong> yang berhak mendapatkan <strong>Hadiah Apresiasi (Reward) Bulan ${curMonthName}</strong>!`;
+          if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Peringkat Reward Bulan Ini (${curMonthName}):`;
         } else {
-          bannerTitle.textContent = "🏆 Peringkat Reward Bulanan Santri RQ Ummul Qasim";
-          bannerDesc.innerHTML = "Reward diberikan kepada <strong>1 Juara Kategori Dasar</strong> dan <strong>1 Juara Kategori Menengah</strong>.";
-          if (badgeCategoryLabel) badgeCategoryLabel.textContent = "Semua Santri RQ Ummul Qasim:";
+          bannerTitle.textContent = `🏆 Peringkat Reward Bulan Ini: ${curMonthName}`;
+          bannerDesc.innerHTML = `Reward diberikan kepada <strong>1 Juara Kategori Dasar</strong> dan <strong>1 Juara Kategori Menengah</strong> pada kalender bulan ${curMonthName}.`;
+          if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Semua Santri (${curMonthName}):`;
         }
+      } else if (this.currentPeriodFilter === "bulan_kemarin") {
+        if (bannerIcon) bannerIcon.textContent = "⏪";
+        bannerTitle.textContent = `⏪ Rekap Capaian Bulan Kemarin: ${prevMonthName} (Murni 1 Bulan Final)`;
+        bannerDesc.innerHTML = `Rekapitulasi <strong>evaluasi bulanan periode lalu (${prevMonthName})</strong> murni untuk pembagian reward & piagam capaian santri yang sudah tuntas tanpa tercampur setoran bulan ini.`;
+        if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Hasil Rekap Bulan Kemarin (${prevMonthName}):`;
+
+      } else if (this.currentPeriodFilter === "30_hari") {
+        if (bannerIcon) bannerIcon.textContent = "🔄";
+        bannerTitle.textContent = `🔄 Capaian 30 Hari Terakhir: ${last30RangeStr} (Lintas 2 Bulan)`;
+        bannerDesc.innerHTML = `Menghitung total setoran santri selama <strong>30 hari berturut-turut (${last30RangeStr})</strong> yang melintasi 2 bulan berbeda tanpa terpotong batas tanggal 1.`;
+        if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Santri (30 Hari Lintas Bulan):`;
+
+      } else if (this.currentPeriodFilter === "custom") {
+        if (bannerIcon) bannerIcon.textContent = "🗓️";
+        const sStr = this.customPeriodStart || "Awal";
+        const eStr = this.customPeriodEnd || "Hari Ini";
+        bannerTitle.textContent = `🗓️ Capaian Periode Kustom: ${sStr} s/d ${eStr}`;
+        bannerDesc.innerHTML = `Menampilkan perolehan bintang santri sesuai rentang tanggal yang ditentukan (${sStr} s/d ${eStr}).`;
+        if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Santri Periode Kustom:`;
+
       } else {
         if (bannerIcon) bannerIcon.textContent = "🌟";
         bannerTitle.textContent = "🌟 Peringkat Akumulasi Semua Waktu";
@@ -1620,10 +1781,25 @@ const App = {
       const weekStars = weekRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
       const weekSetoran = weekRecords.length;
 
-      // Filter Bulanan (Bulan ini)
+      // Filter Bulan Ini (Bulan kalender berjalan)
       const monthRecords = allSantriRecords.filter(r => this.isDateInCurrentMonth(r.tanggal, r));
       const monthStars = monthRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
       const monthSetoran = monthRecords.length;
+
+      // Filter Bulan Kemarin (Bulan kalender sebelumnya murni)
+      const prevMonthRecords = allSantriRecords.filter(r => this.isDateInPreviousMonth(r.tanggal, r));
+      const prevMonthStars = prevMonthRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
+      const prevMonthSetoran = prevMonthRecords.length;
+
+      // Filter 30 Hari Terakhir (Rolling 30 hari ke belakang - Lintas 2 Bulan)
+      const last30Records = allSantriRecords.filter(r => this.isDateInLast30Days(r.tanggal, r));
+      const last30Stars = last30Records.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
+      const last30Setoran = last30Records.length;
+
+      // Filter Kustom
+      const customRecords = allSantriRecords.filter(r => this.isDateInCustomRange(r.tanggal, this.customPeriodStart, this.customPeriodEnd, r));
+      const customStars = customRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
+      const customSetoran = customRecords.length;
 
       const latestRecord = allSantriRecords.length > 0 ? allSantriRecords[0] : null;
 
@@ -1640,7 +1816,7 @@ const App = {
           : `<span class="meta-badge meta-badge-tamhid">📖 Kitab Tamhid</span>`;
       }
 
-      // Tentukan nilai bintang & setoran aktif yang ditampilkan sesuai Periode
+      // Tentukan nilai bintang & setoran aktif yang ditampilkan sesuai Periode yang Dipilih
       let displayStars = totalStars;
       let displaySetoran = totalSetoran;
       let periodLabel = "Total Bintang";
@@ -1653,6 +1829,18 @@ const App = {
         displayStars = monthStars;
         displaySetoran = monthSetoran;
         periodLabel = "Bulan Ini";
+      } else if (this.currentPeriodFilter === "bulan_kemarin") {
+        displayStars = prevMonthStars;
+        displaySetoran = prevMonthSetoran;
+        periodLabel = "Bulan Kemarin";
+      } else if (this.currentPeriodFilter === "30_hari") {
+        displayStars = last30Stars;
+        displaySetoran = last30Setoran;
+        periodLabel = "30 Hari Lintas Bulan";
+      } else if (this.currentPeriodFilter === "custom") {
+        displayStars = customStars;
+        displaySetoran = customSetoran;
+        periodLabel = "Periode Kustom";
       }
 
       let latestHafalanText = "Belum ada";
@@ -1679,6 +1867,12 @@ const App = {
         weekSetoran,
         monthStars,
         monthSetoran,
+        prevMonthStars,
+        prevMonthSetoran,
+        last30Stars,
+        last30Setoran,
+        customStars,
+        customSetoran,
         latestBacaanBadge,
         latestHafalan: latestHafalanText,
         latestRecord
@@ -1724,6 +1918,12 @@ const App = {
         let rank1BadgeText = "🏆 PENERIMA REWARD BULANAN";
         if (this.currentPeriodFilter === "pekanan") {
           rank1BadgeText = "🥇 BINTANG PEKAN INI";
+        } else if (this.currentPeriodFilter === "bulan_kemarin") {
+          rank1BadgeText = "🏆 JUARA BULAN KEMARIN";
+        } else if (this.currentPeriodFilter === "30_hari") {
+          rank1BadgeText = "⭐ JUARA 30 HARI TERAKHIR";
+        } else if (this.currentPeriodFilter === "custom") {
+          rank1BadgeText = "🥇 JUARA PERIODE KUSTOM";
         } else if (this.currentPeriodFilter === "semua") {
           rank1BadgeText = "👑 TERBANYAK AKUMULASI";
         }
@@ -1784,7 +1984,13 @@ const App = {
         if (rankNumber === 1) {
           rankClass = "rank-1";
           if (this.currentPeriodFilter === "bulanan") {
-            rewardBadge = `<span class="meta-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:800;">🏆 Juara 1 (Penerima Reward Bulanan)</span>`;
+            rewardBadge = `<span class="meta-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:800;">🏆 Juara 1 (Reward Bulan Ini)</span>`;
+          } else if (this.currentPeriodFilter === "bulan_kemarin") {
+            rewardBadge = `<span class="meta-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:800;">🏆 Juara 1 (Rekap Bulan Kemarin)</span>`;
+          } else if (this.currentPeriodFilter === "30_hari") {
+            rewardBadge = `<span class="meta-badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-weight:800;">⭐ Juara 1 (30 Hari Lintas Bulan)</span>`;
+          } else if (this.currentPeriodFilter === "custom") {
+            rewardBadge = `<span class="meta-badge" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800;">🥇 Juara 1 Periode Kustom</span>`;
           } else if (this.currentPeriodFilter === "pekanan") {
             rewardBadge = `<span class="meta-badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:800;">🥇 Peringkat 1 Pekan Ini</span>`;
           } else {
@@ -2061,18 +2267,22 @@ const App = {
       }
     }
 
-    // Hitung Bintang Pekan Ini, Bulan Ini, dan Total (Memakai parseDateSafe yang robust)
+    // Hitung Bintang Pekan Ini, Bulan Ini, 30 Hari Terakhir (Lintas Bulan) & Total
     const weekRecords = records.filter(r => this.isDateInCurrentWeek(r.tanggal));
     const weekStars = weekRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
     const monthRecords = records.filter(r => this.isDateInCurrentMonth(r.tanggal));
     const monthStars = monthRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
+    const last30Records = records.filter(r => this.isDateInLast30Days(r.tanggal));
+    const last30Stars = last30Records.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
 
     const statWeek = document.getElementById("parentStatStarsWeek");
     const statMonth = document.getElementById("parentStatStarsMonth");
+    const statLast30 = document.getElementById("parentStatStarsLast30");
     const statTotal = document.getElementById("parentStatStars");
 
     if (statWeek) statWeek.textContent = `${weekStars} ⭐`;
     if (statMonth) statMonth.textContent = `${monthStars} ⭐`;
+    if (statLast30) statLast30.textContent = `${last30Stars} ⭐`;
     if (statTotal) statTotal.textContent = `${totalStars} ⭐`;
     
     const statBacaan = document.getElementById("parentStatBacaan");
@@ -2516,6 +2726,8 @@ const App = {
     const weekStars = weekRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
     const monthRecords = records.filter(r => this.isDateInCurrentMonth(r.tanggal));
     const monthStars = monthRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
+    const last30Records = records.filter(r => this.isDateInLast30Days(r.tanggal));
+    const last30Stars = last30Records.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
     const latest = records.length > 0 ? records[0] : null;
 
     let text = `*LAPORAN MUTABA'AH HAFALAN & TILAWAH SANTRI*\n`;
@@ -2525,6 +2737,7 @@ const App = {
     text += `🏫 *Kelas:* ${santri.halaqah} (Kategori ${santri.kategori})\n`;
     text += `📅 *Bintang Pekan Ini:* ${weekStars} ⭐ (${weekRecords.length}x setoran)\n`;
     text += `🏆 *Bintang Bulan Ini:* ${monthStars} ⭐ (${monthRecords.length}x setoran)\n`;
+    text += `🔄 *30 Hari Terakhir (Lintas Bulan):* ${last30Stars} ⭐ (${last30Records.length}x setoran)\n`;
     text += `🌟 *Total Akumulasi Bintang:* ${totalStars} ⭐\n`;
     
     if (latest) {
