@@ -173,7 +173,7 @@ const TAMHID_JILID_OPTIONS = [
   "Jilid 5"
 ];
 
-// Data santri resmi RQ Ummul Qasim (36 Santri, 4 Kelas)
+// Data santri resmi RQ Ummul Qasim (37 Santri, 4 Kelas)
 const MASTER_SANTRI = [
   // 1. KELAS DASAR IKHWAN & AKHOWAT (Pengampu: Ustadzah Ummu Khadijah) - Kategori Dasar
   { id: "S01", nama: "Ratu", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👧🏻", foto: "", statusBelajar: "Tamhid" },
@@ -185,6 +185,7 @@ const MASTER_SANTRI = [
   { id: "S07", nama: "Firas", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏽", foto: "", statusBelajar: "Tamhid" },
   { id: "S08", nama: "Razky", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },
   { id: "S09", nama: "Aqmar", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👦🏼", foto: "", statusBelajar: "Tamhid" },
+  { id: "S37", nama: "Aisyah", halaqah: "Kelas Dasar Ikhwan & Akhowat", kategori: "Dasar", avatar: "👧🏻", foto: "", statusBelajar: "Tamhid" },
 
   // 2. KELAS DASAR IKHWAN (Pengampu: Ustadzah Khirfatul Jannah) - Kategori Dasar
   { id: "S10", nama: "Hafiz", halaqah: "Kelas Dasar Ikhwan", kategori: "Dasar", avatar: "👦🏻", foto: "", statusBelajar: "Tamhid" },

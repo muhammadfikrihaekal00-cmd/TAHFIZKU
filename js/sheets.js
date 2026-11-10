@@ -666,8 +666,20 @@ const SheetsService = {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SANTRI);
       if (raw) {
-        const parsed = JSON.parse(raw);
+        let parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length >= 30) {
+          // Sinkronisasi otomatis: jika ada santri di MASTER_SANTRI (misal: Aisyah) yang belum ada di localStorage, gabungkan otomatis
+          let hasChange = false;
+          MASTER_SANTRI.forEach(ms => {
+            const exists = parsed.some(s => s.id === ms.id || (s.nama && s.nama.trim().toLowerCase() === ms.nama.trim().toLowerCase()));
+            if (!exists) {
+              parsed.push(ms);
+              hasChange = true;
+            }
+          });
+          if (hasChange) {
+            localStorage.setItem(STORAGE_KEY_SANTRI, JSON.stringify(parsed));
+          }
           return parsed;
         }
       }
