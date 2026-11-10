@@ -1300,7 +1300,7 @@ const App = {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const santriId = document.getElementById("selectSantri").value;
+      const santriId = document.getElementById("selectSantri")?.value;
       if (!santriId) {
         this.showToast("Mohon pilih santri terlebih dahulu!", "error");
         return;
@@ -1310,7 +1310,7 @@ const App = {
       const currentSantri = allSantri.find(s => s.id === santriId);
       const namaSantri = currentSantri ? currentSantri.nama : "Santri RQ";
       const kategoriSantri = currentSantri ? currentSantri.kategori : "Menengah";
-      const bacaanTipe = document.getElementById("inputBacaanTipe").value;
+      const bacaanTipe = document.getElementById("inputBacaanTipe")?.value || "Tamhid";
 
       const checkZiyadah = document.getElementById("checkEnableZiyadah")?.checked ?? true;
       const checkMurojaah = document.getElementById("checkEnableMurojaah")?.checked ?? true;
@@ -1340,24 +1340,29 @@ const App = {
       const todayStr = new Date().toISOString().split("T")[0];
       const tanggalVal = (rawTanggal && rawTanggal.trim()) ? rawTanggal.trim() : todayStr;
 
+      const starTajwid = parseInt(document.getElementById("inputStarTajwid")?.value, 10) || this.ratings.tajwid || 5;
+      const starKelancaran = parseInt(document.getElementById("inputStarKelancaran")?.value, 10) || this.ratings.kelancaran || 5;
+      const starMakhraj = parseInt(document.getElementById("inputStarMakhraj")?.value, 10) || this.ratings.makhraj || 5;
+      const starTotal = parseInt(document.getElementById("inputStarTotal")?.value, 10) || (starTajwid + starKelancaran + starMakhraj);
+
       const record = {
         id: "REC-" + Date.now(),
         timestamp: new Date().toISOString(),
         tanggal: tanggalVal,
         santriId: santriId,
         namaSantri: namaSantri,
-        halaqah: document.getElementById("selectHalaqah").value,
+        halaqah: document.getElementById("selectHalaqah")?.value || currentSantri?.halaqah || "Kelas Dasar Ikhwan & Akhowat",
         kategori: kategoriSantri,
-        ustadz: document.getElementById("inputUstadz").value || SheetsService.getCurrentUstadz(),
+        ustadz: document.getElementById("inputUstadz")?.value || SheetsService.getCurrentUstadz(),
         
         // Tilawah (Tamhid vs Tartil Ringkas)
         bacaanTipe: bacaanTipe,
-        tamhidJilid: bacaanTipe === "Tamhid" ? document.getElementById("selectTamhidJilid").value : "-",
-        tamhidHalaman: bacaanTipe === "Tamhid" ? document.getElementById("inputTamhidHalaman").value.trim() : "-",
-        tartilJuz: bacaanTipe === "Tartil" ? document.getElementById("selectTartilJuz").value : "-",
-        tartilHalaman: bacaanTipe === "Tartil" ? document.getElementById("inputTartilHalaman").value.trim() : "-",
-        bacaanStatus: bacaanTipe === "Tamhid" ? document.getElementById("inputTamhidStatus").value : document.getElementById("inputTartilStatus").value,
-        bacaanCatatan: document.getElementById("inputBacaanCatatan").value.trim() || "-",
+        tamhidJilid: bacaanTipe === "Tamhid" ? (document.getElementById("selectTamhidJilid")?.value || "Jilid 1") : "-",
+        tamhidHalaman: bacaanTipe === "Tamhid" ? (document.getElementById("inputTamhidHalaman")?.value?.trim() || "-") : "-",
+        tartilJuz: bacaanTipe === "Tartil" ? (document.getElementById("selectTartilJuz")?.value || "30") : "-",
+        tartilHalaman: bacaanTipe === "Tartil" ? (document.getElementById("inputTartilHalaman")?.value?.trim() || "-") : "-",
+        bacaanStatus: bacaanTipe === "Tamhid" ? (document.getElementById("inputTamhidStatus")?.value || "Lanjut") : (document.getElementById("inputTartilStatus")?.value || "Lanjut"),
+        bacaanCatatan: document.getElementById("inputBacaanCatatan")?.value?.trim() || "-",
 
         // Hafalan Al-Qur'an (Terpisah Ziyadah & Muroja'ah)
         hafalanJenis: hafalanJenis,
@@ -1379,18 +1384,18 @@ const App = {
         surahAkhir: isZiyadahActive ? ziyadahSurahAkhir : (isMurojaahActive ? murojaahSurahAkhir : "-"),
         ayatAkhir: isZiyadahActive ? ziyadahAyatAkhir : (isMurojaahActive ? murojaahAyatAkhir : 0),
 
-        bintangTajwid: parseInt(document.getElementById("inputStarTajwid").value, 10),
-        bintangKelancaran: parseInt(document.getElementById("inputStarKelancaran").value, 10),
-        bintangMakhraj: parseInt(document.getElementById("inputStarMakhraj").value, 10),
-        totalBintang: parseInt(document.getElementById("inputStarTotal").value, 10),
-        hafalanStatus: document.getElementById("inputHafalanStatus").value,
-        hafalanCatatan: document.getElementById("inputHafalanCatatan").value.trim() || "-"
+        bintangTajwid: starTajwid,
+        bintangKelancaran: starKelancaran,
+        bintangMakhraj: starMakhraj,
+        totalBintang: starTotal,
+        hafalanStatus: document.getElementById("inputHafalanStatus")?.value || "Lulus",
+        hafalanCatatan: document.getElementById("inputHafalanCatatan")?.value?.trim() || "-"
       };
 
       const originalBtnText = submitBtn.innerHTML;
 
       try {
-        // 1. Simpan seketika (0 ms delay - Optimistic Save)
+        // 1. Simpan seketika (0 ms delay - Optimistic Save ke LocalStorage)
         SheetsService.submitSetoranInstant(record);
 
         // 2. Tampilkan umpan balik sukses seketika pada tombol
@@ -1398,11 +1403,11 @@ const App = {
         submitBtn.style.background = "#059669";
         
         // 3. Langsung reset input formulir agar ustadz bisa langsung input santri berikutnya
-        document.getElementById("inputTamhidHalaman").value = "";
-        document.getElementById("inputTartilHalaman").value = "";
-        document.getElementById("inputBacaanCatatan").value = "";
-        document.getElementById("inputHafalanCatatan").value = "";
-        document.getElementById("selectSantri").value = "";
+        if (document.getElementById("inputTamhidHalaman")) document.getElementById("inputTamhidHalaman").value = "";
+        if (document.getElementById("inputTartilHalaman")) document.getElementById("inputTartilHalaman").value = "";
+        if (document.getElementById("inputBacaanCatatan")) document.getElementById("inputBacaanCatatan").value = "";
+        if (document.getElementById("inputHafalanCatatan")) document.getElementById("inputHafalanCatatan").value = "";
+        if (document.getElementById("selectSantri")) document.getElementById("selectSantri").value = "";
         this.renderFormStudentHistory("");
 
         this.ratings = { tajwid: 5, kelancaran: 5, makhraj: 5 };
@@ -1424,10 +1429,12 @@ const App = {
         this.refreshParentPortalIfActive(santriId);
         this.renderRecentSetoranList();
 
-        // Broadcast & sinkronkan seketika ke Cloud 4 Pengajar
-        this.syncCloudData({ force: true });
+        // 5. Broadcast & sinkronkan ke Cloud Google Sheets dengan jeda 3 detik agar proses commit di remote selesai
+        setTimeout(() => {
+          this.syncCloudData({ force: true });
+        }, 3500);
 
-        // 5. Kembalikan teks tombol dalam 900ms
+        // 6. Kembalikan teks tombol dalam 900ms
         setTimeout(() => {
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalBtnText;
@@ -3605,7 +3612,9 @@ function createJsonResponse(data) {
           this.renderFormStudentHistory(currentInputSantriId);
         }
         this.showToast("Catatan evaluasi setoran berhasil dihapus permanen.", "success");
-        this.syncCloudData({ force: true });
+        setTimeout(() => {
+          this.syncCloudData({ force: true });
+        }, 2500);
       } else {
         this.showToast(res.message || "Gagal menghapus catatan setoran.", "error");
       }
@@ -4091,8 +4100,8 @@ function createJsonResponse(data) {
       return;
     }
 
-    // Tampilkan 25 setoran terakhir (terurut paling baru)
-    const recentRecords = [...allRecords].reverse().slice(0, 25);
+    // Tampilkan 30 setoran terakhir (sudah terurut paling baru di awal)
+    const recentRecords = allRecords.slice(0, 30);
 
     container.innerHTML = recentRecords.map(r => {
       let hafalanText = "";
@@ -4315,7 +4324,9 @@ function createJsonResponse(data) {
             }
             this.showToast(`Alhamdulillah! Perubahan setoran ${escapeHtml(namaSantri)} berhasil disimpan ke Spreadsheet.`, "success");
             closeModal();
-            this.syncCloudData({ force: true });
+            setTimeout(() => {
+              this.syncCloudData({ force: true });
+            }, 3500);
           } else {
             this.showToast(res.message || "Gagal memperbarui setoran.", "error");
           }

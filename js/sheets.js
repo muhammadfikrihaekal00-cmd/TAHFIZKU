@@ -368,7 +368,27 @@ const SheetsService = {
     return { valid: false };
   },
 
-  // Normalisasi data & perbaiki tanggal kosong/invalid dari Spreadsheet
+  getRecordTimestampMs(r) {
+    if (!r) return 0;
+    if (r.timestamp) {
+      const t = new Date(r.timestamp).getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (r.id) {
+      const m = String(r.id).match(/REC-(\d+)/);
+      if (m) {
+        const t = Number(m[1]);
+        if (!isNaN(t)) return t;
+      }
+    }
+    if (r.tanggal) {
+      const t = new Date(r.tanggal).getTime();
+      if (!isNaN(t)) return t;
+    }
+    return 0;
+  },
+
+  // Normalisasi data & perbaiki tanggal kosong/invalid dari Spreadsheet (Selalu terurut descending: paling baru di awal)
   normalizeRecordDates(records) {
     if (!Array.isArray(records)) return [];
     const todayStr = new Date().toISOString().split("T")[0];
@@ -441,7 +461,8 @@ const SheetsService = {
           bintangKelancaran: Number(r.bintangKelancaran) || 0,
           bintangMakhraj: Number(r.bintangMakhraj) || 0
         };
-      });
+      })
+      .sort((a, b) => this.getRecordTimestampMs(b) - this.getRecordTimestampMs(a));
   },
 
   // Simpan data setoran secara instan (Optimistic UI - 0 ms delay)
@@ -604,6 +625,9 @@ const SheetsService = {
       const response = await fetch(url, { method: "GET" });
       const res = await response.json();
       if (res && res.status === "success" && Array.isArray(res.data)) {
+        const deletedIds = this.getDeletedRecordIds();
+        const deletedSigs = this.getDeletedSignatures();
+
         // 1. Bersihkan antrian pending lokal jika perubahannya sudah tercermin di Cloud
         const remoteIdMap = new Map();
         res.data.forEach(r => {
@@ -630,8 +654,30 @@ const SheetsService = {
 
         let validRemote = res.data.filter(r => !activePendingDeletes.includes(String(r.id || "").trim()));
         let normalizedRemote = this.normalizeRecordDates(validRemote);
+        const remoteSet = new Set(normalizedRemote.map(r => String(r.id || "").trim()));
 
-        // 3. Terapkan pending save & edit yang masih offline pada perangkat ini
+        // 3. MERGE LOKAL: JANGAN PERNAH MENGHAPUS DATA LOKAL YANG BARU DIINPUT PADA HP / LAPTOP!
+        // Jika ustadz baru saja menyimpan setoran tapi belum sempat masuk ke indeks Google Sheets, pertahankan selalu!
+        const localRecords = this.getAllRecords();
+        localRecords.forEach(localRec => {
+          if (!localRec || !localRec.id) return;
+          const cleanLocalId = String(localRec.id).trim();
+          if (this.isRecordBlacklisted(localRec, deletedIds, deletedSigs)) return;
+
+          if (!remoteSet.has(cleanLocalId)) {
+            // Belum ada di Cloud -> pertahankan di memori lokal agar riwayat & bintang tidak hilang seketika!
+            normalizedRemote.push(localRec);
+            remoteSet.add(cleanLocalId);
+
+            // Pastikan tetap terdaftar di antrian pending save agar pasti tersinkron ke Google Sheets
+            const inQueue = this.getPendingQueue().some(q => q.id === cleanLocalId && q.action === "save");
+            if (!inQueue) {
+              this.addToPendingQueue("save", localRec);
+            }
+          }
+        });
+
+        // 4. Terapkan pending save & edit yang masih offline pada perangkat ini
         const remainingPending = this.getPendingQueue();
         if (remainingPending.length > 0) {
           const pendingEdits = remainingPending.filter(p => p.action === "edit" && p.record);
@@ -643,16 +689,18 @@ const SheetsService = {
           });
 
           const pendingSaves = remainingPending.filter(p => p.action === "save" && p.record);
-          const currentIdSet = new Set(normalizedRemote.map(r => String(r.id).trim()));
           pendingSaves.forEach(p => {
-            if (!currentIdSet.has(p.id)) {
-              normalizedRemote.unshift(p.record);
-              currentIdSet.add(p.id);
+            if (!remoteSet.has(p.id)) {
+              normalizedRemote.push(p.record);
+              remoteSet.add(p.id);
             }
           });
         }
 
-        // 4. Sinkronkan otomatis santri baru jika ada nama santri di Cloud yang belum ada di master lokal
+        // Urutkan selalu dari yang paling baru ke paling lama
+        normalizedRemote = this.normalizeRecordDates(normalizedRemote);
+
+        // 5. Sinkronkan otomatis santri baru jika ada nama santri di Cloud yang belum ada di master lokal
         try {
           const localSantri = this.getAllSantri();
           const santriSet = new Set(localSantri.map(s => (s.nama || "").trim().toLowerCase()));
@@ -678,10 +726,10 @@ const SheetsService = {
           }
         } catch (eSantri) {}
 
-        // 5. Simpan data otoritatif Google Sheets sebagai Single Source of Truth
+        // 6. Simpan data otoritatif Google Sheets yang sudah di-merge dengan aman
         localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(normalizedRemote));
 
-        // 6. Jalankan pemrosesan pending queue di background jika masih ada yang tersisa
+        // 7. Jalankan pemrosesan pending queue di background jika masih ada yang tersisa
         this.processPendingQueue().catch(() => {});
 
         return normalizedRemote;
