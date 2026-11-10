@@ -2,7 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Aplikasi Mutaba'ah & Kontrol Hafalan Al-Qur'an, Kitab Tamhid, dan Tartil Qur'an santri Rumah Qur'an Ummul Qasim.">
   <meta name="theme-color" content="#0284c7">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -10,18 +11,22 @@
   <meta name="apple-mobile-web-app-title" content="RQ Ummul Qasim">
   <title>RQ Ummul Qasim - Kontrol Hafalan, Kitab Tamhid & Tartil Qur'an</title>
   
-  <!-- Modern Google Fonts -->
+  <!-- Modern Google Fonts (Preload & Non-blocking) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  </noscript>
   
-  <!-- Stylesheet (v5.4 Tambah Santri Aisyah di Kelas Dasar Ikhwan & Akhowat) -->
-  <link rel="stylesheet" href="css/style.css?v=5.4">
+  <!-- Stylesheet (v5.5 Optimalisasi Lighthouse: Kecepatan, Kontras & Aksesibilitas) -->
+  <link rel="stylesheet" href="css/style.css?v=5.5">
 </head>
 <body>
 
   <!-- HIDDEN PHOTO INPUT FOR QUICK UPLOAD -->
-  <input type="file" id="globalPhotoInput" accept="image/*" style="display:none;">
+  <input type="file" id="globalPhotoInput" accept="image/*" style="display:none;" aria-label="Unggah Foto Santri">
 
   <!-- ===================================================================
        APP HEADER
@@ -29,7 +34,7 @@
   <header class="app-header">
     <div class="header-container">
       <div class="brand-wrapper" id="brandHeaderAction" title="Klik untuk kembali ke beranda">
-        <img src="assets/logo.png" alt="Logo RQ Ummul Qasim" class="brand-logo" onerror="this.src='assets/logo.jpg'">
+        <img src="assets/logo.png" alt="Logo RQ Ummul Qasim" class="brand-logo" width="44" height="42" onerror="this.src='assets/logo.jpg'">
         <div class="brand-info">
           <h1>RQ UMMUL QASIM <span class="badge-rq">TAHFIDZ & TARTIL</span></h1>
           <p id="headerTeacherText">Portal Mutaba'ah & Kontrol Hafalan</p>
@@ -171,7 +176,7 @@
       <div class="reward-banner">
         <div class="reward-icon" id="rewardBannerIcon">📅</div>
         <div class="reward-text">
-          <h3 id="rewardBannerTitle">Capaian Bintang Pekan Ini (Senin – Ahad)</h3>
+          <h2 id="rewardBannerTitle" style="font-size: 1.05rem; font-weight: 800; margin-bottom: 4px;">Capaian Bintang Pekan Ini (Senin – Ahad)</h2>
           <p id="rewardBannerDesc">
             Memantau keaktifan setoran hafalan dan tilawah ananda sepanjang pekan berjalan secara realtime.
           </p>
@@ -200,12 +205,12 @@
       <div class="filter-bar">
         <div class="search-box">
           <span class="search-box-icon">🔍</span>
-          <input type="text" id="searchLeaderboard" placeholder="Cari nama santri di papan peringkat...">
+          <input type="text" id="searchLeaderboard" placeholder="Cari nama santri di papan peringkat..." aria-label="Cari nama santri di papan peringkat">
         </div>
 
         <div style="display: flex; gap: 8px;">
           <!-- Filter 4 Kelas Spesifik -->
-          <select class="form-select" id="filterHalaqahLeaderboard" style="width: auto; min-width: 170px;">
+          <select class="form-select" id="filterHalaqahLeaderboard" aria-label="Filter Santri Berdasarkan Kelas" style="width: auto; min-width: 170px;">
             <option value="">Semua Kelas</option>
           </select>
 
@@ -261,7 +266,7 @@
         </div>
 
         <div class="form-group" style="margin-top: 14px;">
-          <select class="form-select" id="selectParentSantri" style="font-size: 1rem; padding: 12px 16px; border-radius: var(--radius-md); font-weight: 700; border-color: #ffffff;">
+          <select class="form-select" id="selectParentSantri" aria-label="Pilih Nama Santri dari Daftar Dropdown" style="font-size: 1rem; padding: 12px 16px; border-radius: var(--radius-md); font-weight: 700; border-color: #ffffff;">
             <option value="">-- Atau Pilih Nama Ananda dari Dropdown --</option>
           </select>
         </div>
@@ -370,7 +375,7 @@
             <!-- Pilih Kelas (4 Pilihan Resmi) -->
             <div class="clean-field">
               <label class="clean-label" for="selectHalaqah">KELAS BIMBINGAN</label>
-              <select class="clean-select" id="selectHalaqah" required>
+              <select class="clean-select" id="selectHalaqah" aria-label="Pilih Kelas Bimbingan" required>
                 <!-- Populated by JS -->
               </select>
             </div>
@@ -389,7 +394,7 @@
                   <span>+ Tambah Santri</span>
                 </button>
               </div>
-              <select class="clean-select" id="selectSantri" required>
+              <select class="clean-select" id="selectSantri" aria-label="Pilih Nama Santri" required>
                 <option value="">-- Pilih Santri --</option>
               </select>
             </div>
@@ -420,7 +425,7 @@
             <div class="clean-grid clean-grid-2">
               <div class="clean-field">
                 <label class="clean-label" for="selectTamhidJilid">JILID KITAB</label>
-                <select class="clean-select" id="selectTamhidJilid">
+                <select class="clean-select" id="selectTamhidJilid" aria-label="Pilih Jilid Kitab Tamhid">
                   <!-- Populated by JS -->
                 </select>
               </div>
@@ -458,7 +463,7 @@
             <div class="clean-grid clean-grid-2">
               <div class="clean-field">
                 <label class="clean-label" for="selectTartilJuz">PILIHAN JUZ</label>
-                <select class="clean-select" id="selectTartilJuz">
+                <select class="clean-select" id="selectTartilJuz" aria-label="Pilih Juz Tartil Al-Qur'an">
                   <!-- Juz 1 s/d 30 -->
                 </select>
               </div>
@@ -528,12 +533,12 @@
               <div class="batas-hafalan-grid">
                 <!-- Kolom Kiri: Surah & Ayat Awal Ziyadah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">SURAH AWAL</label>
-                  <select class="clean-select select-surah-clean" id="selectZiyadahSurahAwal">
+                  <label class="field-micro-label" for="selectZiyadahSurahAwal">SURAH AWAL</label>
+                  <select class="clean-select select-surah-clean" id="selectZiyadahSurahAwal" aria-label="Pilih Surah Awal Ziyadah">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
-                    <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAwal">
+                    <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAwal" aria-label="Pilih Ayat Awal Ziyadah">
                       <option value="1">Ayat 1</option>
                     </select>
                     <input type="hidden" id="inputZiyadahAyatAwal" value="1">
@@ -542,12 +547,12 @@
 
                 <!-- Kolom Kanan: Surah & Ayat Akhir Ziyadah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">SURAH AKHIR</label>
-                  <select class="clean-select select-surah-clean" id="selectZiyadahSurahAkhir">
+                  <label class="field-micro-label" for="selectZiyadahSurahAkhir">SURAH AKHIR</label>
+                  <select class="clean-select select-surah-clean" id="selectZiyadahSurahAkhir" aria-label="Pilih Surah Akhir Ziyadah">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
-                    <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAkhir">
+                    <select class="clean-select select-ayat-clean" id="selectZiyadahAyatAkhir" aria-label="Pilih Ayat Akhir Ziyadah">
                       <option value="10">Ayat 10</option>
                     </select>
                     <input type="hidden" id="inputZiyadahAyatAkhir" value="10">
@@ -594,12 +599,12 @@
               <div class="batas-hafalan-grid">
                 <!-- Kolom Kiri: Surah & Ayat Awal Muroja'ah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">SURAH AWAL</label>
-                  <select class="clean-select select-surah-clean" id="selectMurojaahSurahAwal">
+                  <label class="field-micro-label" for="selectMurojaahSurahAwal">SURAH AWAL</label>
+                  <select class="clean-select select-surah-clean" id="selectMurojaahSurahAwal" aria-label="Pilih Surah Awal Muroja'ah">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
-                    <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAwal">
+                    <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAwal" aria-label="Pilih Ayat Awal Muroja'ah">
                       <option value="1">Ayat 1</option>
                     </select>
                     <input type="hidden" id="inputMurojaahAyatAwal" value="1">
@@ -608,12 +613,12 @@
 
                 <!-- Kolom Kanan: Surah & Ayat Akhir Muroja'ah -->
                 <div class="batas-hafalan-col">
-                  <label class="field-micro-label">SURAH AKHIR</label>
-                  <select class="clean-select select-surah-clean" id="selectMurojaahSurahAkhir">
+                  <label class="field-micro-label" for="selectMurojaahSurahAkhir">SURAH AKHIR</label>
+                  <select class="clean-select select-surah-clean" id="selectMurojaahSurahAkhir" aria-label="Pilih Surah Akhir Muroja'ah">
                     <!-- Populated with surahs -->
                   </select>
                   <div class="ayat-select-wrap">
-                    <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAkhir">
+                    <select class="clean-select select-ayat-clean" id="selectMurojaahAyatAkhir" aria-label="Pilih Ayat Akhir Muroja'ah">
                       <option value="20">Ayat 20</option>
                     </select>
                     <input type="hidden" id="inputMurojaahAyatAkhir" value="20">
@@ -895,7 +900,7 @@
       <!-- Logo Emblem Pusat -->
       <div class="login-emblem-wrap">
         <div class="login-emblem-circle">
-          <img src="assets/logo.png" alt="Logo RQ Ummul Qasim" class="login-emblem-img" onerror="this.src='assets/logo.jpg'">
+          <img src="assets/logo.png" alt="Logo RQ Ummul Qasim" class="login-emblem-img" width="81" height="77" onerror="this.src='assets/logo.jpg'">
         </div>
       </div>
 
@@ -908,7 +913,7 @@
       <form id="formPortalLogin" autocomplete="off">
         <div class="login-field-item">
           <label class="login-field-label" for="portalSelectUstadz">1. PILIH PROFIL DATABASE / PENGAJAR</label>
-          <select class="login-field-select" id="portalSelectUstadz" required>
+          <select class="login-field-select" id="portalSelectUstadz" aria-label="Pilih Profil Pengajar" required>
             <option value="">-- Pilih Profil Anda --</option>
             <!-- Populated with 4 official teachers -->
           </select>
@@ -1062,14 +1067,14 @@
 
           <div class="form-group" style="margin-bottom: 14px;">
             <label class="form-label" for="newSantriHalaqah">Pilih Kelas</label>
-            <select class="form-select" id="newSantriHalaqah" required style="font-weight: 700;">
+            <select class="form-select" id="newSantriHalaqah" aria-label="Pilih Kelas Santri Baru" required style="font-weight: 700;">
               <!-- 4 Kelas Resmi -->
             </select>
           </div>
 
           <div class="form-group" style="margin-bottom: 14px;">
             <label class="form-label" for="newSantriJenjang">Jenjang Tilawah Awal</label>
-            <select class="form-select" id="newSantriJenjang">
+            <select class="form-select" id="newSantriJenjang" aria-label="Pilih Jenjang Tilawah Awal">
               <option value="Tamhid">Kitab Tamhid (Dasar)</option>
               <option value="Tartil Qur'an">Tartil Al-Qur'an (Lulus Tamhid)</option>
             </select>
@@ -1134,14 +1139,14 @@
 
         <div class="form-group" style="margin-bottom: 14px;">
           <label class="form-label" for="editSantriHalaqah">Pilih Kelas</label>
-          <select class="form-select" id="editSantriHalaqah" required style="font-weight: 700;">
+          <select class="form-select" id="editSantriHalaqah" aria-label="Pilih Kelas Santri" required style="font-weight: 700;">
             <!-- 4 Kelas Resmi -->
           </select>
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
           <label class="form-label" for="editSantriJenjang">Jenjang Tilawah</label>
-          <select class="form-select" id="editSantriJenjang">
+          <select class="form-select" id="editSantriJenjang" aria-label="Pilih Jenjang Tilawah">
             <option value="Tamhid">Kitab Tamhid (Dasar)</option>
             <option value="Tartil Qur'an">Tartil Al-Qur'an (Lulus Tamhid)</option>
           </select>
@@ -1190,7 +1195,7 @@
         <!-- Pilihan Kelas -->
         <div class="form-group" style="margin-bottom: 18px;">
           <label class="form-label" for="exportClassSelect" style="font-weight: 700; color: #334155; margin-bottom: 6px;">Pilih Kelas Bimbingan</label>
-          <select class="form-select" id="exportClassSelect">
+          <select class="form-select" id="exportClassSelect" aria-label="Pilih Kelas Bimbingan untuk Laporan">
             <option value="ALL">Semua Kelas (Seluruh Santri)</option>
             <option value="Kelas Dasar Ikhwan & Akhowat">Kelas Dasar Ikhwan & Akhowat (Ustdzh Ummu Khadijah)</option>
             <option value="Kelas Dasar Ikhwan">Kelas Dasar Ikhwan (Ustdzh Khirfatul Jannah)</option>
@@ -1295,7 +1300,7 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="editSantriSelect" style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block;">Santri</label>
-            <select id="editSantriSelect" class="form-select" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
+            <select id="editSantriSelect" class="form-select" aria-label="Pilih Santri yang Diedit" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
               <!-- Populated by JS -->
             </select>
           </div>
@@ -1305,13 +1310,13 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label" for="editHalaqahSelect" style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block;">Kelas / Halaqah</label>
-            <select id="editHalaqahSelect" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
+            <select id="editHalaqahSelect" class="form-select" aria-label="Pilih Kelas atau Halaqah" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
               <!-- Populated by JS -->
             </select>
           </div>
           <div class="form-group">
             <label class="form-label" for="editUstadzSelect" style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block;">Ustadz / Ustadzah</label>
-            <select id="editUstadzSelect" class="form-select" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
+            <select id="editUstadzSelect" class="form-select" aria-label="Pilih Ustadz Pengampu" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.86rem;">
               <!-- Populated by JS -->
             </select>
           </div>
@@ -1321,7 +1326,7 @@
         <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <span style="font-weight: 800; font-size: 0.86rem; color: #0284c7;">📖 Tilawah (Kitab Tamhid / Tartil)</span>
-            <select id="editBacaanTipe" class="form-select" style="padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; font-weight: 700;">
+            <select id="editBacaanTipe" class="form-select" aria-label="Pilih Tipe Tilawah" style="padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; font-weight: 700;">
               <option value="Tamhid">Kitab Tamhid</option>
               <option value="Tartil">Tartil Al-Qur'an</option>
             </select>
@@ -1330,8 +1335,8 @@
           <!-- Box Tamhid -->
           <div id="editBoxTamhid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
             <div>
-              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Jilid</label>
-              <select id="editTamhidJilid" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <label for="editTamhidJilid" style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Jilid</label>
+              <select id="editTamhidJilid" class="form-select" aria-label="Pilih Jilid Tamhid" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
                 <option value="Jilid 1">Jilid 1</option>
                 <option value="Jilid 2">Jilid 2</option>
                 <option value="Jilid 3">Jilid 3</option>
@@ -1341,12 +1346,12 @@
               </select>
             </div>
             <div>
-              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Halaman</label>
+              <label for="editTamhidHalaman" style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Halaman</label>
               <input type="text" id="editTamhidHalaman" class="form-input" placeholder="Halaman / Bab" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
             </div>
             <div>
-              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Status</label>
-              <select id="editTamhidStatus" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <label for="editTamhidStatus" style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Status</label>
+              <select id="editTamhidStatus" class="form-select" aria-label="Pilih Status Kelulusan Tamhid" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
                 <option value="Lanjut">Lanjut</option>
                 <option value="Ulang">Ulang</option>
                 <option value="Lulus Naik Jilid">Lulus Naik Jilid</option>
@@ -1358,18 +1363,18 @@
           <!-- Box Tartil -->
           <div id="editBoxTartil" style="display: none; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
             <div>
-              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Juz</label>
-              <select id="editTartilJuz" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <label for="editTartilJuz" style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Juz</label>
+              <select id="editTartilJuz" class="form-select" aria-label="Pilih Juz Tartil" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
                 <!-- Populated by JS 1-30 -->
               </select>
             </div>
             <div>
-              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Halaman Mushaf</label>
+              <label for="editTartilHalaman" style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Halaman Mushaf</label>
               <input type="text" id="editTartilHalaman" class="form-input" placeholder="Misal: Halaman 582" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
             </div>
             <div>
-              <label style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Status</label>
-              <select id="editTartilStatus" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <label for="editTartilStatus" style="font-size: 0.74rem; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Status</label>
+              <select id="editTartilStatus" class="form-select" aria-label="Pilih Status Tartil" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
                 <option value="Lanjut">Lanjut</option>
                 <option value="Ulang">Ulang</option>
                 <option value="Khatam">Khatam</option>
@@ -1400,11 +1405,11 @@
           <div id="editZiyadahSection" style="margin-bottom: 10px;">
             <div style="font-size: 0.74rem; font-weight: 700; color: #047857; margin-bottom: 4px;">Ziyadah (Hafalan Baru)</div>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
-              <select id="editZiyadahSurah" class="form-select" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <select id="editZiyadahSurah" class="form-select" aria-label="Pilih Surah Ziyadah" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
                 <!-- Surahs -->
               </select>
-              <input type="number" id="editZiyadahAyatAwal" class="form-input" placeholder="Ayat Awal" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
-              <input type="number" id="editZiyadahAyatAkhir" class="form-input" placeholder="Ayat Akhir" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <input type="number" id="editZiyadahAyatAwal" class="form-input" placeholder="Ayat Awal" min="1" aria-label="Ayat Awal Ziyadah" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <input type="number" id="editZiyadahAyatAkhir" class="form-input" placeholder="Ayat Akhir" min="1" aria-label="Ayat Akhir Ziyadah" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
             </div>
           </div>
 
@@ -1412,19 +1417,19 @@
           <div id="editMurojaahSection" style="margin-bottom: 10px;">
             <div style="font-size: 0.74rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Muroja'ah (Pengulangan Hafalan)</div>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
-              <select id="editMurojaahSurah" class="form-select" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <select id="editMurojaahSurah" class="form-select" aria-label="Pilih Surah Muroja'ah" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
                 <!-- Surahs -->
               </select>
-              <input type="number" id="editMurojaahAyatAwal" class="form-input" placeholder="Ayat Awal" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
-              <input type="number" id="editMurojaahAyatAkhir" class="form-input" placeholder="Ayat Akhir" min="1" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <input type="number" id="editMurojaahAyatAwal" class="form-input" placeholder="Ayat Awal" min="1" aria-label="Ayat Awal Muroja'ah" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <input type="number" id="editMurojaahAyatAkhir" class="form-input" placeholder="Ayat Akhir" min="1" aria-label="Ayat Akhir Muroja'ah" style="padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
             </div>
           </div>
 
           <!-- Rating Bintang Edit -->
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 8px;">
             <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Tajwid</label>
-              <select id="editStarTajwid" class="form-select" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
+              <label for="editStarTajwid" style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Tajwid</label>
+              <select id="editStarTajwid" class="form-select" aria-label="Bintang Tajwid" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
                 <option value="1">⭐ 1</option>
                 <option value="2">⭐ 2</option>
                 <option value="3">⭐ 3</option>
@@ -1433,8 +1438,8 @@
               </select>
             </div>
             <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Kelancaran</label>
-              <select id="editStarKelancaran" class="form-select" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
+              <label for="editStarKelancaran" style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Kelancaran</label>
+              <select id="editStarKelancaran" class="form-select" aria-label="Bintang Kelancaran" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
                 <option value="1">⭐ 1</option>
                 <option value="2">⭐ 2</option>
                 <option value="3">⭐ 3</option>
@@ -1443,8 +1448,8 @@
               </select>
             </div>
             <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Makhraj</label>
-              <select id="editStarMakhraj" class="form-select" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
+              <label for="editStarMakhraj" style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Makhraj</label>
+              <select id="editStarMakhraj" class="form-select" aria-label="Bintang Makhraj" style="width: 100%; padding: 4px; font-size: 0.8rem; border-radius: 4px;">
                 <option value="1">⭐ 1</option>
                 <option value="2">⭐ 2</option>
                 <option value="3">⭐ 3</option>
@@ -1461,8 +1466,8 @@
           <!-- Status Hafalan & Catatan -->
           <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 8px;">
             <div>
-              <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Status Hafalan</label>
-              <select id="editHafalanStatus" class="form-select" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
+              <label for="editHafalanStatus" style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Status Hafalan</label>
+              <select id="editHafalanStatus" class="form-select" aria-label="Pilih Status Kelulusan Hafalan" style="width: 100%; padding: 6px 8px; font-size: 0.82rem; border-radius: 6px;">
                 <option value="Lulus">Lulus</option>
                 <option value="Ulang">Ulang</option>
               </select>
@@ -1535,9 +1540,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v5.4 Tambah Santri Aisyah di Kelas Dasar Ikhwan & Akhowat) -->
-  <script src="js/data.js?v=5.4"></script>
-  <script src="js/sheets.js?v=5.4"></script>
-  <script src="js/app.js?v=5.4"></script>
+  <!-- Scripts (Cache Buster v5.5 Optimalisasi Lighthouse: Kecepatan, Kontras & Aksesibilitas) -->
+  <script defer src="js/data.js?v=5.5"></script>
+  <script defer src="js/sheets.js?v=5.5"></script>
+  <script defer src="js/app.js?v=5.5"></script>
 </body>
 </html>

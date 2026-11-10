@@ -659,9 +659,9 @@ body.is-ustadz .tab-btn.ustadz-only {
 }
 
 .category-filter-btn.active {
-  background: #0284c7;
+  background: #0369a1;
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 2px 8px rgba(3, 105, 161, 0.35);
 }
 
 /* Reward Banner (HANYA JUARA 1 REWARD) */
@@ -703,6 +703,7 @@ body.is-ustadz .tab-btn.ustadz-only {
   border: 2px solid #ffffff;
 }
 
+.reward-text h2,
 .reward-text h3 {
   font-size: 1.05rem;
   font-weight: 800;
@@ -896,7 +897,8 @@ body.is-ustadz .tab-btn.ustadz-only {
   height: 34px;
   border-radius: 50%;
   background: #f1f5f9;
-  color: var(--text-muted);
+  color: #1e293b;
+  border: 1.5px solid #cbd5e1;
   font-weight: 800;
   font-size: 0.88rem;
   display: flex;
@@ -908,6 +910,7 @@ body.is-ustadz .tab-btn.ustadz-only {
 .rank-number-badge.rank-1 {
   background: #fbbf24;
   color: #78350f;
+  border: 1.5px solid #f59e0b;
   font-size: 1rem;
 }
 
@@ -1505,6 +1508,8 @@ body.is-ustadz .tab-btn.ustadz-only {
 
 .sync-spinning {
   display: inline-block;
+  will-change: transform;
+  transform: translateZ(0);
   animation: spinSync 0.8s linear infinite;
 }
 
@@ -2003,7 +2008,7 @@ body.is-ustadz .tab-btn.ustadz-only {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: #475569;
   transition: color 0.2s ease;
 }
 
@@ -2014,7 +2019,7 @@ body.is-ustadz .tab-btn.ustadz-only {
   white-space: nowrap;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #475569;
   display: block !important;
   transition: color 0.2s ease;
 }
@@ -2746,7 +2751,7 @@ body.is-ustadz .tab-btn.ustadz-only {
   height: 50px;
   border: none;
   border-radius: 12px;
-  background: #d97706;
+  background: #b45309;
   color: #ffffff;
   font-family: var(--font-main);
   font-size: 0.96rem;
@@ -2754,7 +2759,7 @@ body.is-ustadz .tab-btn.ustadz-only {
   letter-spacing: 0.02em;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25);
+  box-shadow: 0 4px 14px rgba(180, 83, 9, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
