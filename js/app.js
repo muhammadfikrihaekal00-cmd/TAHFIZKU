@@ -33,6 +33,9 @@ function escapeHtml(str) {
 }
 
 const App = {
+  isSyncing: false,
+  lastSyncTimestamp: 0,
+  lastRecordCount: 0,
   currentCategoryFilter: "Menengah", // Default ke Menengah atau Dasar
   currentPeriodFilter: "pekanan", // "pekanan", "bulanan", "bulan_kemarin", "30_hari", "custom", "semua"
   customPeriodStart: null,
@@ -74,7 +77,8 @@ const App = {
     this.setupCloudSyncButton();
     this.updateSheetsStatusIndicator();
 
-    this.tryBackgroundRemoteSync();
+    // Segera lakukan sinkronisasi data Cloud teraktual dari 4 Pengajar
+    this.syncCloudData({ showToast: false, force: true });
     this.startRealtimePolling();
   },
 
@@ -332,10 +336,12 @@ const App = {
 
     if (targetId === "tab-leaderboard") {
       this.renderLeaderboard();
-      this.tryBackgroundRemoteSync();
+      this.syncIfStale();
     } else if (targetId === "tab-wali") {
       this.renderParentPortal();
-      this.tryBackgroundRemoteSync();
+      this.syncIfStale();
+    } else if (targetId === "tab-input") {
+      this.syncIfStale();
     } else if (targetId === "tab-hadits") {
       this.renderHaditsList();
     } else if (targetId === "tab-doa") {
@@ -1410,6 +1416,9 @@ const App = {
         this.refreshParentPortalIfActive(santriId);
         this.renderRecentSetoranList();
 
+        // Broadcast & sinkronkan seketika ke Cloud 4 Pengajar
+        this.syncCloudData({ force: true });
+
         // 5. Kembalikan teks tombol dalam 900ms
         setTimeout(() => {
           submitBtn.disabled = false;
@@ -1606,59 +1615,25 @@ const App = {
     }
   },
 
-  // Tombol Segarkan Cloud Realtime (Header & Leaderboard)
+  // Tombol & Badge Sinkronisasi Cloud Realtime (Header & Leaderboard)
   setupCloudSyncButton() {
     const btnSyncHeader = document.getElementById("btnHeaderSyncData");
-    const iconSyncHeader = document.getElementById("btnHeaderSyncIcon");
+    const cloudSyncBadge = document.getElementById("cloudSyncStatusBadge");
     const btnRefreshLead = document.getElementById("btnRefreshLeaderboard");
 
-    const doSync = async () => {
-      if (iconSyncHeader) iconSyncHeader.classList.add("sync-spinning");
-      if (btnRefreshLead) btnRefreshLead.querySelector("span")?.classList.add("sync-spinning");
-
-      this.showToast("🔄 Menyinkronkan data realtime dari Google Spreadsheet...", "info");
-      
-      try {
-        const remoteData = await SheetsService.fetchRemoteRecords();
-        if (remoteData && remoteData.length >= 0) {
-          this.renderLeaderboard();
-          this.renderParentPortal();
-          this.renderRecentSetoranList();
-          const currentInputSantriId = document.getElementById("selectSantri")?.value;
-          if (currentInputSantriId) {
-            this.renderFormStudentHistory(currentInputSantriId);
-          }
-          if (this.currentParentStudentId) {
-            this.renderParentStudentDetail(this.currentParentStudentId);
-          }
-          this.showToast(`✅ Data realtime berhasil disinkronkan! (${remoteData.length} catatan setoran)`, "success");
-        } else {
-          this.showToast("Terhubung ke Google Spreadsheet! Data lokal sudah mutakhir.", "success");
-        }
-      } catch (err) {
-        this.showToast("Gagal memperbarui data dari Cloud: " + err.message, "error");
-      } finally {
-        if (iconSyncHeader) iconSyncHeader.classList.remove("sync-spinning");
-        if (btnRefreshLead) btnRefreshLead.querySelector("span")?.classList.remove("sync-spinning");
-      }
+    const doManualSync = () => {
+      this.syncCloudData({ showToast: true, force: true });
     };
 
     if (btnSyncHeader) {
-      btnSyncHeader.addEventListener("click", doSync);
+      btnSyncHeader.addEventListener("click", doManualSync);
+    }
+    if (cloudSyncBadge) {
+      cloudSyncBadge.addEventListener("click", doManualSync);
     }
     if (btnRefreshLead) {
-      btnRefreshLead.addEventListener("click", doSync);
+      btnRefreshLead.addEventListener("click", doManualSync);
     }
-
-    // Deteksi otomatis saat pengguna HP membuka kembali browser dari latar belakang
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        this.tryBackgroundRemoteSync();
-      }
-    });
-    window.addEventListener("focus", () => {
-      this.tryBackgroundRemoteSync();
-    });
   },
 
   // 8. Kategori Capaian Reward: HANYA 2 KATEGORI (Dasar & Menengah)
@@ -1746,9 +1721,9 @@ const App = {
 
       } else if (this.currentPeriodFilter === "30_hari") {
         if (bannerIcon) bannerIcon.textContent = "🔄";
-        bannerTitle.textContent = `🔄 Capaian 30 Hari Terakhir: ${last30RangeStr} (Lintas 2 Bulan)`;
-        bannerDesc.innerHTML = `Menghitung total setoran santri selama <strong>30 hari berturut-turut (${last30RangeStr})</strong> yang melintasi 2 bulan berbeda tanpa terpotong batas tanggal 1.`;
-        if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Santri (30 Hari Lintas Bulan):`;
+        bannerTitle.textContent = `🔄 Capaian 30 Hari Terakhir: ${last30RangeStr}`;
+        bannerDesc.innerHTML = `Menghitung total setoran santri selama <strong>30 hari berturut-turut (${last30RangeStr})</strong> secara akumulatif.`;
+        if (badgeCategoryLabel) badgeCategoryLabel.textContent = `Santri (30 Hari Terakhir):`;
 
       } else if (this.currentPeriodFilter === "custom") {
         if (bannerIcon) bannerIcon.textContent = "🗓️";
@@ -1791,7 +1766,7 @@ const App = {
       const prevMonthStars = prevMonthRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
       const prevMonthSetoran = prevMonthRecords.length;
 
-      // Filter 30 Hari Terakhir (Rolling 30 hari ke belakang - Lintas 2 Bulan)
+      // Filter 30 Hari Terakhir (Rolling 30 hari ke belakang)
       const last30Records = allSantriRecords.filter(r => this.isDateInLast30Days(r.tanggal, r));
       const last30Stars = last30Records.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
       const last30Setoran = last30Records.length;
@@ -1836,7 +1811,7 @@ const App = {
       } else if (this.currentPeriodFilter === "30_hari") {
         displayStars = last30Stars;
         displaySetoran = last30Setoran;
-        periodLabel = "30 Hari Lintas Bulan";
+        periodLabel = "30 Hari Terakhir";
       } else if (this.currentPeriodFilter === "custom") {
         displayStars = customStars;
         displaySetoran = customSetoran;
@@ -1988,7 +1963,7 @@ const App = {
           } else if (this.currentPeriodFilter === "bulan_kemarin") {
             rewardBadge = `<span class="meta-badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:800;">🏆 Juara 1 (Rekap Bulan Kemarin)</span>`;
           } else if (this.currentPeriodFilter === "30_hari") {
-            rewardBadge = `<span class="meta-badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-weight:800;">⭐ Juara 1 (30 Hari Lintas Bulan)</span>`;
+            rewardBadge = `<span class="meta-badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-weight:800;">⭐ Juara 1 (30 Hari Terakhir)</span>`;
           } else if (this.currentPeriodFilter === "custom") {
             rewardBadge = `<span class="meta-badge" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800;">🥇 Juara 1 Periode Kustom</span>`;
           } else if (this.currentPeriodFilter === "pekanan") {
@@ -2267,7 +2242,7 @@ const App = {
       }
     }
 
-    // Hitung Bintang Pekan Ini, Bulan Ini, 30 Hari Terakhir (Lintas Bulan) & Total
+    // Hitung Bintang Pekan Ini, Bulan Ini, 30 Hari Terakhir & Total
     const weekRecords = records.filter(r => this.isDateInCurrentWeek(r.tanggal));
     const weekStars = weekRecords.reduce((sum, r) => sum + (Number(r.totalBintang) || 0), 0);
     const monthRecords = records.filter(r => this.isDateInCurrentMonth(r.tanggal));
@@ -2737,7 +2712,7 @@ const App = {
     text += `🏫 *Kelas:* ${santri.halaqah} (Kategori ${santri.kategori})\n`;
     text += `📅 *Bintang Pekan Ini:* ${weekStars} ⭐ (${weekRecords.length}x setoran)\n`;
     text += `🏆 *Bintang Bulan Ini:* ${monthStars} ⭐ (${monthRecords.length}x setoran)\n`;
-    text += `🔄 *30 Hari Terakhir (Lintas Bulan):* ${last30Stars} ⭐ (${last30Records.length}x setoran)\n`;
+    text += `🔄 *30 Hari Terakhir:* ${last30Stars} ⭐ (${last30Records.length}x setoran)\n`;
     text += `🌟 *Total Akumulasi Bintang:* ${totalStars} ⭐\n`;
     
     if (latest) {
@@ -3151,7 +3126,7 @@ function createJsonResponse(data) {
         modal.classList.remove("active");
 
         if (url) {
-          this.tryBackgroundRemoteSync();
+          this.syncCloudData({ showToast: true, force: true });
         }
       });
     }
@@ -3182,6 +3157,8 @@ function createJsonResponse(data) {
     const endpoint = SheetsService.getEndpoint();
     const dot = document.getElementById("sheetStatusDot");
     const label = document.getElementById("sheetStatusLabel");
+    const cloudSyncDot = document.getElementById("cloudSyncDot");
+    const cloudSyncText = document.getElementById("cloudSyncText");
 
     if (dot && label) {
       if (endpoint) {
@@ -3192,18 +3169,57 @@ function createJsonResponse(data) {
         label.textContent = "Spreadsheet";
       }
     }
+
+    if (cloudSyncDot && cloudSyncText) {
+      if (endpoint) {
+        if (!cloudSyncDot.classList.contains("syncing")) {
+          cloudSyncDot.className = "cloud-sync-dot";
+        }
+        if (this.lastRecordCount > 0) {
+          cloudSyncText.textContent = `Tersambung (${this.lastRecordCount})`;
+        } else {
+          cloudSyncText.textContent = "Cloud Aktif";
+        }
+      } else {
+        cloudSyncDot.className = "cloud-sync-dot offline";
+        cloudSyncText.textContent = "Offline";
+      }
+    }
   },
 
-  async tryBackgroundRemoteSync() {
-    const endpoint = SheetsService.getEndpoint();
-    if (!endpoint) return;
+  async syncCloudData(options = {}) {
+    const showToast = options.showToast || false;
+    const force = options.force || false;
+
+    if (this.isSyncing) return;
+    this.isSyncing = true;
+
+    const iconSyncHeader = document.getElementById("btnHeaderSyncIcon");
+    const btnRefreshLead = document.getElementById("btnRefreshLeaderboard");
+    const cloudSyncDot = document.getElementById("cloudSyncDot");
+    const cloudSyncText = document.getElementById("cloudSyncText");
+
+    if (iconSyncHeader) iconSyncHeader.classList.add("sync-spinning");
+    if (btnRefreshLead) btnRefreshLead.querySelector("span")?.classList.add("sync-spinning");
+    if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot syncing";
+    if (cloudSyncText) cloudSyncText.textContent = "Menyinkronkan...";
+
+    if (showToast) {
+      this.showToast("🔄 Menyinkronkan data realtime dari seluruh perangkat 4 Pengajar...", "info");
+    }
 
     try {
       const remote = await SheetsService.fetchRemoteRecords();
-      if (remote) {
+      if (remote && Array.isArray(remote)) {
+        const prevCount = this.lastRecordCount;
+        this.lastRecordCount = remote.length;
+        this.lastSyncTimestamp = Date.now();
+
+        // Render ulang seluruh view data dengan data otoritatif Google Sheets
         this.renderLeaderboard();
         this.renderParentPortal();
         this.renderRecentSetoranList();
+
         const currentInputSantriId = document.getElementById("selectSantri")?.value;
         if (currentInputSantriId) {
           this.renderFormStudentHistory(currentInputSantriId);
@@ -3211,18 +3227,85 @@ function createJsonResponse(data) {
         if (this.currentParentStudentId) {
           this.renderParentStudentDetail(this.currentParentStudentId);
         }
+
+        if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot";
+        if (cloudSyncText) cloudSyncText.textContent = `Tersambung (${remote.length})`;
+        this.updateSheetsStatusIndicator();
+
+        if (showToast) {
+          this.showToast(`✅ Data 4 Pengajar berhasil tersambung & mutakhir! (${remote.length} catatan setoran)`, "success");
+        } else if (prevCount > 0 && remote.length > prevCount) {
+          const diff = remote.length - prevCount;
+          this.showToast(`🔔 ${diff} setoran baru dari pengajar lain berhasil disinkronkan realtime!`, "info");
+        }
+      } else {
+        if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot";
+        if (cloudSyncText) cloudSyncText.textContent = "Cloud Aktif";
+        this.updateSheetsStatusIndicator();
       }
-      this.updateSheetsStatusIndicator();
     } catch (e) {
-      console.log("Remote sync silent error:", e);
+      console.warn("Sync cloud error:", e);
+      if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot offline";
+      if (cloudSyncText) cloudSyncText.textContent = "Offline";
+      if (showToast) {
+        this.showToast("Koneksi Cloud terganggu: " + (e.message || "Gagal menghubungi Google Apps Script"), "error");
+      }
+    } finally {
+      this.isSyncing = false;
+      if (iconSyncHeader) iconSyncHeader.classList.remove("sync-spinning");
+      if (btnRefreshLead) btnRefreshLead.querySelector("span")?.classList.remove("sync-spinning");
     }
   },
 
+  syncIfStale(force = false) {
+    const elapsed = Date.now() - (this.lastSyncTimestamp || 0);
+    // Sinkronkan jika sudah lebih dari 6 detik atau jika dipaksa
+    if (force || elapsed > 6000) {
+      this.syncCloudData({ showToast: false, force: force });
+    }
+  },
+
+  tryBackgroundRemoteSync() {
+    this.syncIfStale();
+  },
+
   startRealtimePolling() {
-    // Sinkronisasi realtime otomatis setiap 20 detik agar orang tua di rumah mendapatkan data terkini
+    // 1. Polling interval 12 detik ketika browser/tab aktif
     setInterval(() => {
-      this.tryBackgroundRemoteSync();
-    }, 20000);
+      if (document.visibilityState === "visible") {
+        this.syncIfStale();
+      }
+    }, 12000);
+
+    // 2. Deteksi saat layar HP dibuka kembali / tab aktif kembali (Resume / Wakeup)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        this.syncIfStale(true);
+      }
+    });
+
+    // 3. Deteksi saat jendela HP / laptop mendapat fokus
+    window.addEventListener("focus", () => {
+      this.syncIfStale();
+    });
+
+    // 4. Deteksi saat koneksi internet kembali online
+    window.addEventListener("online", () => {
+      this.showToast("📶 Internet terhubung kembali. Memperbarui data Cloud...", "info");
+      this.syncCloudData({ showToast: false, force: true });
+    });
+
+    // 5. Broadcast perubahan antar-tab pada perangkat yang sama
+    window.addEventListener("storage", (e) => {
+      if (e.key === "rq_ummul_qasim_setoran_v4" || e.key === "rq_ummul_qasim_santri_v4") {
+        this.renderLeaderboard();
+        this.renderParentPortal();
+        this.renderRecentSetoranList();
+        const currentInputSantriId = document.getElementById("selectSantri")?.value;
+        if (currentInputSantriId) this.renderFormStudentHistory(currentInputSantriId);
+        if (this.currentParentStudentId) this.renderParentStudentDetail(this.currentParentStudentId);
+      }
+    });
   },
 
   // 11. Modal Tambah & Kelola Santri (Khusus Ustadz M. Fikri Haekal)
@@ -3514,6 +3597,7 @@ function createJsonResponse(data) {
           this.renderFormStudentHistory(currentInputSantriId);
         }
         this.showToast("Catatan evaluasi setoran berhasil dihapus permanen.", "success");
+        this.syncCloudData({ force: true });
       } else {
         this.showToast(res.message || "Gagal menghapus catatan setoran.", "error");
       }
@@ -3961,6 +4045,7 @@ function createJsonResponse(data) {
 
     const openHandler = () => {
       this.renderRecentSetoranList();
+      this.syncIfStale(true);
       if (modal) {
         modal.classList.add("active");
         try {
@@ -4222,7 +4307,7 @@ function createJsonResponse(data) {
             }
             this.showToast(`Alhamdulillah! Perubahan setoran ${escapeHtml(namaSantri)} berhasil disimpan ke Spreadsheet.`, "success");
             closeModal();
-            this.tryBackgroundRemoteSync();
+            this.syncCloudData({ force: true });
           } else {
             this.showToast(res.message || "Gagal memperbarui setoran.", "error");
           }

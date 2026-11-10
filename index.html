@@ -20,8 +20,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   </noscript>
   
-  <!-- Stylesheet (v5.5 Optimalisasi Lighthouse: Kecepatan, Kontras & Aksesibilitas) -->
-  <link rel="stylesheet" href="css/style.css?v=5.5">
+  <!-- Stylesheet (v5.6 Sinkronisasi Realtime 4 Pengajar & Bersihkan Lintas Bulan) -->
+  <link rel="stylesheet" href="css/style.css?v=5.6">
 </head>
 <body>
 
@@ -48,8 +48,13 @@
           <span id="authLabel">Masuk Ustadz/ah</span>
         </button>
 
-        <!-- Tombol Segarkan Cloud Realtime (Laptop <-> HP) -->
-        <button class="btn-icon" id="btnHeaderSyncData" title="Segarkan Data Realtime dari Google Spreadsheet (Cloud)" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; border: 1.5px solid #bae6fd;">
+        <!-- Status & Tombol Segarkan Cloud Realtime (Laptop <-> HP 4 Pengajar) -->
+        <button type="button" class="cloud-sync-badge" id="cloudSyncStatusBadge" title="Status Cloud: Terhubung ke Google Spreadsheet 4 Pengajar. Klik untuk sinkronisasi seketika.">
+          <span class="cloud-sync-dot" id="cloudSyncDot"></span>
+          <span id="cloudSyncText">Cloud Aktif</span>
+        </button>
+
+        <button class="btn-icon" id="btnHeaderSyncData" title="Segarkan Data Realtime dari Seluruh Perangkat 4 Pengajar (Cloud)" aria-label="Segarkan Data Realtime dari Seluruh Perangkat" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; border: 1.5px solid #bae6fd;">
           <span id="btnHeaderSyncIcon">🔄</span>
         </button>
 
@@ -133,7 +138,7 @@
          =================================================================== -->
     <section class="tab-panel active" id="tab-leaderboard">
       
-      <!-- CAPAIAN BINTANG: PEKANAN, BULAN INI, BULAN KEMARIN, 30 HARI TERAKHIR (LINTAS BULAN), KUSTOM, SEMUA -->
+      <!-- CAPAIAN BINTANG: PEKANAN, BULAN INI, BULAN KEMARIN, 30 HARI TERAKHIR, KUSTOM, SEMUA -->
       <div class="period-filter-wrapper" id="periodFilterWrapper">
         <button type="button" class="period-btn active" data-period="pekanan" id="btnPeriodPekanan">
           <span>📅 Pekan Ini</span>
@@ -145,7 +150,7 @@
           <span>⏪ Bulan Kemarin</span>
         </button>
         <button type="button" class="period-btn" data-period="30_hari" id="btnPeriod30Hari">
-          <span>🔄 30 Hari (Lintas Bulan)</span>
+          <span>🔄 30 Hari Terakhir</span>
         </button>
         <button type="button" class="period-btn" data-period="custom" id="btnPeriodCustom">
           <span>🗓️ Pilih Tanggal</span>
@@ -311,7 +316,7 @@
             </div>
             <div class="stat-box">
               <div class="stat-label">30 Hari Terakhir</div>
-              <div class="stat-val" id="parentStatStarsLast30" style="color: #059669;" title="Rolling 30 hari ke belakang (lintas 2 bulan)">0 ⭐</div>
+              <div class="stat-val" id="parentStatStarsLast30" style="color: #059669;" title="Akumulasi 30 hari ke belakang">0 ⭐</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">Total Bintang</div>
@@ -1540,9 +1545,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v5.5 Optimalisasi Lighthouse: Kecepatan, Kontras & Aksesibilitas) -->
-  <script defer src="js/data.js?v=5.5"></script>
-  <script defer src="js/sheets.js?v=5.5"></script>
-  <script defer src="js/app.js?v=5.5"></script>
+  <!-- Scripts (Cache Buster v5.6 Sinkronisasi Realtime 4 Pengajar & Bersihkan Lintas Bulan) -->
+  <script defer src="js/data.js?v=5.6"></script>
+  <script defer src="js/sheets.js?v=5.6"></script>
+  <script defer src="js/app.js?v=5.6"></script>
 </body>
 </html>

@@ -181,7 +181,7 @@ const SheetsService = {
   // Endpoint Google Sheets
   getEndpoint() {
     const settings = this.getSettings();
-    if (settings && settings.endpointUrl && settings.endpointUrl.trim()) {
+    if (settings && settings.endpointUrl && settings.endpointUrl.trim().startsWith("https://script.google.com/")) {
       return settings.endpointUrl.trim();
     }
     return (typeof DEFAULT_SPREADSHEET_ENDPOINT !== "undefined" && DEFAULT_SPREADSHEET_ENDPOINT) ? DEFAULT_SPREADSHEET_ENDPOINT.trim() : "";
@@ -489,28 +489,35 @@ const SheetsService = {
     if (!endpoint) return { success: false, message: "Endpoint kosong" };
 
     const payload = { action: "save", ...record };
+    const jsonStr = JSON.stringify(payload);
+    const dataParam = encodeURIComponent(jsonStr);
+    const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=save&data=${dataParam}&t=${Date.now()}`;
 
+    // 1. Prioritas Utama: GET terkonfirmasi (CORS enabled di Google Apps Script doGet)
     try {
-      // Prioritas 1: Gunakan POST dengan mode: "no-cors" agar browser tidak memblokir redirect 302 Apps Script
-      await fetch(endpoint, {
+      const res = await fetch(getUrl, { method: "GET" });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        this.removeFromPendingQueue(record.id, "save");
+        return { success: true, remote: data };
+      }
+    } catch (err) {
+      console.warn("Notice: GET save dialihkan ke POST...", err);
+    }
+
+    // 2. Fallback: POST mode no-cors dengan data di URL & Body
+    try {
+      await fetch(getUrl, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
+        body: jsonStr
       });
       this.removeFromPendingQueue(record.id, "save");
-      return { success: true };
-    } catch (err) {
-      // Prioritas 2: Fallback ke GET jika terjadi kendala CORS/redirect pada jaringan seluler/HP
-      try {
-        const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=save&data=${encodeURIComponent(JSON.stringify(payload))}&t=${Date.now()}`;
-        await fetch(getUrl, { method: "GET", mode: "no-cors" });
-        this.removeFromPendingQueue(record.id, "save");
-        return { success: true };
-      } catch (e2) {
-        console.warn("Spreadsheet save retry notice:", err, e2);
-        return { success: false, error: err };
-      }
+      return { success: true, fallback: true };
+    } catch (err2) {
+      console.error("Gagal kirim setoran ke Cloud:", err2);
+      return { success: false, error: err2 };
     }
   },
 
@@ -556,26 +563,35 @@ const SheetsService = {
     if (!endpoint) return { success: false, message: "Endpoint kosong" };
 
     const payload = { action: "edit", ...record };
+    const jsonStr = JSON.stringify(payload);
+    const dataParam = encodeURIComponent(jsonStr);
+    const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=edit&data=${dataParam}&t=${Date.now()}`;
 
+    // 1. Prioritas Utama: GET terkonfirmasi
     try {
-      await fetch(endpoint, {
+      const res = await fetch(getUrl, { method: "GET" });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        this.removeFromPendingQueue(record.id, "edit");
+        return { success: true, remote: data };
+      }
+    } catch (err) {
+      console.warn("Notice: GET edit dialihkan ke POST...", err);
+    }
+
+    // 2. Fallback: POST mode no-cors
+    try {
+      await fetch(getUrl, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
+        body: jsonStr
       });
       this.removeFromPendingQueue(record.id, "edit");
-      return { success: true };
-    } catch (err) {
-      try {
-        const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=edit&data=${encodeURIComponent(JSON.stringify(payload))}&t=${Date.now()}`;
-        await fetch(getUrl, { method: "GET", mode: "no-cors" });
-        this.removeFromPendingQueue(record.id, "edit");
-        return { success: true };
-      } catch (e2) {
-        console.warn("Spreadsheet edit retry notice:", err, e2);
-        return { success: false, error: err };
-      }
+      return { success: true, fallback: true };
+    } catch (err2) {
+      console.error("Gagal kirim edit ke Cloud:", err2);
+      return { success: false, error: err2 };
     }
   },
 
@@ -588,20 +604,37 @@ const SheetsService = {
       const response = await fetch(url, { method: "GET" });
       const res = await response.json();
       if (res && res.status === "success" && Array.isArray(res.data)) {
-        const deletedIds = this.getDeletedRecordIds();
-        const deletedSigs = this.getDeletedSignatures();
+        // 1. Bersihkan antrian pending lokal jika perubahannya sudah tercermin di Cloud
+        const remoteIdMap = new Map();
+        res.data.forEach(r => {
+          if (r && r.id) remoteIdMap.set(String(r.id).trim(), r);
+        });
 
-        // 1. Bersihkan blacklist lokal
-        let validRemote = res.data.filter(r => !this.isRecordBlacklisted(r, deletedIds, deletedSigs));
-        let normalizedRemote = this.normalizeRecordDates(validRemote);
-
-        // 2. Terapkan antrian pending lokal (offline/in-flight changes pada perangkat ini)
         const pending = this.getPendingQueue();
         if (pending.length > 0) {
-          const pendingDeletes = pending.filter(p => p.action === "delete").map(p => p.id);
-          normalizedRemote = normalizedRemote.filter(r => !pendingDeletes.includes(String(r.id).trim()));
+          let updatedPending = pending.filter(p => {
+            const pId = String(p.id || "").trim();
+            // Jika save dan sudah ada di remote -> selesai
+            if (p.action === "save" && remoteIdMap.has(pId)) return false;
+            // Jika delete dan sudah tidak ada di remote -> selesai
+            if (p.action === "delete" && !remoteIdMap.has(pId)) return false;
+            return true;
+          });
+          localStorage.setItem(STORAGE_KEY_PENDING, JSON.stringify(updatedPending));
+        }
 
-          const pendingEdits = pending.filter(p => p.action === "edit" && p.record);
+        // 2. Blacklist lokal hanya untuk pending delete yang masih aktif di perangkat ini
+        const activePendingDeletes = this.getPendingQueue()
+          .filter(p => p.action === "delete")
+          .map(p => String(p.id).trim());
+
+        let validRemote = res.data.filter(r => !activePendingDeletes.includes(String(r.id || "").trim()));
+        let normalizedRemote = this.normalizeRecordDates(validRemote);
+
+        // 3. Terapkan pending save & edit yang masih offline pada perangkat ini
+        const remainingPending = this.getPendingQueue();
+        if (remainingPending.length > 0) {
+          const pendingEdits = remainingPending.filter(p => p.action === "edit" && p.record);
           pendingEdits.forEach(p => {
             const idx = normalizedRemote.findIndex(r => String(r.id).trim() === p.id);
             if (idx !== -1) {
@@ -609,26 +642,52 @@ const SheetsService = {
             }
           });
 
-          const remoteIdSet = new Set(normalizedRemote.map(r => String(r.id).trim()));
-          const pendingSaves = pending.filter(p => p.action === "save" && p.record);
+          const pendingSaves = remainingPending.filter(p => p.action === "save" && p.record);
+          const currentIdSet = new Set(normalizedRemote.map(r => String(r.id).trim()));
           pendingSaves.forEach(p => {
-            if (!remoteIdSet.has(p.id)) {
+            if (!currentIdSet.has(p.id)) {
               normalizedRemote.unshift(p.record);
-              remoteIdSet.add(p.id);
+              currentIdSet.add(p.id);
             }
           });
         }
 
-        // 3. Simpan data otoritatif ini ke LocalStorage (Google Sheets sebagai Single Source of Truth)
+        // 4. Sinkronkan otomatis santri baru jika ada nama santri di Cloud yang belum ada di master lokal
+        try {
+          const localSantri = this.getAllSantri();
+          const santriSet = new Set(localSantri.map(s => (s.nama || "").trim().toLowerCase()));
+          let addedSantri = false;
+          normalizedRemote.forEach(r => {
+            const rNama = (r.namaSantri || "").trim();
+            if (rNama && rNama !== "-" && !santriSet.has(rNama.toLowerCase())) {
+              localSantri.push({
+                id: r.santriId || ("S" + (localSantri.length + 1)),
+                nama: rNama,
+                halaqah: r.halaqah || "Kelas Dasar Ikhwan & Akhowat",
+                kategori: r.kategori || "Dasar",
+                avatar: "👤",
+                foto: "",
+                statusBelajar: r.bacaanTipe || "Tamhid"
+              });
+              santriSet.add(rNama.toLowerCase());
+              addedSantri = true;
+            }
+          });
+          if (addedSantri) {
+            localStorage.setItem(STORAGE_KEY_SANTRI, JSON.stringify(localSantri));
+          }
+        } catch (eSantri) {}
+
+        // 5. Simpan data otoritatif Google Sheets sebagai Single Source of Truth
         localStorage.setItem(STORAGE_KEY_SETORAN, JSON.stringify(normalizedRemote));
 
-        // 4. Proses antrian pending yang belum terkirim di latar belakang
+        // 6. Jalankan pemrosesan pending queue di background jika masih ada yang tersisa
         this.processPendingQueue().catch(() => {});
 
         return normalizedRemote;
       }
     } catch (err) {
-      console.error("Gagal fetch Google Sheets:", err);
+      console.warn("Gagal fetch Google Sheets:", err);
     }
     return null;
   },
@@ -781,39 +840,40 @@ const SheetsService = {
     const endpoint = this.getEndpoint();
     if (!endpoint) return { success: false, message: "Endpoint kosong" };
 
-    const payload = {
-      action: "delete",
-      id: cleanId,
-      namaSantri: recordObj ? recordObj.namaSantri : "",
-      tanggal: recordObj ? recordObj.tanggal : ""
-    };
+    const namaParam = recordObj && recordObj.namaSantri ? `&namaSantri=${encodeURIComponent(recordObj.namaSantri)}` : "";
+    const tglParam = recordObj && recordObj.tanggal ? `&tanggal=${encodeURIComponent(recordObj.tanggal)}` : "";
+    const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=delete&id=${encodeURIComponent(cleanId)}${namaParam}${tglParam}&t=${Date.now()}`;
 
-    let postSuccess = false;
+    // 1. Prioritas Utama: GET terkonfirmasi
     try {
-      await fetch(endpoint, {
+      const res = await fetch(getUrl, { method: "GET" });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        this.removeFromPendingQueue(cleanId, "delete");
+        return { success: true, remote: data };
+      }
+    } catch (err) {
+      console.warn("Notice: GET delete dialihkan ke POST...", err);
+    }
+
+    // 2. Fallback: POST mode no-cors
+    try {
+      await fetch(getUrl, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          action: "delete",
+          id: cleanId,
+          namaSantri: recordObj ? recordObj.namaSantri : "",
+          tanggal: recordObj ? recordObj.tanggal : ""
+        })
       });
-      postSuccess = true;
-    } catch (err) {}
-
-    // Selalu trigger GET fallback untuk menjamin Google Apps Script mengeksekusi penghapusan
-    try {
-      const namaParam = recordObj && recordObj.namaSantri ? `&namaSantri=${encodeURIComponent(recordObj.namaSantri)}` : "";
-      const tglParam = recordObj && recordObj.tanggal ? `&tanggal=${encodeURIComponent(recordObj.tanggal)}` : "";
-      const getUrl = `${endpoint}${endpoint.includes("?") ? "&" : "?"}action=delete&id=${encodeURIComponent(cleanId)}${namaParam}${tglParam}&t=${Date.now()}`;
-      await fetch(getUrl, { method: "GET", mode: "no-cors" });
       this.removeFromPendingQueue(cleanId, "delete");
-      return { success: true };
-    } catch (err) {
-      if (postSuccess) {
-        this.removeFromPendingQueue(cleanId, "delete");
-        return { success: true };
-      }
-      console.warn("Spreadsheet delete notice:", err);
-      return { success: false, error: err };
+      return { success: true, fallback: true };
+    } catch (err2) {
+      console.error("Gagal kirim delete ke Cloud:", err2);
+      return { success: false, error: err2 };
     }
   },
 
