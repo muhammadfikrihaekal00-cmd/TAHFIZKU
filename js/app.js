@@ -260,9 +260,17 @@ const App = {
       }
       
       if (headerTeacherText) {
-        headerTeacherText.textContent = isAdmin 
-          ? `${ustadzName || "Ustadz M. Fikri Haekal"} (Admin Utama 👑)`
-          : `${ustadzName || "Pengampu RQ"} (Pengajar 📖)`;
+        const isMobile = window.innerWidth <= 640;
+        if (isAdmin) {
+          headerTeacherText.textContent = isMobile 
+            ? "Ust. Fikri Haekal (Admin 👑)" 
+            : `${ustadzName || "Ustadz M. Fikri Haekal"} (Admin Utama 👑)`;
+        } else {
+          const shortName = (ustadzName || "Pengampu").replace("Ustadzah", "Ustz.").replace("Ustadz", "Ust.");
+          headerTeacherText.textContent = isMobile 
+            ? `${shortName} (Guru)` 
+            : `${ustadzName || "Pengampu RQ"} (Pengajar 📖)`;
+        }
       }
 
       ustadzFeatures.forEach(el => {
@@ -1989,11 +1997,11 @@ const App = {
 
             <div class="santri-info-col" onclick="App.openParentDetailDirectly('${s.id}')">
               <div class="santri-name-header">
-                <span>${s.nama}</span>
+                <span class="santri-name-title">${s.nama}</span>
                 ${rewardBadge}
               </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">
-                ${s.halaqah} • <span class="meta-badge meta-badge-kategori">${s.kategori === "Dasar" ? "🌱 Kelas Dasar" : "🚀 Kelas Menengah"}</span>
+              <div class="santri-subinfo-text">
+                ${s.halaqah}
               </div>
               <div class="santri-meta-badges">
                 ${s.latestBacaanBadge}
@@ -2003,7 +2011,7 @@ const App = {
 
             <div class="santri-stars-col" onclick="App.openParentDetailDirectly('${s.id}')">
               <div class="total-stars-val">${s.displayStars} ⭐</div>
-              <div class="total-setoran-count">${s.displaySetoran}x Setoran (${s.periodLabel})</div>
+              <div class="total-setoran-count">${s.displaySetoran}x Setoran</div>
             </div>
           </div>
         `;
