@@ -2141,6 +2141,13 @@ const App = {
     this.refreshParentSantriList();
   },
 
+  renderParentPortal() {
+    this.refreshParentSantriList();
+    if (this.currentParentStudentId) {
+      this.renderParentStudentDetail(this.currentParentStudentId);
+    }
+  },
+
   refreshParentSantriList() {
     const selectParentSantri = document.getElementById("selectParentSantri");
     const chipsContainer = document.getElementById("parentQuickSantriChips");
@@ -3170,28 +3177,23 @@ function createJsonResponse(data) {
 
   updateSheetsStatusIndicator() {
     const endpoint = SheetsService.getEndpoint();
-    const dot = document.getElementById("sheetStatusDot");
-    const label = document.getElementById("sheetStatusLabel");
     const cloudSyncDot = document.getElementById("cloudSyncDot");
     const cloudSyncText = document.getElementById("cloudSyncText");
-
-    if (dot && label) {
-      if (endpoint) {
-        dot.className = "status-dot";
-        label.textContent = "Spreadsheet Terhubung";
-      } else {
-        dot.className = "status-dot offline";
-        label.textContent = "Spreadsheet";
-      }
-    }
+    const totalRecords = this.lastRecordCount || SheetsService.getAllRecords().length;
 
     if (cloudSyncDot && cloudSyncText) {
+      if (!navigator.onLine) {
+        cloudSyncDot.className = "cloud-sync-dot offline";
+        cloudSyncText.textContent = totalRecords > 0 ? `Lokal (${totalRecords})` : "Offline";
+        return;
+      }
+
       if (endpoint) {
         if (!cloudSyncDot.classList.contains("syncing")) {
           cloudSyncDot.className = "cloud-sync-dot";
         }
-        if (this.lastRecordCount > 0) {
-          cloudSyncText.textContent = `Tersambung (${this.lastRecordCount})`;
+        if (totalRecords > 0) {
+          cloudSyncText.textContent = `Terhubung (${totalRecords})`;
         } else {
           cloudSyncText.textContent = "Cloud Aktif";
         }
@@ -3230,40 +3232,52 @@ function createJsonResponse(data) {
         this.lastRecordCount = remote.length;
         this.lastSyncTimestamp = Date.now();
 
-        // Render ulang seluruh view data dengan data otoritatif Google Sheets
-        this.renderLeaderboard();
-        this.renderParentPortal();
-        this.renderRecentSetoranList();
+        // Render ulang seluruh view data secara aman dan defensif
+        try { this.renderLeaderboard(); } catch (err) { console.warn("renderLeaderboard notice:", err); }
+        try { this.renderParentPortal(); } catch (err) { console.warn("renderParentPortal notice:", err); }
+        try { this.renderRecentSetoranList(); } catch (err) { console.warn("renderRecentSetoranList notice:", err); }
 
-        const currentInputSantriId = document.getElementById("selectSantri")?.value;
-        if (currentInputSantriId) {
-          this.renderFormStudentHistory(currentInputSantriId);
-        }
-        if (this.currentParentStudentId) {
-          this.renderParentStudentDetail(this.currentParentStudentId);
+        try {
+          const currentInputSantriId = document.getElementById("selectSantri")?.value;
+          if (currentInputSantriId) {
+            this.renderFormStudentHistory(currentInputSantriId);
+          }
+          if (this.currentParentStudentId) {
+            this.renderParentStudentDetail(this.currentParentStudentId);
+          }
+        } catch (err) {
+          console.warn("renderDetail notice:", err);
         }
 
         if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot";
-        if (cloudSyncText) cloudSyncText.textContent = `Tersambung (${remote.length})`;
+        if (cloudSyncText) cloudSyncText.textContent = `Terhubung (${remote.length})`;
         this.updateSheetsStatusIndicator();
 
         if (showToast) {
-          this.showToast(`✅ Data 4 Pengajar berhasil tersambung & mutakhir! (${remote.length} catatan setoran)`, "success");
+          this.showToast(`✅ Data 4 Pengajar berhasil tersambung & mutakhir! (${remote.length} setoran)`, "success");
         } else if (prevCount > 0 && remote.length > prevCount) {
           const diff = remote.length - prevCount;
           this.showToast(`🔔 ${diff} setoran baru dari pengajar lain berhasil disinkronkan realtime!`, "info");
         }
       } else {
+        const localCount = SheetsService.getAllRecords().length;
         if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot";
-        if (cloudSyncText) cloudSyncText.textContent = "Cloud Aktif";
+        if (cloudSyncText) cloudSyncText.textContent = localCount > 0 ? `Terhubung (${localCount})` : "Cloud Aktif";
         this.updateSheetsStatusIndicator();
       }
     } catch (e) {
       console.warn("Sync cloud error:", e);
-      if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot offline";
-      if (cloudSyncText) cloudSyncText.textContent = "Offline";
+      // HANYA tampilkan Offline jika perangkat benar-benar kehilangan sinyal / offline
+      if (!navigator.onLine) {
+        if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot offline";
+        if (cloudSyncText) cloudSyncText.textContent = "Offline";
+      } else {
+        const localCount = SheetsService.getAllRecords().length;
+        if (cloudSyncDot) cloudSyncDot.className = "cloud-sync-dot";
+        if (cloudSyncText) cloudSyncText.textContent = localCount > 0 ? `Terhubung (${localCount})` : "Cloud Aktif";
+      }
       if (showToast) {
-        this.showToast("Koneksi Cloud terganggu: " + (e.message || "Gagal menghubungi Google Apps Script"), "error");
+        this.showToast("Koneksi Cloud tertunda: " + (e.message || "Gagal menghubungi Google Apps Script"), "error");
       }
     } finally {
       this.isSyncing = false;

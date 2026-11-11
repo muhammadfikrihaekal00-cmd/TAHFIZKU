@@ -20,8 +20,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   </noscript>
   
-  <!-- Stylesheet (v5.8 Perbaikan Simpan Input HP & Sinkronisasi Aman) -->
-  <link rel="stylesheet" href="css/style.css?v=5.8">
+  <!-- Stylesheet (v5.9 Header Rapi Terpadu, Bebas Offline Palsu & Desain Harmonis) -->
+  <link rel="stylesheet" href="css/style.css?v=5.9">
 </head>
 <body>
 
@@ -42,46 +42,44 @@
       </div>
       
       <div class="header-actions">
-        <!-- Auth Role Toggle Button -->
-        <button class="btn-auth-role" id="btnAuthToggle" title="Beralih peran Ustadz / Wali Santri">
-          <span id="authIcon">🔒</span>
-          <span id="authLabel">Masuk Ustadz/ah</span>
-        </button>
-
         <!-- Status & Tombol Segarkan Cloud Realtime (Laptop <-> HP 4 Pengajar) -->
         <button type="button" class="cloud-sync-badge" id="cloudSyncStatusBadge" title="Status Cloud: Terhubung ke Google Spreadsheet 4 Pengajar. Klik untuk sinkronisasi seketika.">
           <span class="cloud-sync-dot" id="cloudSyncDot"></span>
-          <span id="cloudSyncText">Cloud Aktif</span>
+          <span id="cloudSyncText">Terhubung</span>
         </button>
 
-        <button class="btn-icon" id="btnHeaderSyncData" title="Segarkan Data Realtime dari Seluruh Perangkat 4 Pengajar (Cloud)" aria-label="Segarkan Data Realtime dari Seluruh Perangkat" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; border: 1.5px solid #bae6fd;">
-          <span id="btnHeaderSyncIcon">🔄</span>
-        </button>
+        <!-- Grup Aksi Toolbar Ustadz/Admin -->
+        <div class="header-tools-group">
+          <!-- Refresh Cloud Data -->
+          <button type="button" class="btn-icon" id="btnHeaderSyncData" title="Segarkan Data Realtime dari Seluruh Perangkat 4 Pengajar (Cloud)" aria-label="Segarkan Data Cloud">
+            <span id="btnHeaderSyncIcon">🔄</span>
+          </button>
 
-        <!-- Download / Cetak Laporan (PDF & Excel) -->
-        <button class="btn-icon" id="btnOpenExportModal" title="Unduh & Cetak Laporan Mutaba'ah (PDF / Excel)" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1.5px solid #bae6fd;">
-          <span>📄</span>
-        </button>
+          <!-- Download / Cetak Laporan (PDF & Excel) -->
+          <button type="button" class="btn-icon" id="btnOpenExportModal" title="Unduh & Cetak Laporan Mutaba'ah (PDF / Excel)" aria-label="Unduh & Cetak Laporan">
+            <span>📄</span>
+          </button>
 
-        <!-- Riwayat Input & Hapus Setoran Keliru -->
-        <button class="btn-icon" id="btnHeaderRecentSetoran" title="Lihat Riwayat & Hapus Setoran Keliru" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1.5px solid #fecaca;">
-          <span>📋</span>
-        </button>
+          <!-- Riwayat Input & Hapus Setoran Keliru -->
+          <button type="button" class="btn-icon" id="btnHeaderRecentSetoran" title="Lihat Riwayat & Hapus Setoran Keliru" aria-label="Riwayat Setoran">
+            <span>📋</span>
+          </button>
 
-        <!-- Google Sheets Connection Status (Khusus Admin) -->
-        <div class="status-pill ustadz-feature admin-only-feature" id="sheetStatusPill" title="Pengaturan Spreadsheet (Khusus Ustadz M. Fikri Haekal)" style="display: none;">
-          <span class="status-dot offline" id="sheetStatusDot"></span>
-          <span id="sheetStatusLabel">Spreadsheet</span>
+          <!-- Add Santri (Khusus Admin) -->
+          <button type="button" class="btn-icon ustadz-feature admin-only-feature" id="btnAddSantriModal" title="Tambah & Kelola Santri (Khusus Ustadz M. Fikri Haekal)" aria-label="Tambah Santri" style="display: none;">
+            <span>➕</span>
+          </button>
+
+          <!-- Settings (Khusus Admin) -->
+          <button type="button" class="btn-icon ustadz-feature admin-only-feature" id="btnOpenSettings" title="Pengaturan Sandi & Spreadsheet (Khusus Ustadz M. Fikri Haekal)" aria-label="Pengaturan" style="display: none;">
+            <span>⚙️</span>
+          </button>
         </div>
-        
-        <!-- Add Santri (Khusus Admin) -->
-        <button class="btn-icon ustadz-feature admin-only-feature" id="btnAddSantriModal" title="Tambah & Kelola Santri (Khusus Ustadz M. Fikri Haekal)" style="display: none;">
-          <span>➕</span>
-        </button>
 
-        <!-- Settings (Khusus Admin) -->
-        <button class="btn-icon ustadz-feature admin-only-feature" id="btnOpenSettings" title="Pengaturan Sandi & Spreadsheet (Khusus Ustadz M. Fikri Haekal)" style="display: none;">
-          <span>⚙️</span>
+        <!-- Auth Role Toggle Button -->
+        <button type="button" class="btn-auth-role" id="btnAuthToggle" title="Beralih peran Ustadz / Wali Santri">
+          <span id="authIcon">🔒</span>
+          <span id="authLabel">Masuk Ustadz/ah</span>
         </button>
       </div>
     </div>
@@ -1545,9 +1543,9 @@
   <!-- PRINTABLE REPORT CONTAINER -->
   <div id="printableReportArea" style="display: none;"></div>
 
-  <!-- Scripts (Cache Buster v5.8 Perbaikan Simpan Input HP & Sinkronisasi Aman) -->
-  <script defer src="js/data.js?v=5.8"></script>
-  <script defer src="js/sheets.js?v=5.8"></script>
-  <script defer src="js/app.js?v=5.8"></script>
+  <!-- Scripts (Cache Buster v5.9 Header Rapi Terpadu & Bebas Offline Palsu) -->
+  <script defer src="js/data.js?v=5.9"></script>
+  <script defer src="js/sheets.js?v=5.9"></script>
+  <script defer src="js/app.js?v=5.9"></script>
 </body>
 </html>
