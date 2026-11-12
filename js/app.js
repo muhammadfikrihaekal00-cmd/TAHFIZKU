@@ -2150,7 +2150,6 @@ const App = {
 
   refreshParentSantriList() {
     const selectParentSantri = document.getElementById("selectParentSantri");
-    const chipsContainer = document.getElementById("parentQuickSantriChips");
     const allSantri = SheetsService.getAllSantri();
     const filterClass = this.currentParentClassFilter || "ALL";
 
@@ -2158,7 +2157,7 @@ const App = {
       ? allSantri 
       : allSantri.filter(s => s.halaqah === filterClass);
 
-    // Update Dropdown
+    // Update Dropdown (tampilan bersih tanpa kotak tumpukan nama)
     if (selectParentSantri) {
       const currentVal = selectParentSantri.value;
       selectParentSantri.innerHTML = `<option value="">-- Pilih Nama Ananda (${filtered.length} Santri) --</option>`;
@@ -2168,15 +2167,6 @@ const App = {
       if (currentVal && filtered.some(s => s.id === currentVal)) {
         selectParentSantri.value = currentVal;
       }
-    }
-
-    // Update Quick Santri Chips (Tanpa icon wajah agar bersih dan tidak ramai)
-    if (chipsContainer) {
-      chipsContainer.innerHTML = filtered.map(s => `
-        <button type="button" class="quick-santri-chip" onclick="App.openParentDetailDirectly('${s.id}')" title="Buka pantauan ${escapeHtml(s.nama)}">
-          <span>${escapeHtml(s.nama)}</span>
-        </button>
-      `).join("");
     }
   },
 

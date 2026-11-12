@@ -287,8 +287,43 @@ const SheetsService = {
     } catch (e) {}
   },
 
+  // Daftar nama contoh / demo lama yang bukan santri resmi RQ Ummul Qasim
+  LEGACY_DUMMY_SANTRI_NAMES: [
+    "ahmad rayyan al-fatih",
+    "ahmad rayyan",
+    "fathir daniswara putra",
+    "yusuf al-qarni",
+    "khalid basalamah",
+    "fatima azzahra",
+    "maryam humaira",
+    "zahra salsabila",
+    "muhammad ziyad rabbani",
+    "bilal habasyi ramadhan",
+    "ibrahim khalilullah",
+    "aisyah nuha qanita",
+    "hafizh al-bukhari",
+    "syifa naura al-madina",
+    "kenzo ar-rasyid",
+    "dzaki al-mubarak",
+    "naila husna syafiqah",
+    "-",
+    "test"
+  ],
+
+  isInvalidOrDummyRecord(r) {
+    if (!r) return true;
+    const nama = String(r.namaSantri || "").trim().toLowerCase();
+    const sId = String(r.santriId || "").trim().toLowerCase();
+    const id = String(r.id || "").trim();
+    if (!nama || nama === "-" || nama === "test" || sId === "test") return true;
+    if (this.LEGACY_DUMMY_SANTRI_NAMES.includes(nama)) return true;
+    if (id === "REC-1792196143516") return true;
+    return false;
+  },
+
   isRecordBlacklisted(r, deletedIds, deletedSigs) {
     if (!r) return true;
+    if (this.isInvalidOrDummyRecord(r)) return true;
     if (r.id && deletedIds.includes(String(r.id).trim())) return true;
     const sig = this.makeRecordSignature(r);
     if (sig && deletedSigs.includes(sig)) return true;
@@ -700,16 +735,22 @@ const SheetsService = {
         // Urutkan selalu dari yang paling baru ke paling lama
         normalizedRemote = this.normalizeRecordDates(normalizedRemote);
 
-        // 5. Sinkronkan otomatis santri baru jika ada nama santri di Cloud yang belum ada di master lokal
+        // 5. Sinkronkan otomatis santri baru yang sah dari Cloud (abaikan nama dummy/kosong & cegah tabrakan ID)
         try {
           const localSantri = this.getAllSantri();
           const santriSet = new Set(localSantri.map(s => (s.nama || "").trim().toLowerCase()));
+          const idSet = new Set(localSantri.map(s => String(s.id || "").trim()));
           let addedSantri = false;
           normalizedRemote.forEach(r => {
+            if (this.isInvalidOrDummyRecord(r)) return;
             const rNama = (r.namaSantri || "").trim();
-            if (rNama && rNama !== "-" && !santriSet.has(rNama.toLowerCase())) {
+            if (rNama && !santriSet.has(rNama.toLowerCase())) {
+              const rawId = String(r.santriId || "").trim();
+              const safeId = (rawId && rawId !== "-" && !idSet.has(rawId))
+                ? rawId
+                : ("S-CLOUD-" + (localSantri.length + 1));
               localSantri.push({
-                id: r.santriId || ("S" + (localSantri.length + 1)),
+                id: safeId,
                 nama: rNama,
                 halaqah: r.halaqah || "Kelas Dasar Ikhwan & Akhowat",
                 kategori: r.kategori || "Dasar",
@@ -718,6 +759,7 @@ const SheetsService = {
                 statusBelajar: r.bacaanTipe || "Tamhid"
               });
               santriSet.add(rNama.toLowerCase());
+              idSet.add(safeId);
               addedSantri = true;
             }
           });
@@ -774,9 +816,27 @@ const SheetsService = {
       const raw = localStorage.getItem(STORAGE_KEY_SANTRI);
       if (raw) {
         let parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length >= 30) {
-          // Sinkronisasi otomatis: jika ada santri di MASTER_SANTRI (misal: Aisyah) yang belum ada di localStorage, gabungkan otomatis
+        if (Array.isArray(parsed) && parsed.length > 0) {
           let hasChange = false;
+          const seenIds = new Set();
+          // Bersihkan santri hantu / nama dummy lama & duplikat ID
+          parsed = parsed.filter(s => {
+            if (!s || !s.nama) { hasChange = true; return false; }
+            const lowerName = s.nama.trim().toLowerCase();
+            if (this.LEGACY_DUMMY_SANTRI_NAMES.includes(lowerName)) {
+              hasChange = true;
+              return false;
+            }
+            const strId = String(s.id || "").trim();
+            if (strId && seenIds.has(strId)) {
+              hasChange = true;
+              return false;
+            }
+            if (strId) seenIds.add(strId);
+            return true;
+          });
+
+          // Sinkronisasi otomatis: jika ada santri di MASTER_SANTRI yang belum ada di localStorage, gabungkan otomatis
           MASTER_SANTRI.forEach(ms => {
             const exists = parsed.some(s => s.id === ms.id || (s.nama && s.nama.trim().toLowerCase() === ms.nama.trim().toLowerCase()));
             if (!exists) {
@@ -784,10 +844,11 @@ const SheetsService = {
               hasChange = true;
             }
           });
-          if (hasChange) {
+
+          if (hasChange || parsed.length === 0) {
             localStorage.setItem(STORAGE_KEY_SANTRI, JSON.stringify(parsed));
           }
-          return parsed;
+          if (parsed.length > 0) return parsed;
         }
       }
     } catch (e) {
